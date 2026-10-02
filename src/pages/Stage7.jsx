@@ -1,3 +1,5 @@
+// Этап 1 документы
+
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import BottomBar from "../components/BottomBar";
@@ -99,13 +101,13 @@ function Stage7() {
   return (
     <>
       <div className="container stage7-page">
-        <h1 className="title">Этап 7 - Документы на продукт </h1>
+        <h1 className="title">Этап 1 - Документы на продукт </h1>
         <h2 className="subtitle">Добавьте документы</h2>
-        {!productId && (
+        {/* {!productId && (
           <p className="form-error">
             Откройте создание карточки с главной страницы.
           </p>
-        )}
+        )} */}
         {error && <p className="form-error">{error}</p>}
 
         <div className="form">
@@ -195,7 +197,7 @@ function Stage7() {
         )}
       </div>
 
-      <BottomBar current={7} total={11} prevPath="/stage6" nextPath="/stage8" />
+      <BottomBar current={7} total={11} prevPath="/stage12" nextPath="/stage4" />
     </>
   );
 }

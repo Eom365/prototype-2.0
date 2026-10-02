@@ -23,6 +23,8 @@ import Stage18 from './pages/Stage18'
 import Stage19 from './pages/Stage19'
 import Stage20 from './pages/Stage20'
 import Stage21 from './pages/Stage21'
+import Stage22 from './pages/Stage22'
+import Stage23 from './pages/Stage23'
 
 function App() {
   return (
@@ -33,8 +35,8 @@ function App() {
         <Route path="/stage1" element={<Stage1 />} />
         <Route path="/stage2" element={<Stage2 />} />
         <Route path="/stage2_3" element={<Stage2_3 />} />
-        <Route path="/stage3" element={<Stage3 />} /> 
-        <Route path="/stage4" element={<Stage4 />} /> 
+        <Route path="/stage3" element={<Stage3 />} />
+        <Route path="/stage4" element={<Stage4 />} />
         <Route path="/stage5" element={<Stage5 />} />
         <Route path="/stage6" element={<Stage6 />} />
         <Route path="/stage7" element={<Stage7 />} />
@@ -52,10 +54,11 @@ function App() {
         <Route path="/stage19" element={<Stage19 />} />
         <Route path="/stage20" element={<Stage20 />} />
         <Route path="/stage21" element={<Stage21 />} />
+        <Route path="/stage22" element={<Stage22 />} />
+        <Route path="/stage23" element={<Stage23 />} />
       </Routes>
     </BrowserRouter>
   )
 }
 
 export default App
-
