@@ -52,9 +52,6 @@ export const productsApi = {
     saveVariationCharacteristics: (id, variationId, body) => api(`/products/${id}/variations/${variationId}/characteristics`, { method: 'PUT', body: JSON.stringify(body) }),
     saveVariationName: (id, variationId, body) => api(`/products/${id}/variations/${variationId}/name`, { method: 'PUT', body: JSON.stringify(body) }),
     saveVariationPackaging: (id, variationId, body) => api(`/products/${id}/variations/${variationId}/packaging`, { method: 'PUT', body: JSON.stringify(body) }),
-
-    saveBrand: (id, formData) => api(`/products/${id}/brand`, { method: 'POST', body: formData }),
-
     upload: (id, formData) => api(`/products/${id}/files`, { method: 'POST', body: formData }),
     deleteFile: (fileId) => api(`/files/${fileId}`, { method: 'DELETE' }),
     addVariation: (id, body) => api(`/products/${id}/variations`, { method: 'POST', body: JSON.stringify(body) }),

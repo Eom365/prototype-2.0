@@ -24,6 +24,7 @@ import Stage20 from './pages/Stage20'
 import Stage21 from './pages/Stage21'
 import Stage22 from './pages/Stage22'
 import Stage23 from './pages/Stage23'
+import Stage24 from './pages/Stage24'
 
 function Stage13Redirect() {
   const location = useLocation()
@@ -60,6 +61,7 @@ function App() {
         <Route path="/stage21" element={<Stage21 />} />
         <Route path="/stage22" element={<Stage22 />} />
         <Route path="/stage23" element={<Stage23 />} />
+        <Route path="/stage24" element={<Stage24 />} />
       </Routes>
     </BrowserRouter>
   )

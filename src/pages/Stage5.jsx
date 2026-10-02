@@ -161,7 +161,7 @@ function Stage5() {
     return (
         <>
             <div className="container">
-                <h1 className="title">Этап 5 — Описание и характеристики продукта</h1>
+                <h1 className="title">Этап 3 — Характеристики продукта</h1>
 
                 {/* {!productId && (
                     <p className="form-error">Откройте создание карточки с главной страницы.</p>
@@ -169,7 +169,7 @@ function Stage5() {
                 {error && <p className="form-error">{error}</p>} */}
 
                 {/* ===== ОПИСАНИЕ ===== */}
-                <div className="descriptionN">
+                {/* <div className="descriptionN">
                     <h2 className="subtitleOne">Введите описание товара:</h2>
 
                     <Stage5Description
@@ -202,16 +202,16 @@ function Stage5() {
                             </span>
                         )}
                     </div>
-                </div>
+                </div> */}
 
                 <div className="descriptionM">
                     {/* ===== ХАРАКТЕРИСТИКИ ===== */}
                     <h2 className="subtitleOne subtitle--spaced">Заполните характеристики продукта:</h2>
-                    {!kind && (
+                    {/* {!kind && (
                         <p className="paragraph">
                             Сначала выберите вид продукта на этапе 2. От него зависит набор характеристик.
                         </p>
-                    )}
+                    )} */}
 
                     <div className="form">
                         <input
