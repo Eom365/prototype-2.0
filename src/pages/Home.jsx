@@ -55,12 +55,12 @@ function Home() {
                 <button className="home__button" onClick={handleCreate} disabled={creating}>
                     {creating ? 'Создание...' : 'Создать карточку товара'}
                 </button>
-                <button className="home__button" onClick={() => setFilter('draft')}>
+                {/* <button className="home__button" onClick={() => setFilter('draft')}>
                     Черновики
                 </button>
                 <button className="home__button" onClick={() => navigate('/stage3')}>
                     Объединение товара
-                </button>
+                </button> */}
             </div>
 
             {error && <p className="form-error">{error}</p>}

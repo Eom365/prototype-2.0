@@ -30,14 +30,16 @@ function Stage12() {
                 <p className="description">
                     Вариант параметра продукта — это характеристики, по которым покупатель может выбрать один из нескольких вариантов внутри одной карточки продукта.
                 </p>
-                <p className="question">
-                    У созданного продукта есть варианты для выбора?
-                </p>
-                <p className="pBold two">Пример вариантов параметра продукта:<br /></p>
+               
+                <p className="pBold">Пример вариантов параметра продукта:<br /></p>
                 <img
                     src="/images/example.png"
                     alt="Вариант параметра продукта - пример"
+                    className="imgOne"
                 />
+                <p className="question">
+                    У созданного продукта есть варианты для выбора?
+                </p>
             </div>
 
             <div className="action-bar">

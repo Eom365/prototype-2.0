@@ -1,0 +1,343 @@
+/* ===== Страница ===== */
+.stage3-page {
+    padding-bottom: 140px;
+    max-width: 720px;
+}
+
+.stage3-title {
+    position: relative;
+    z-index: 2;
+    background: #fff;
+    padding: 4px 0;
+    margin-bottom: 8px;
+}
+
+.stage3-description {
+    font-size: 14px;
+    color: #444;
+    line-height: 1.5;
+    margin: 0 0 24px;
+    max-width: 560px;
+}
+
+.stage3-subtitle {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 24px 0 12px;
+    color: #222;
+}
+
+.stage3-subtitle--line {
+    margin-top: 32px;
+}
+
+/* ===== Строка: ? + контент ===== */
+.stage3-row {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    padding-left: 40px;
+    /* место под иконку «?» */
+}
+
+.stage3-row--doc {
+    align-items: center;
+}
+
+/* ===== Input ===== */
+.stage3-input {
+    flex: 1;
+    min-width: 0;
+    padding: 12px 14px;
+    font-size: 15px;
+    border: 1.5px solid #222;
+    border-radius: 4px;
+    background: #fff;
+    color: #222;
+    box-sizing: border-box;
+}
+
+.stage3-input:focus {
+    outline: none;
+    border-color: #7b2ff7;
+}
+
+.stage3-input--readonly {
+    background: #f7f7f7;
+    color: #555;
+    cursor: default;
+}
+
+.stage3-input--readonly::placeholder {
+    color: #aaa;
+    font-style: italic;
+}
+
+.stage4-page.stage3-page {
+    max-width: 860px;
+}
+
+.stage4-lead {
+    text-align: left;
+    font-size: 16px;
+    line-height: 1;
+    color: #333;
+    margin: 18px 0 28px;
+    max-width: none;
+}
+
+.stage4-name-box {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+    min-height: 56px;
+    padding: 8px 16px;
+    border: 1.5px solid #222;
+    border-radius: 4px;
+    background: #fff;
+    box-sizing: border-box;
+}
+
+.stage4-name-box__logo {
+    width: 52px;
+    height: 52px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.stage4-name-box__text {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 16px;
+    color: #222;
+}
+
+.stage3-input--line {
+    max-width: 320px;
+}
+
+/* ===== Метки ===== */
+.stage3-label {
+    font-size: 15px;
+    color: #222;
+    min-width: 140px;
+    flex-shrink: 0;
+}
+
+.stage3-inline-label {
+    font-size: 15px;
+    color: #222;
+    flex-shrink: 0;
+}
+
+/* ===== Иконка «?» и подсказка ===== */
+.tip {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 1001;
+}
+
+.tip__icon {
+    width: 26px;
+    height: 26px;
+    border: 2px solid #222;
+    border-radius: 50%;
+    background: #fff;
+    color: #222;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+.tip__icon:hover {
+    background: #222;
+    color: #fff;
+}
+
+.tip__bubble {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 480px;
+    max-width: calc(100vw - 80px);
+    position: absolute;
+    left: 34px;
+    top: 100%;
+    margin-top: 8px;
+    background: #222;
+    color: #fff;
+    font-size: 12px;
+    line-height: 1.4;
+    padding: 8px 10px;
+    border-radius: 6px;
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    white-space: normal;
+}
+
+.tip__image {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    object-fit: contain;
+    border-radius: 4px;
+    background: #fff;
+    max-width: 200px;
+        margin: 0 auto;
+}
+
+.tip__caption {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: #fff;
+    text-align: center;
+    margin-top: 4px;
+}
+
+/* ===== Поля загрузки файлов ===== */
+.file-field {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+}
+
+.file-field__icon {
+    width: 44px;
+    height: 44px;
+    border: 1.5px solid #222;
+    border-radius: 4px;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.file-field__icon-plus {
+    font-size: 22px;
+    line-height: 1;
+    color: #222;
+}
+
+.file-field__button {
+    padding: 10px 18px;
+    font-size: 15px;
+    border: 1.5px solid #222;
+    border-radius: 4px;
+    background: #fff;
+    color: #222;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 320px;
+}
+
+.file-field__button:hover {
+    background: #f5f5f5;
+}
+
+/* ===== Файловое поле в стиле Этапа 7 ===== */
+.stage3-page .stage3-doc-wrap {
+    flex: 1;
+    min-width: 0;
+}
+
+.stage3-page .file-input {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    width: 100%;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 2px 4px 2px 10px;
+    background: #fff;
+    transition: border-color 0.2s;
+    box-sizing: border-box;
+}
+
+.stage3-page .file-input:focus-within {
+    border-color: #2ecc71;
+}
+
+.stage3-page .file-input__text {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-size: 15px;
+    padding: 10px 0;
+    background: transparent;
+    color: #333;
+    min-width: 0;
+    cursor: pointer;
+}
+
+.stage3-page .file-input__text::placeholder {
+    color: #999;
+}
+
+.stage3-page .file-input__clear {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: none;
+    background: #eee;
+    color: #666;
+    cursor: pointer;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    flex-shrink: 0;
+}
+
+.stage3-page .file-input__clear:hover {
+    background: #ddd;
+    color: #000;
+}
+
+.stage3-page .file-input__clip {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    flex-shrink: 0;
+    color: #666;
+    transition: background 0.2s;
+}
+
+.stage3-page .file-input__clip:hover {
+    background: #f0f0f0;
+    color: #333;
+}
+
+.pop {
+    margin-block-start: 150px;
+}
+
+.stage3-subtitle {
+    text-align: left;
+}

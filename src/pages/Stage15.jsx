@@ -144,9 +144,10 @@ function Stage15() {
     return (
         <>
             <div className="container">
+                <div className="descriptionN">
                 <h1 className="title">{variantFillStageHeading(15, 'Описание и характеристики продукта')}</h1>
                 <VariationPreview stage={15} />
-                <h2 className="subtitle">Введите описание товара:</h2>
+                <h2 className="subtitleOne">Введите описание товара:</h2>
                 {!productId && <p className="form-error">Откройте создание карточки с главной страницы.</p>}
                 {productId && !variationId && <p className="form-error">Сначала создайте вариант на этапе 13.</p>}
                 {error && <p className="form-error">{error}</p>}
@@ -155,8 +156,24 @@ function Stage15() {
                     form={descriptionForm}
                     onChange={(section, value) => setDescriptionForm((prev) => ({ ...prev, [section]: value }))}
                 />
+                <button
+                    type="button"
+                    className="descriptionN__save"
+                    onClick={async () => {
+                        if (!productId) return
+                        await productsApi.saveDescription(
+                            productId,
+                            serializeDescriptionForm(descriptionForm)
+                        )
+                        setDescriptionSaved(true)
+                        setTimeout(() => setDescriptionSaved(false), 2000)
+                    }}
+                >
+                    Сохранить описание
+                </button>
+                </div>
 
-                <h2 className="subtitle subtitle--spaced">Заполните характеристики продукта:</h2>
+                <h2 className="subtitleOne subtitle--spaced">Заполните характеристики продукта:</h2>
                 {!kind && <p className="paragraph">Сначала выберите вид продукта на этапе 2. От него зависит набор характеристик.</p>}
 
                 <div className="form">

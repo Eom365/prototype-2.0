@@ -1,9 +1,22 @@
 .stage2-page.container {
-    max-width: 700px;
+    max-width: 1100px;
     margin: 0 auto;
     padding: 40px 20px 120px;
     overflow: visible;
     text-align: left;
+    box-sizing: border-box;
+}
+
+.stage2-workarea {
+    --category-width: min(900px, calc(100vw - 48px));
+    position: relative;
+    width: 100%;
+    max-width: 1100px;
+    margin: 24px auto 0;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .stage2-page .title {
@@ -118,17 +131,9 @@
     cursor: default;
 }
 
-.stage2-category-wrap {
-    position: relative;
-    left: 50%;
-    transform: translateX(-50%);
-    width: min(calc(700px + 6cm), calc(100vw - 48px));
-    box-sizing: border-box;
-}
-
 .field--category {
-    width: 100%;
-    margin-top: 16px;
+    width: var(--category-width);
+    margin: 16px 0 0;
 }
 
 .category-picker {
@@ -204,4 +209,235 @@
 
 .hint-icon:hover::after {
     display: block;
+}
+
+/* ===== Основной контейнер страницы ===== */
+.stage2-page {
+    padding-bottom: 120px;
+}
+
+.stage2-title {
+    padding: 4px 0;
+}
+
+.stage2-modal {
+    position: relative;
+    inset: auto;
+    width: var(--category-width);
+    height: 15cm;
+    margin: 16px 0 0;
+    padding: 20px;
+    box-sizing: border-box;
+    background: rgba(0, 0, 0, 0.28);
+    display: flex;
+    justify-content: flex-start;
+    align-items: flex-start;
+    z-index: 2;
+}
+
+.stage2-page .modal-sheet {
+    position: relative;
+    width: min(460px, 100%);
+    max-height: calc(15cm - 40px);
+    overflow-y: auto;
+    background: #fff;
+    border: 1px solid #222;
+    padding: 16px 18px 0;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+    animation: sheet-fade 0.15s ease-out;
+    font-size: 14px;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+}
+
+@keyframes sheet-fade {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ===== Заголовок модалки ===== */
+.modal-sheet__header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.modal-sheet__back {
+    background: none;
+    border: none;
+    font-size: 26px;
+    line-height: 1;
+    color: #888;
+    cursor: pointer;
+    padding: 0;
+}
+
+.modal-sheet__back:hover {
+    color: #222;
+}
+
+.modal-sheet__title {
+    font-size: 18px;
+    margin: 0;
+    font-weight: 500;
+    color: #222;
+    flex: 1;
+    text-align: center;
+}
+
+.modal-sheet__header .modal-sheet__back+.modal-sheet__title {
+    text-align: left;
+}
+
+/* ===== Список пунктов ===== */
+.modal-sheet__list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 24px;
+}
+
+.modal-sheet__item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 14px;
+    background: #fff;
+    border: 1.5px solid #222;
+    font-size: 15px;
+    text-align: left;
+    cursor: pointer;
+    color: #222;
+}
+
+.modal-sheet__item:hover {
+    background: #f5f5f5;
+}
+
+.modal-sheet__item--selected {
+    border-color: #7b2ff7;
+    border-width: 2px;
+    background: #faf6ff;
+}
+
+.modal-sheet__arrow {
+    color: #999;
+    font-size: 26px;
+    line-height: 1;
+    font-weight: 300;
+}
+
+.modal-sheet__empty {
+    color: #888;
+    font-size: 14px;
+    padding: 8px 0;
+}
+
+/* ===== Блок "Предложите категорию" ===== */
+.modal-sheet__suggest {
+    margin-top: 16px;
+    border-top: 2px solid #222;
+    padding-top: 10px;
+    padding-bottom: 16px;
+}
+
+.modal-sheet__suggest .paragraph {
+    font-size: 15px;
+    margin: 0 0 6px;
+    color: #222;
+}
+
+.modal-sheet__suggest .input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1.5px solid #222;
+    font-size: 14px;
+    box-sizing: border-box;
+    background: #fff;
+}
+
+/* ===== Нижние кнопки (как на этапе 12) ===== */
+.modal-sheet__actions {
+    display: flex;
+    margin: auto -18px 0;
+    min-height: 64px;
+}
+
+.modal-sheet__action {
+    flex: 1;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: inherit;
+    transition: filter 0.2s;
+}
+
+.modal-sheet__action:hover {
+    filter: brightness(0.95);
+}
+
+.modal-sheet__action:active {
+    filter: brightness(0.9);
+}
+
+.modal-sheet__action--cancel {
+    background: #f39c12;
+}
+
+.modal-sheet__action--confirm {
+    background: #2ecc71;
+}
+
+.modal-sheet__action-circle {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    font-weight: bold;
+    line-height: 1;
+    flex-shrink: 0;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.modal-sheet__action--cancel .modal-sheet__action-circle {
+    color: #f39c12;
+}
+
+.modal-sheet__action--confirm .modal-sheet__action-circle {
+    color: #2ecc71;
+}
+
+.modal-sheet__subhint {
+    margin: 10px 0 0;
+    font-size: 14px;
+    color: #333;
+    line-height: 1.45;
+}
+
+.modal-sheet__subhint-check {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    background: #4caf50;
+    color: #fff;
+    font-size: 14px;
+    vertical-align: middle;
 }

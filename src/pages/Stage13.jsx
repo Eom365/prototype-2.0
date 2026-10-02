@@ -472,18 +472,16 @@ function Stage13() {
                     Создание варианта параметра продукта
                     <span className="info-icon" title="Подсказка">?</span>
                 </h1>
-                {/* <h2 className="subtitle">
-                    Выберите вариант параметра продукта, по которым покупатель будет выбирать товар.
-                </h2> */}
-                <p className="section-description twoo">
+                <p className="section-description standart">
                     Вариант параметра продукта позволяет объединить продукты одной линейки, у которых меняются определенные характеристики (модель, объём памяти, цвет).
                 </p>
                 <p className="pBold">Пример правильного заполнения:<br /></p>
                 <img
                     src="/images/productParameterOption.png"
                     alt="Пример: одно изделие — стоматологический наконечник"
+                    className="imgTwo"
                 />
-                <p className="section-description two">
+                <p className="variants-title two">
                     Выберите варианты параметра продукта:
                 </p>
                 {error && <p className="form-error">{error}</p>}
@@ -535,79 +533,74 @@ function Stage13() {
 
             <div className="variants-section">
                 <h2 className="variants-title two">
-                    Заполните значения у варианта параметра продукта:
+                    Введите значение варианта параметра продукта
                     <span className="info-icon" title="Подсказка">?</span>
                 </h2>
-
-                <p className="variants-description">
-                    Введите значения характеристик продукта, затем нажмите на кнопку
-                    "Создать вариант параметра продукта"
-                </p>
 
                 {selectedFields.length === 0 ? (
                     <p className="variants-description">Выберите характеристики</p>
                 ) : (
-                <div className="variants-table">
-                    {selectedFields.map((item) => {
-                        const draft = drafts[item.key] || { value: '', customValue: '' }
-                        const field = item.field
-                        return (
-                    <div className="variant-row" key={item.key}>
-                        <span className="variant-row__name">{item.label}</span>
+                    <div className="variants-table">
+                        {selectedFields.map((item) => {
+                            const draft = drafts[item.key] || { value: '', customValue: '' }
+                            const field = item.field
+                            return (
+                                <div className="variant-row" key={item.key}>
+                                    <span className="variant-row__name">{item.label}</span>
 
-                        {field.inputType === 'choice' && draft.value === 'other' ? (
-                            <input
-                                type="text"
-                                className="variant-row__input"
-                                placeholder="Введите своё значение"
-                                value={draft.customValue}
-                                onChange={(event) => setDraft(item.key, { customValue: event.target.value })}
-                            />
-                        ) : field.inputType === 'choice' ? (
-                            <select
-                                className="variant-row__select"
-                                value={draft.value}
-                                onChange={(event) => setDraft(item.key, { value: event.target.value, customValue: '' })}
-                            >
-                                <option value=""></option>
-                                {(field.options || []).map((option) => (
-                                    <option key={option.value} value={option.value}>{option.label}</option>
-                                ))}
-                                {field.allowCustom && <option value="other">Иное</option>}
-                            </select>
-                        ) : (
-                            <input
-                                type="text"
-                                className="variant-row__input"
-                                placeholder="Введите значение"
-                                value={draft.value}
-                                onChange={(event) => setDraft(item.key, { value: event.target.value })}
-                            />
-                        )}
-
-                        <div className="variant-chips">
-                            {valueChips(item).map((chip) => (
-                                <div className="variant-chip" key={chip.text}>
-                                    <span>{chip.text}</span>
-                                    {chip.removable ? (
-                                        <button
-                                            type="button"
-                                            className="variant-chip__remove"
-                                            title="Удалить"
-                                            onClick={() => removeCharacteristicValue(item.key, chip.text)}
+                                    {field.inputType === 'choice' && draft.value === 'other' ? (
+                                        <input
+                                            type="text"
+                                            className="variant-row__input"
+                                            placeholder="Введите своё значение"
+                                            value={draft.customValue}
+                                            onChange={(event) => setDraft(item.key, { customValue: event.target.value })}
+                                        />
+                                    ) : field.inputType === 'choice' ? (
+                                        <select
+                                            className="variant-row__select"
+                                            value={draft.value}
+                                            onChange={(event) => setDraft(item.key, { value: event.target.value, customValue: '' })}
                                         >
-                                            ✕
-                                        </button>
+                                            <option value=""></option>
+                                            {(field.options || []).map((option) => (
+                                                <option key={option.value} value={option.value}>{option.label}</option>
+                                            ))}
+                                            {field.allowCustom && <option value="other">Иное</option>}
+                                        </select>
                                     ) : (
-                                        <span className="variant-chip__info" title="Ранее сохранённое">?</span>
+                                        <input
+                                            type="text"
+                                            className="variant-row__input"
+                                            placeholder="Введите значение"
+                                            value={draft.value}
+                                            onChange={(event) => setDraft(item.key, { value: event.target.value })}
+                                        />
                                     )}
+
+                                    <div className="variant-chips">
+                                        {valueChips(item).map((chip) => (
+                                            <div className="variant-chip" key={chip.text}>
+                                                <span>{chip.text}</span>
+                                                {chip.removable ? (
+                                                    <button
+                                                        type="button"
+                                                        className="variant-chip__remove"
+                                                        title="Удалить"
+                                                        onClick={() => removeCharacteristicValue(item.key, chip.text)}
+                                                    >
+                                                        ✕
+                                                    </button>
+                                                ) : (
+                                                    <span className="variant-chip__info" title="Ранее сохранённое">?</span>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
-                            ))}
-                        </div>
+                            )
+                        })}
                     </div>
-                        )
-                    })}
-                </div>
                 )}
 
                 {error && <p className="form-error">{error}</p>}
@@ -620,6 +613,7 @@ function Stage13() {
                         Создать вариант параметра продукта
                         <span className="info-icon info-icon--white" title="Подсказка">?</span>
                     </button>
+
                     <div className="variants-actions__row">
                         <button type="button" className="action-secondary">
                             Скачать шаблон Excel
@@ -638,10 +632,6 @@ function Stage13() {
                         Варианты параметра продукта
                         <span className="info-icon" title="Подсказка">?</span>
                     </h2>
-
-                    <p className="variants-preview__description">
-                        Заполните все необходимые данные и отправьте на проверку каждый вариант товара
-                    </p>
 
                     {card && !editingBase && (
                         <div className="product-card">
@@ -786,72 +776,79 @@ function Stage13() {
                     const warehouses = cardWarehouses(bundle, variation.id)
                     const article = variationArticle(variation)
                     return (
-                    <div className="product-card" key={variation.id}>
-                        <div className="product-card__chips">
-                            {chips.map((chip) => (
-                                <span className="product-card__chip" key={chip}>{chip}</span>
-                            ))}
-                        </div>
-                        <div className="product-card__body">
-                            <div className="product-card__col product-card__col--status">
-                                <div className="product-card__status-row">
-                                    <span className="product-card__status-label">Активна</span>
-                                    <button type="button" className="toggle toggle--on" title="Выключить">
-                                        <span className="toggle__knob" />
-                                    </button>
-                                    <button type="button" className="product-card__edit" title="Редактировать" onClick={() => editVariant(variation)}>
-                                        ✎
-                                    </button>
-                                    <button type="button" className="product-card__delete" title="Удалить" onClick={() => deleteVariant(variation)}>
-                                        ✕
+                        <div className="product-card" key={variation.id}>
+                            <div className="product-card__chips">
+                                {chips.map((chip) => (
+                                    <span className="product-card__chip" key={chip}>{chip}</span>
+                                ))}
+                            </div>
+                            <div className="product-card__body">
+                                <div className="product-card__col product-card__col--status">
+                                    <div className="product-card__status-row">
+                                        <span className="product-card__status-label">Активна</span>
+                                        <button type="button" className="toggle toggle--on" title="Выключить">
+                                            <span className="toggle__knob" />
+                                        </button>
+                                        <button type="button" className="product-card__edit" title="Редактировать" onClick={() => editVariant(variation)}>
+                                            ✎
+                                        </button>
+                                        <button type="button" className="product-card__delete" title="Удалить" onClick={() => deleteVariant(variation)}>
+                                            ✕
+                                        </button>
+                                    </div>
+                                    <button type="button" className="product-card__preview-link">
+                                        Посмотреть карточку товара ›
                                     </button>
                                 </div>
-                                <button type="button" className="product-card__preview-link">
-                                    Посмотреть карточку товара ›
-                                </button>
-                            </div>
-                            <PhotoStrip photos={(bundle.files || []).filter((file) => sameId(file.variationId, variation.id) && (file.role === 'presentation' || file.role === 'product'))} />
-                            <div className="product-card__col product-card__col--info">
-                                <h3 className="product-card__name">{variation.fullName || card?.name}</h3>
-                                {card?.category && <p className="product-card__desc">{card.category}</p>}
-                                {card?.line && <p className="product-card__line">{card.line}</p>}
-                                {article && (
-                                    <div className="product-card__article-row">
-                                        <span className="product-card__article">{article}</span>
-                                    </div>
-                                )}
-                            </div>
-                            <div className="product-card__col product-card__col--address">
-                                {warehouses.length ? (
-                                    warehouses.map((warehouse) => (
-                                        <div className="product-card__warehouse" key={warehouse.id || warehouse.address}>
-                                            <p className="product-card__address">
-                                                <span className="product-card__bullet">●</span>
-                                                {warehouse.address}
-                                            </p>
-                                            {warehouse.quantity && (
-                                                <p className="product-card__quantity">
-                                                    Количество - {warehouse.quantity} {pluralPieces(warehouse.quantity)}.
-                                                </p>
-                                            )}
+                                <PhotoStrip photos={(bundle.files || []).filter((file) => sameId(file.variationId, variation.id) && (file.role === 'presentation' || file.role === 'product'))} />
+                                <div className="product-card__col product-card__col--info">
+                                    <h3 className="product-card__name">{variation.fullName || card?.name}</h3>
+                                    {card?.category && <p className="product-card__desc">{card.category}</p>}
+                                    {card?.line && <p className="product-card__line">{card.line}</p>}
+                                    {article && (
+                                        <div className="product-card__article-row">
+                                            <span className="product-card__article">{article}</span>
                                         </div>
-                                    ))
-                                ) : (
-                                    <p className="product-card__address">Склад не указан</p>
-                                )}
-                            </div>
-                            <div className="product-card__col product-card__col--price">
-                                {variation.price && (
-                                    <>
-                                        <span className="product-card__price-symbol">{currencySymbol(variation.currency)}</span>
-                                        <span className="product-card__price-value">{formatPrice(variation.price)}</span>
-                                    </>
-                                )}
+                                    )}
+                                </div>
+                                <div className="product-card__col product-card__col--address">
+                                    {warehouses.length ? (
+                                        warehouses.map((warehouse) => (
+                                            <div className="product-card__warehouse" key={warehouse.id || warehouse.address}>
+                                                <p className="product-card__address">
+                                                    <span className="product-card__bullet">●</span>
+                                                    {warehouse.address}
+                                                </p>
+                                                {warehouse.quantity && (
+                                                    <p className="product-card__quantity">
+                                                        Количество - {warehouse.quantity} {pluralPieces(warehouse.quantity)}.
+                                                    </p>
+                                                )}
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <p className="product-card__address">Склад не указан</p>
+                                    )}
+                                </div>
+                                <div className="product-card__col product-card__col--price">
+                                    {variation.price && (
+                                        <>
+                                            <span className="product-card__price-symbol">{currencySymbol(variation.currency)}</span>
+                                            <span className="product-card__price-value">{formatPrice(variation.price)}</span>
+                                        </>
+                                    )}
+                                </div>
                             </div>
                         </div>
-                    </div>
                     )
                 })}
+
+               
+                {sectionsOpen && (
+                    <p className="variants-title two">
+                        Заполните вариант параметра продукта:
+                    </p>
+                )}
 
                 {sectionsOpen && (
                     <div
