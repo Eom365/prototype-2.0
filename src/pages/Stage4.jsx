@@ -1,3 +1,4 @@
+// Этап 2 фотография продукта
 import { useSearchParams } from 'react-router-dom'
 import BottomBar from '../components/BottomBar'
 import PhotoGallery from '../components/PhotoGallery'
@@ -10,7 +11,7 @@ function Stage4() {
     return (
         <>
             <div className="container">
-                <h1 className="title">Этап 4 — Фотографии варианта параметра продукта</h1>
+                <h1 className="title">Этап 2 — Фотографии варианта параметра продукта</h1>
                 {/* <h2 className="subtitle">Добавьте фотографии продукта</h2> */}
                 <p className="section-description standart">
                     Загрузите изображения, которые соответствуют внешнему виду варианта параметра продукта.
@@ -30,11 +31,11 @@ function Stage4() {
                     />
                 </div>
 
-                {!productId && <p className="form-error">Откройте создание карточки с главной страницы.</p>}
+                {/* {!productId && <p className="form-error">Откройте создание карточки с главной страницы.</p>} */}
                 {productId && <PhotoGallery productId={productId} role="product" />}
             </div>
 
-            <BottomBar current={4} total={11} prevPath="/stage3" nextPath="/stage5" />
+            <BottomBar current={4} total={11} prevPath="/stage7" nextPath="/stage5" />
         </>
     )
 }

@@ -36,7 +36,7 @@ function findKind(catalog, kindCode) {
     return null
 }
 
-function Stage5() {
+function Stage23() {
     const [params] = useSearchParams()
     const productId = params.get('id')
     const [catalog, setCatalog] = useState(null)
@@ -454,4 +454,4 @@ function CharacteristicRow({ field, value, unitGroups, onChange }) {
     )
 }
 
-export default Stage5
+export default Stage23
