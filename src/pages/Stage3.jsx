@@ -1,3 +1,4 @@
+// Этап 4 презентация продукта
 import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import BottomBar from "../components/BottomBar";
@@ -12,7 +13,7 @@ function Stage3() {
   return (
     <>
       <div className="container">
-        <h1 className="title">Этап 3 - Презентация продукции</h1>
+        <h1 className="title">Этап 4 - Презентация продукции</h1>
         
         <p className="section-description standart">
           {" "}
@@ -66,7 +67,7 @@ function Stage3() {
         </div>
       </div>
 
-      <BottomBar current={3} total={11} prevPath="/stage2_3" nextPath="/stage4" />
+      <BottomBar current={3} total={11} prevPath="/stage2_3" nextPath="/stage22" />
     </>
   );
 }

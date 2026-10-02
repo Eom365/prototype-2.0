@@ -35,7 +35,7 @@ function Stage4() {
                 {productId && <PhotoGallery productId={productId} role="product" />}
             </div>
 
-            <BottomBar current={4} total={11} prevPath="/stage7" nextPath="/stage5" />
+            <BottomBar current={4} total={11} prevPath="/stage7" nextPath="/stage23" />
         </>
     )
 }

@@ -355,7 +355,7 @@
     display: grid;
     grid-template-columns: 24px 30px minmax(180px, 240px) minmax(180px, 1fr) 160px;
     align-items: center;
-    gap: 12px;
+    gap: 100px;
     border-bottom: 1px solid #ddd;
     padding-bottom: 12px;
 }
@@ -597,4 +597,215 @@
     text-align: left;
     font-size: 16px;
     color: #000;
+}
+
+.fog {
+    width: 600px;
+}
+
+/* ===== Контейнер ===== */
+.container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 20px 140px;
+    box-sizing: border-box;
+}
+
+/* ===== Строка поля ===== */
+.field-row {
+    display: grid;
+    grid-template-columns: 24px 260px 1fr 30px;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 0;
+    border-bottom: 1px solid #ddd;
+}
+
+.info-icon {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 1.5px solid #999;
+    color: #999;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-style: italic;
+    cursor: help;
+    flex-shrink: 0;
+}
+
+.field-name {
+    font-size: 15px;
+    color: #333;
+    line-height: 1.3;
+}
+
+.field-input {
+    padding: 8px 10px;
+    font-size: 14px;
+    border: 1px solid #bbb;
+    border-radius: 4px;
+    outline: none;
+    background: #fff;
+    width: 100%;
+    box-sizing: border-box;
+    font-family: inherit;
+    transition: border-color 0.2s;
+}
+
+.field-input:focus {
+    border-color: #2ecc71;
+}
+
+.required-mark {
+    font-size: 20px;
+    color: #000;
+    text-align: center;
+}
+
+/* ===== Поле с файлом (логотип) ===== */
+.field-input--file {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    background: #fff;
+    border: 1px solid #bbb;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #333;
+    text-align: left;
+    width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+    font-family: inherit;
+}
+
+.field-input--file:hover {
+    border-color: #888;
+    background: #fafafa;
+}
+
+.field-input--has-file {
+    cursor: default;
+    background: #fafafa;
+}
+
+.file-icon {
+    flex-shrink: 0;
+    font-size: 16px;
+}
+
+.file-text {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #666;
+}
+
+.file-preview {
+    width: 50px;
+    height: 30px;
+    object-fit: contain;
+    border-radius: 4px;
+    flex-shrink: 0;
+    background: #fff;
+}
+
+.file-remove {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: none;
+    background: #eee;
+    color: #666;
+    cursor: pointer;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    flex-shrink: 0;
+}
+
+.file-remove:hover {
+    background: #ddd;
+    color: #000;
+}
+
+/* ===== Нижняя панель с кнопками ===== */
+.action-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 80px;
+    display: flex;
+    z-index: 100;
+}
+
+.action-btn {
+    flex: 1;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: filter 0.2s;
+    font-family: inherit;
+    padding: 0;
+}
+
+.action-btn:hover {
+    filter: brightness(0.95);
+}
+
+.action-btn:active {
+    filter: brightness(0.9);
+}
+
+.action-btn--no {
+    background: #f39c12;   /* оранжевая */
+}
+
+.action-btn--yes {
+    background: #2ecc71;   /* зелёная */
+}
+
+.action-btn__circle {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    font-weight: bold;
+    flex-shrink: 0;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.action-btn--no .action-btn__circle {
+    color: #f39c12;
+}
+
+.action-btn--yes .action-btn__circle {
+    color: #2ecc71;
+}
+
+.OOp {
+    width: 600px;
+}
+
+.tab--active {
+    background: #a09bdf;
+    /* фиолетовый */
+    color: #fff;
+    font-weight: 600;
+    border-color: #333;
 }
