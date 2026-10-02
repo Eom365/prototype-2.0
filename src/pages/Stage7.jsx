@@ -19,9 +19,7 @@ const documentFields = [
 ];
 
 function valueText(values, code) {
-  const field = (values || []).find(
-    (item) => item.code === code && !item.variationId,
-  );
+  const field = (values || []).find((item) => item.code === code);
   if (!field?.value) return "";
   return field.value === "other" ? field.customValue || "" : field.value;
 }
@@ -55,14 +53,28 @@ function Stage7() {
 
   const load = async () => {
     const product = await productsApi.get(productId);
+    const variation = variationId
+      ? (product.variations || []).find(
+          (item) => String(item.id).toLowerCase() === String(variationId).toLowerCase(),
+        )
+      : null;
     const next = {};
     for (const file of product.files || []) {
       if (file.role === "document" && file.documentType && sameVariation(file.variationId)) {
         next[file.documentType] = file;
       }
     }
+    // Бренд-документ с основной карточки подтягиваем в вариант, если своего ещё нет
+    if (variationId && !next.brand) {
+      const productBrandDoc = (product.files || []).find(
+        (file) => file.role === "document" && file.documentType === "brand" && !file.variationId,
+      );
+      if (productBrandDoc) next.brand = productBrandDoc;
+    }
     const hasBrand = Boolean(
-      valueText(product.values, "brand") || product.brandName?.trim(),
+      valueText(variation?.values, "brand") ||
+        valueText(product.values, "brand") ||
+        product.brandName?.trim(),
     );
     setRequiredFields(getRequiredFields(product.categoryCode || "", hasBrand));
     setFiles(next);
@@ -94,6 +106,15 @@ function Stage7() {
   const handleFileRemove = async (name) => {
     const file = files[name];
     if (!file) return;
+    // Документ бренда с основной карточки не удаляем при заполнении варианта
+    if (variationId && name === "brand" && !file.variationId) {
+      setFiles((prev) => {
+        const next = { ...prev };
+        delete next.brand;
+        return next;
+      });
+      return;
+    }
     setError("");
     try {
       await productsApi.deleteFile(file.id);

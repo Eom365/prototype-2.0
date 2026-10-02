@@ -50,7 +50,7 @@ function Stage14() {
                 current={variantFillStep(14)}
                 total={VARIANT_FILL_STAGE_COUNT}
                 prevPath="/stage7"
-                nextPath="/stage15"
+                nextPath="/stage23"
             />
         </>
     )

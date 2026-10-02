@@ -341,7 +341,7 @@ function Stage18() {
                 </div>
             </div>
 
-            <BottomBar current={variantFillStep(18)} total={VARIANT_FILL_STAGE_COUNT} prevPath="/stage15" nextPath="/stage19" onSave={save} />
+            <BottomBar current={variantFillStep(18)} total={VARIANT_FILL_STAGE_COUNT} prevPath="/stage24" nextPath="/stage19" onSave={save} />
         </>
     )
 }

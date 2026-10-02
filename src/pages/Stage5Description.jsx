@@ -102,9 +102,12 @@ function patchComplectationItem(form, onChange, index, patch) {
   onChange("complectation", { items });
 }
 
-export default function Stage5Description({ form, onChange }) {
+export default function Stage5Description({ form, onChange, only = null }) {
+  const show = (key) => !only || only === key
+
   return (
     <div className="desc-blocks">
+      {show("description") && (
       <DescriptionBlock title="Описание">
         <DescriptionInput
           value={form.description.purpose}
@@ -128,7 +131,9 @@ export default function Stage5Description({ form, onChange }) {
           placeholder="Принцип работы продукта"
         />
       </DescriptionBlock>
+      )}
 
+      {show("complectation") && (
       <DescriptionBlock title="Комплектация">
         <div className="desc-complectation-list">
           {(form.complectation.items || [{ name: "", quantity: "" }]).map(
@@ -157,7 +162,9 @@ export default function Stage5Description({ form, onChange }) {
           )}
         </div>
       </DescriptionBlock>
+      )}
 
+      {show("applicationArea") && (
       <DescriptionBlock title="Область эксплуатации продукта">
         <DescriptionInput
           value={form.applicationArea.sphere}
@@ -180,7 +187,9 @@ export default function Stage5Description({ form, onChange }) {
           placeholder="Способ применение"
         />
       </DescriptionBlock>
+      )}
 
+      {show("storageConditions") && (
       <DescriptionBlock title="Условия транспортировки, хранения, эксплуатации">
         <ConditionGroup
           title="Условия транспортировки"
@@ -226,7 +235,9 @@ export default function Stage5Description({ form, onChange }) {
           />
         </div>
       </DescriptionBlock>
+      )}
 
+      {show("precautions") && (
       <DescriptionBlock title="Меры предосторожности">
         <DescriptionInput
           value={form.precautions.hazardClass}
@@ -250,6 +261,7 @@ export default function Stage5Description({ form, onChange }) {
           placeholder="утилизация товаров и упаковки"
         />
       </DescriptionBlock>
+      )}
     </div>
   );
 }

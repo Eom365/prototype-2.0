@@ -1,16 +1,17 @@
 export const BASE_STAGE_COUNT = 11
 
-/** Variant fill: docs → photos → specs → pack → price → delivery → preview (7 steps). */
-export const VARIANT_FILL_STAGE_COUNT = 7
+/** Variant fill: docs → photos → specs(23) → 24 → pack → price → delivery → preview. */
+export const VARIANT_FILL_STAGE_COUNT = 8
 
 const VARIANT_FILL_STEPS = {
     7: 1,
     14: 2,
-    15: 3,
-    18: 4,
-    19: 5,
-    20: 6,
-    21: 7,
+    23: 3,
+    24: 4,
+    18: 5,
+    19: 6,
+    20: 7,
+    21: 8,
 }
 
 export function variantFillStep(routeStage) {

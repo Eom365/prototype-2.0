@@ -270,6 +270,17 @@ public class ProductsController : ControllerBase
             });
         }
 
+        var brandValue = dto.Values.FirstOrDefault(item =>
+            string.Equals(item.Code?.Trim(), "brand", StringComparison.OrdinalIgnoreCase));
+        if (brandValue != null)
+        {
+            var brandText = string.Equals(brandValue.Value, "other", StringComparison.OrdinalIgnoreCase)
+                ? brandValue.CustomValue
+                : brandValue.Value;
+            if (!string.IsNullOrWhiteSpace(brandText))
+                product.BrandName = brandText.Trim();
+        }
+
         Touch(product, 5);
         await _db.SaveChangesAsync();
         return await Get(id);

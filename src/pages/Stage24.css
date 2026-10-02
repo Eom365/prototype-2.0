@@ -1,0 +1,148 @@
+.stage24-page {
+    padding-bottom: 180px;
+}
+
+.stage24-page--review {
+    padding-bottom: 100px;
+}
+
+.stage24-title {
+    margin: 0 0 20px;
+    text-align: left;
+    font-size: 28px;
+}
+
+.stage24-tabs {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 18px;
+    background: #f7f7f7;
+}
+
+.stage24-tab {
+    border: none;
+    border-right: 1px solid #ccc;
+    background: #f7f7f7;
+    padding: 12px 8px;
+    font-family: inherit;
+    font-size: 12px;
+    line-height: 1.3;
+    color: #444;
+    cursor: pointer;
+    text-align: center;
+    min-height: 52px;
+}
+
+.stage24-tab:last-child {
+    border-right: none;
+}
+
+.stage24-tab--active {
+    background: #fff;
+    color: #222;
+    font-weight: 600;
+    box-shadow: inset 0 -3px 0 #6b63c7;
+}
+
+.stage24-tab--done:not(.stage24-tab--active) {
+    background: #e8e4ff;
+}
+
+.stage24-hint {
+    font-size: 14px;
+    color: #555;
+    margin: 0 0 16px;
+    line-height: 1.45;
+}
+
+.stage24-section-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #222;
+    margin: 0 0 14px;
+}
+
+.wizard-action-bar {
+    position: fixed;
+    bottom: 60px;
+    left: 0;
+    right: 0;
+    height: 72px;
+    display: flex;
+    z-index: 100;
+}
+
+.wizard-action-btn {
+    flex: 1;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    font-family: inherit;
+    position: relative;
+}
+
+.wizard-action-btn:disabled {
+    opacity: 0.7;
+    cursor: wait;
+}
+
+.wizard-action-btn--no {
+    background: #f39c12;
+}
+
+.wizard-action-btn--yes {
+    background: #2ecc71;
+}
+
+.wizard-action-btn__circle {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    font-weight: bold;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.wizard-action-btn--no .wizard-action-btn__circle {
+    color: #888;
+}
+
+.wizard-action-btn--yes .wizard-action-btn__circle {
+    color: #2ecc71;
+}
+
+.wizard-action-btn__step {
+    position: absolute;
+    left: 20px;
+    font-size: 14px;
+    color: #fff;
+    font-weight: 600;
+}
+
+@media (max-width: 900px) {
+    .stage24-tabs {
+        grid-template-columns: 1fr;
+    }
+
+    .stage24-tab {
+        border-right: none;
+        border-bottom: 1px solid #ccc;
+        text-align: left;
+        min-height: auto;
+    }
+
+    .stage24-tab:last-child {
+        border-bottom: none;
+    }
+}
