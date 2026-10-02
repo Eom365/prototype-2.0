@@ -3,6 +3,7 @@ import Home from './pages/Home'
 import Review from './pages/Review'
 import Stage1 from './pages/Stage1'
 import Stage2 from './pages/Stage2'
+import Stage2_3 from './pages/Stage2_3'
 import Stage3 from './pages/Stage3'
 import Stage4 from './pages/Stage4'
 import Stage5 from './pages/Stage5'
@@ -31,6 +32,7 @@ function App() {
         <Route path="/review" element={<Review />} />
         <Route path="/stage1" element={<Stage1 />} />
         <Route path="/stage2" element={<Stage2 />} />
+        <Route path="/stage2_3" element={<Stage2_3 />} />
         <Route path="/stage3" element={<Stage3 />} /> 
         <Route path="/stage4" element={<Stage4 />} /> 
         <Route path="/stage5" element={<Stage5 />} />

@@ -213,7 +213,7 @@ export default function Stage5Description({ form, onChange }) {
           }
         />
         <div className="desc-subsection">
-          <p className="desc-subsection__title">Срок годности</p>
+          <p className="desc-subsection__title">Срок службы</p>
           <DescriptionInput
             value={form.storageConditions.shelfLife}
             onChange={(value) =>
@@ -222,7 +222,7 @@ export default function Stage5Description({ form, onChange }) {
                 shelfLife: value,
               })
             }
-            placeholder="Срок годности"
+            placeholder="Срок службы"
           />
         </div>
       </DescriptionBlock>

@@ -4,9 +4,10 @@ import BottomBar from "../components/BottomBar";
 import { productsApi } from "../api";
 import "./Stage1.css";
 
-const BRAND_DESCRIPTION = `Бренд - это название товарного знака, под которым продается товар.
-Наименование бренда может заполнить только правообладатель товарного знака. Для подтверждения потребуется загрузить "Свидетельство на товарный знак" на Этапе 7 "Документы на продукт".
-Если вы продаете оригинальный товар, но не являетесь правообладателем - не заполняйте это поле.`;
+const BRAND_DESCRIPTION = `Бренд - это название товарного знака, под которым продается товар.`;
+// const BRAND_DESCRIPTION = `Бренд - это название товарного знака, под которым продается товар.
+// Наименование бренда может заполнить только правообладатель товарного знака. Для подтверждения потребуется загрузить "Свидетельство на товарный знак" на Этапе 7 "Документы на продукт".
+// Если вы продаете оригинальный товар, но не являетесь правообладателем - не заполняйте это поле.`;
 
 const emptyFields = {
   authorLastName: "",
@@ -86,7 +87,7 @@ function Stage1() {
   return (
     <>
       <div className="container stage1-page">
-        <h1 className="title">Этап 1 - Проверка идентичности товара</h1>
+        <h1 className="title">Этап 1 - Проверка идентичности продукта</h1>
         <h2 className="subtitle standart">
           Введите информацию о товаре для поиска совпадений среди существующих
           карточек товаров
@@ -142,10 +143,11 @@ function Stage1() {
         <div className="form">
           <div className="field">
             <label className="label">Наименование продукта</label>
-            <p className="standart">
+            {/* <p className="standart">
               Укажите полное наименование продукта в соответствии с
               сопроводительными документами или маркировкой производителя.
-            </p>
+            </p> */}
+            <p className="pInfo">При заполнении ориентируйтесь на следующие документы:<br /> 1.Руководство по эксплуатации<br />2.Сертификат соответствия или декларация о соответствии <br />3.Регистрационное удостоверение</p>
             <p className="pBold">
               Пример правильного заполнения: Ноутбук HUAWEI MateBook D 15;
               Смартфон Apple iPhone 15 Pro
@@ -167,7 +169,8 @@ function Stage1() {
           <div className="field">
             <label className="label">Наименование бренда</label>
             <p className="field-description standart" >{BRAND_DESCRIPTION}</p>
-            <p className="pBold">Пример правильного заполнения: "ОМ 365"</p>
+            <p className="pInfo">При заполнении ориентируйтесь на следующие документы:<br /> 1.Свидетельство на товарный знак</p>
+            <p className="pBold">Пример правильного заполнения: "HUAWEI"</p>
             <input
               type="text"
               value={fields.brandName}
@@ -181,6 +184,8 @@ function Stage1() {
 
           <div className="field">
             <label className="label">Производитель товара</label>
+            <p className="pInfo">При заполнении ориентируйтесь на следующие документы:<br /> 1.Руководство по эксплуатации<br />2.Сертификат соответствия или декларация о соответствии <br />3.Регистрационное удостоверение</p>
+            <p className="pBold">Пример правильного заполнения: "Huawei Device Co., Ltd."</p>
             <div className="field-control">
               <span className="required-mark">✱</span>
               <input
@@ -197,6 +202,7 @@ function Stage1() {
 
           <div className="field">
             <label className="label">Страна производителя</label>
+            <p className="pBold">Пример правильного заполнения: "Китай"</p>
             <div className="field-control">
               <span className="required-mark">✱</span>
               <input
