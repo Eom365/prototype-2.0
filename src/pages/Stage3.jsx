@@ -66,7 +66,7 @@ function Stage3() {
         </div>
       </div>
 
-      <BottomBar current={5} total={5} prevPath="/stage4" />
+      <BottomBar current={5} total={5} prevPath="/stage4" nextPath="/stage22" />
     </>
   );
 }

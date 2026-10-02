@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Navigate, Routes, Route, useLocation } from 'react-router-dom'
 import Home from './pages/Home'
 import Review from './pages/Review'
 import Stage1 from './pages/Stage1'
@@ -14,7 +14,6 @@ import Stage9 from './pages/Stage9'
 import Stage10 from './pages/Stage10'
 import Stage11 from './pages/Stage11'
 import Stage12 from './pages/Stage12'
-import Stage13 from './pages/Stage13'
 import Stage14 from './pages/Stage14'
 import Stage15 from './pages/Stage15'
 import Stage16 from './pages/Stage16'
@@ -25,6 +24,11 @@ import Stage20 from './pages/Stage20'
 import Stage21 from './pages/Stage21'
 import Stage22 from './pages/Stage22'
 import Stage23 from './pages/Stage23'
+
+function Stage13Redirect() {
+  const location = useLocation()
+  return <Navigate to={{ pathname: '/stage22', search: location.search }} replace />
+}
 
 function App() {
   return (
@@ -45,7 +49,7 @@ function App() {
         <Route path="/stage10" element={<Stage10 />} />
         <Route path="/stage11" element={<Stage11 />} />
         <Route path="/stage12" element={<Stage12 />} />
-        <Route path="/stage13" element={<Stage13 />} />
+        <Route path="/stage13" element={<Stage13Redirect />} />
         <Route path="/stage14" element={<Stage14 />} />
         <Route path="/stage15" element={<Stage15 />} />
         <Route path="/stage16" element={<Stage16 />} />

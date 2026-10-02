@@ -724,7 +724,7 @@ function Stage13() {
                             </div>
                             <div className="variant-card__body">
                                 <div className="variant-card__photo">
-                                    <button type="button" className="variant-card__photo-btn" title="Фотографии" onClick={() => goBase('/stage4')}>＋</button>
+                                    <button type="button" className="variant-card__photo-btn" title="Фотографии" onClick={() => goBase('/stage14')}>＋</button>
                                 </div>
                                 <div className="variant-card__sections">
                                     <div className="variant-card__col">
@@ -950,7 +950,7 @@ function Stage13() {
                 )}
             </div>
 
-            <BottomBar showStep={false} prevPath="/stage12" nextPath="/stage14" onSave={saveAxes} />
+            <BottomBar showStep={false} prevPath="/stage12" nextPath="/stage7" onSave={saveAxes} />
         </>
     )
 }

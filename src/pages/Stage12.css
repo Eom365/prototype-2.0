@@ -11,27 +11,96 @@
     margin-bottom: 40px;
 }
 
-.question {
-    font-size: 26px;
-    margin-block: 100px;
-    text-align: left;
-    border-block-start: 7px solid #ccc;
-}
-
 .description {
     font-size: 15px;
     color: #333;
     line-height: 1.6;
     margin-bottom: 30px;
+    padding: 14px 16px;
+    background: #f5f5f5;
+    border-left: 4px solid #2ecc71;
 }
 
-.stage12-progress {
-    position: fixed;
-    left: 20px;
-    bottom: 88px;
+.pBold {
     font-size: 14px;
-    color: #666;
-    z-index: 101;
+    font-weight: bold;
+    color: #555;
+    margin: 0 0 12px;
+}
+
+.imgOne {
+    width: 600px;
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+}
+
+.stage12-values-block {
+    margin-top: 28px;
+    padding-top: 24px;
+    border-top: 6px solid #ccc;
+}
+
+.stage12-values-title {
+    font-size: 17px;
+    font-weight: bold;
+    color: #333;
+    margin: 0 0 18px;
+    text-align: center;
+}
+
+.stage12-values {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.stage12-values__label {
+    font-size: 16px;
+    color: #222;
+    min-width: 72px;
+}
+
+.stage12-values__input {
+    width: min(280px, 100%);
+    padding: 10px 12px;
+    font-size: 15px;
+    border: 1.5px solid #222;
+    border-radius: 4px;
+    background: #fff;
+    box-sizing: border-box;
+}
+
+.stage12-values__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+}
+
+.stage12-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border: 1px solid #bbb;
+    border-radius: 4px;
+    background: #f5f5f5;
+    font-size: 14px;
+    color: #222;
+}
+
+.stage12-chip__remove {
+    border: none;
+    background: none;
+    color: #e74c3c;
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1;
+    padding: 0;
 }
 
 .action-bar {
@@ -64,14 +133,17 @@
     filter: brightness(0.9);
 }
 
+.action-btn:disabled {
+    opacity: 0.7;
+    cursor: wait;
+}
+
 .action-btn--no {
     background: #f39c12;
-    /* оранжевая */
 }
 
 .action-btn--yes {
     background: #2ecc71;
-    /* зелёная */
 }
 
 .action-btn__circle {
@@ -94,8 +166,4 @@
 
 .action-btn--yes .action-btn__circle {
     color: #2ecc71;
-}
-
-.imgOne {
-    width: 500px;
 }

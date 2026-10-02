@@ -1,10 +1,21 @@
 export const BASE_STAGE_COUNT = 11
 
-/** Stages 14–21: numbered fill flow (12–13 are intro, not counted). */
-export const VARIANT_FILL_STAGE_COUNT = 8
+/** Variant fill: docs → photos → specs → pack → price → delivery → preview (7 steps). */
+export const VARIANT_FILL_STAGE_COUNT = 7
+
+const VARIANT_FILL_STEPS = {
+    7: 1,
+    14: 2,
+    15: 3,
+    18: 4,
+    19: 5,
+    20: 6,
+    21: 7,
+}
 
 export function variantFillStep(routeStage) {
-    return routeStage - 13
+    if (VARIANT_FILL_STEPS[routeStage] != null) return VARIANT_FILL_STEPS[routeStage]
+    return Math.max(1, routeStage - 12)
 }
 
 export function variantFillStepLabel(routeStage) {

@@ -207,16 +207,13 @@ function Stage2_3() {
             internalArticle: productSnapshot.internalArticle || '',
         })
 
-        const kindCode = productSnapshot.kindCode || ''
-        if (kindCode && kindCode !== 'other') {
-            await productsApi.saveCategory(productId, {
-                purpose: productSnapshot.purpose || '',
-                kindCode,
-                productName: productSnapshot.productName || '',
-                categoryPath: productSnapshot.categoryPath || '',
-                productLine: lineName,
-            })
-        }
+        await productsApi.saveCategory(productId, {
+            purpose: productSnapshot.purpose || '',
+            kindCode: productSnapshot.kindCode || '',
+            productName: productSnapshot.productName || '',
+            categoryPath: productSnapshot.categoryPath || '',
+            productLine: lineName,
+        })
 
         let savedDoc = brandDoc
         if (brandDoc instanceof File) {

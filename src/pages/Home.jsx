@@ -109,7 +109,7 @@ function Home() {
                             <div className="product-card__actions">
                                 <button
                                     className="bottom-bar__btn"
-                                    onClick={() => navigate(`/stage13?id=${item.id}`)}
+                                    onClick={() => navigate(`/stage22?id=${item.id}`)}
                                 >
                                     Редактировать
                                 </button>

@@ -15,7 +15,6 @@ function Stage14() {
                 <h2 className="subtitle">Добавьте фотографии продукта</h2>
                 <p className="section-description">
                     Загрузите изображения, которые соответствуют внешнему виду варианта параметра продукта.
-
                 </p>
                 <p className="pBold standartOne">Фон: продукт на фотографии должен быть на белом фоне.<br /> Ракурс: продукт должен занимать 2/3 изображения.</p>
                 <p className="pBold">Пример правильного заполнения:</p>
@@ -31,10 +30,12 @@ function Stage14() {
                     />
                 </div>
 
-                <VariationPreview stage={14} />
+                {variationId && <VariationPreview stage={14} />}
 
                 {!productId && <p className="form-error">Откройте создание карточки с главной страницы.</p>}
-                {productId && !variationId && <p className="form-error">Сначала создайте вариант на этапе 13.</p>}
+                {productId && !variationId && (
+                    <PhotoGallery productId={productId} role="product" />
+                )}
                 {productId && variationId && (
                     <PhotoGallery
                         key={variationId}
@@ -45,7 +46,12 @@ function Stage14() {
                 )}
             </div>
 
-            <BottomBar current={variantFillStep(14)} total={VARIANT_FILL_STAGE_COUNT} prevPath="/stage13" nextPath="/stage15" />
+            <BottomBar
+                current={variantFillStep(14)}
+                total={VARIANT_FILL_STAGE_COUNT}
+                prevPath="/stage7"
+                nextPath="/stage15"
+            />
         </>
     )
 }

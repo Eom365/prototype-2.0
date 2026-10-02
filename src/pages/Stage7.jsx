@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import BottomBar from "../components/BottomBar";
 import { productsApi } from "../api";
+import { VARIANT_FILL_STAGE_COUNT, variantFillStep } from "../stageProgress";
 import "./Stage7.css";
 
 const documentFields = [
@@ -39,6 +40,7 @@ function getRequiredFields(categoryCode, hasBrand) {
 function Stage7() {
   const [params] = useSearchParams();
   const productId = params.get("id");
+  const variationId = params.get("variationId");
   const [files, setFiles] = useState({});
   const [requiredFields, setRequiredFields] = useState(
     new Set(["warranty", "manual"]),
@@ -46,12 +48,18 @@ function Stage7() {
   const [error, setError] = useState("");
   const fileInputsRef = useRef({});
 
+  const sameVariation = (fileVariationId) => {
+    if (!variationId) return !fileVariationId;
+    return String(fileVariationId || "").toLowerCase() === String(variationId).toLowerCase();
+  };
+
   const load = async () => {
     const product = await productsApi.get(productId);
     const next = {};
     for (const file of product.files || []) {
-      if (file.role === "document" && file.documentType && !file.variationId)
+      if (file.role === "document" && file.documentType && sameVariation(file.variationId)) {
         next[file.documentType] = file;
+      }
     }
     const hasBrand = Boolean(
       valueText(product.values, "brand") || product.brandName?.trim(),
@@ -63,7 +71,7 @@ function Stage7() {
   useEffect(() => {
     if (!productId) return;
     load().catch((loadError) => setError(loadError.message));
-  }, [productId]);
+  }, [productId, variationId]);
 
   const handleFileChange = async (name, event) => {
     const file = event.target.files?.[0];
@@ -73,6 +81,7 @@ function Stage7() {
     formData.append("file", file);
     formData.append("role", "document");
     formData.append("documentType", name);
+    if (variationId) formData.append("variationId", variationId);
     setError("");
     try {
       await productsApi.upload(productId, formData);
@@ -101,7 +110,7 @@ function Stage7() {
   return (
     <>
       <div className="container stage7-page">
-        <h1 className="title">Этап 1 - Документы на продукт </h1>
+        <h1 className="title">Этап 1 — Документы на продукт</h1>
         <h2 className="subtitle">Добавьте документы</h2>
         {/* {!productId && (
           <p className="form-error">
@@ -197,7 +206,12 @@ function Stage7() {
         )}
       </div>
 
-      <BottomBar current={7} total={11} prevPath="/stage12" nextPath="/stage4" />
+      <BottomBar
+        current={variantFillStep(7)}
+        total={VARIANT_FILL_STAGE_COUNT}
+        prevPath={variationId ? "/stage22" : "/stage12"}
+        nextPath="/stage14"
+      />
     </>
   );
 }

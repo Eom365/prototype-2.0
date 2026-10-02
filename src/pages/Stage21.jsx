@@ -9,9 +9,67 @@ function Stage21() {
     const navigate = useNavigate()
     const location = useLocation()
     const [showModal, setShowModal] = useState(false)
+    const [busy, setBusy] = useState(false)
 
-    const handleNext = () => {
-        setShowModal(true)
+    const clearFlow = (id, variationId) => {
+        if (id) sessionStorage.removeItem(`variantFlow:${id}`)
+        if (variationId) sessionStorage.removeItem(`variantBaseline:${variationId}`)
+    }
+
+    const goStage22 = () => {
+        navigate({ pathname: '/stage22', search: location.search })
+    }
+
+    const handleNext = async () => {
+        if (busy) return
+        setBusy(true)
+        const params = new URLSearchParams(location.search)
+        const id = params.get('id')
+        const variationId = params.get('variationId')
+        try {
+            if (id && variationId) {
+                const product = await productsApi.get(id)
+                const variation = (product.variations || []).find(
+                    (item) => String(item.id).toLowerCase() === String(variationId).toLowerCase(),
+                )
+                const flow = sessionStorage.getItem(`variantFlow:${id}`) || 'create'
+                const baseline = sessionStorage.getItem(`variantBaseline:${variationId}`)
+                const unchanged = flow === 'edit'
+                    && baseline != null
+                    && variation
+                    && (variation.signature || '') === baseline
+
+                if (unchanged) {
+                    clearFlow(id, variationId)
+                    goStage22()
+                    return
+                }
+            }
+            setShowModal(true)
+        } catch (error) {
+            window.alert(error.message || 'Не удалось проверить изменения')
+        } finally {
+            setBusy(false)
+        }
+    }
+
+    const finish = async () => {
+        if (busy) return
+        setBusy(true)
+        const params = new URLSearchParams(location.search)
+        const id = params.get('id')
+        const variationId = params.get('variationId')
+        try {
+            if (id && variationId) {
+                await productsApi.submitReview(id, variationId)
+            }
+            clearFlow(id, variationId)
+            goStage22()
+        } catch (error) {
+            window.alert(error.message || 'Не удалось сохранить карточку')
+        } finally {
+            setBusy(false)
+        }
     }
 
     return (
@@ -29,7 +87,7 @@ function Stage21() {
             />
 
             {showModal && (
-                <div className="modal-overlay" onClick={() => setShowModal(false)}>
+                <div className="modal-overlay" onClick={() => !busy && setShowModal(false)}>
                     <div className="modal" onClick={(e) => e.stopPropagation()}>
                         <h2 className="modal__title">
                             Карточка товара отправлена на проверку
@@ -38,20 +96,10 @@ function Stage21() {
                         <button
                             type="button"
                             className="modal__btn"
-                            onClick={async () => {
-                                const id = new URLSearchParams(location.search).get('id')
-                                if (id) {
-                                    try {
-                                        await productsApi.complete(id)
-                                    } catch (error) {
-                                        window.alert(error.message || 'Не удалось сохранить карточку')
-                                        return
-                                    }
-                                }
-                                navigate({ pathname: '/stage13', search: location.search })
-                            }}
+                            onClick={finish}
+                            disabled={busy}
                         >
-                            Понятно
+                            {busy ? 'Сохранение...' : 'Понятно'}
                         </button>
                     </div>
                 </div>
