@@ -103,8 +103,9 @@
 }
 
 .subtitle--video {
-  margin-top: 40px;
+  margin-top: 140px;
   margin-bottom: 16px;
+  /* border-block-start: 10px solid #eee; */
 }
 
 .video-row {
@@ -153,7 +154,6 @@
   flex-wrap: wrap;
   gap: 16px;
   margin: 20px 0 32px;
-  justify-content: center; /* or flex-start */
 }
 
 .presentation-images img {
@@ -176,5 +176,12 @@
   outline: solid 1px red;
   padding: 20px;
   margin-block-end: 60px;
+  text-align: left;
 }
 
+.hyt {
+  font-size: 22px !important;
+  font-weight: 700 !important;
+  margin-block-start: 40px !important;
+  border-block-start: 10px solid #eee;
+}
