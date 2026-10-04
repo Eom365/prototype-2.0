@@ -1136,7 +1136,7 @@ function Stage23() {
         current={variantFillStep(23)}
         total={VARIANT_FILL_STAGE_COUNT}
         prevPath="/stage14"
-        nextPath="/stage24"
+        nextPath="/stage25"
         onSave={persist}
       />
     </>

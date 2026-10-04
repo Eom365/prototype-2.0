@@ -1,0 +1,11 @@
+.feature-row {
+  border-bottom: none;
+}
+
+.standart {
+  font-size: 18px;
+  font-weight: 500;
+  color: #000;
+  text-align: left;
+  margin-block: 30px;
+}

@@ -1,34 +1,49 @@
-import { BrowserRouter, Navigate, Routes, Route, useLocation } from 'react-router-dom'
-import Home from './pages/Home'
-import Review from './pages/Review'
-import Stage1 from './pages/Stage1'
-import Stage2 from './pages/Stage2'
-import Stage2_3 from './pages/Stage2_3'
-import Stage3 from './pages/Stage3'
-import Stage4 from './pages/Stage4'
-import Stage5 from './pages/Stage5'
-import Stage6 from './pages/Stage6'
-import Stage7 from './pages/Stage7'
-import Stage8 from './pages/Stage8'
-import Stage9 from './pages/Stage9'
-import Stage10 from './pages/Stage10'
-import Stage11 from './pages/Stage11'
-import Stage12 from './pages/Stage12'
-import Stage14 from './pages/Stage14'
-import Stage15 from './pages/Stage15'
-import Stage16 from './pages/Stage16'
-import Stage17 from './pages/Stage17'
-import Stage18 from './pages/Stage18'
-import Stage19 from './pages/Stage19'
-import Stage20 from './pages/Stage20'
-import Stage21 from './pages/Stage21'
-import Stage22 from './pages/Stage22'
-import Stage23 from './pages/Stage23'
-import Stage24 from './pages/Stage24'
+import {
+  BrowserRouter,
+  Navigate,
+  Routes,
+  Route,
+  useLocation,
+} from "react-router-dom";
+import Home from "./pages/Home";
+import Review from "./pages/Review";
+import Stage1 from "./pages/Stage1";
+import Stage2 from "./pages/Stage2";
+import Stage2_3 from "./pages/Stage2_3";
+import Stage3 from "./pages/Stage3";
+import Stage4 from "./pages/Stage4";
+import Stage5 from "./pages/Stage5";
+import Stage6 from "./pages/Stage6";
+import Stage7 from "./pages/Stage7";
+import Stage8 from "./pages/Stage8";
+import Stage9 from "./pages/Stage9";
+import Stage10 from "./pages/Stage10";
+import Stage11 from "./pages/Stage11";
+import Stage12 from "./pages/Stage12";
+import Stage14 from "./pages/Stage14";
+import Stage15 from "./pages/Stage15";
+import Stage16 from "./pages/Stage16";
+import Stage17 from "./pages/Stage17";
+import Stage18 from "./pages/Stage18";
+import Stage19 from "./pages/Stage19";
+import Stage20 from "./pages/Stage20";
+import Stage21 from "./pages/Stage21";
+import Stage22 from "./pages/Stage22";
+import Stage23 from "./pages/Stage23";
+import Stage24 from "./pages/Stage24";
+import Stage25 from "./pages/Stage25";
+import Stage26 from "./pages/Stage26";
+import Stage27 from "./pages/Stage27";
+import Stage28 from "./pages/Stage28";
+import Stage29 from "./pages/Stage29";
+import Stage30 from "./pages/Stage30";
+import Stage31 from "./pages/Stage31";
 
 function Stage13Redirect() {
-  const location = useLocation()
-  return <Navigate to={{ pathname: '/stage22', search: location.search }} replace />
+  const location = useLocation();
+  return (
+    <Navigate to={{ pathname: "/stage22", search: location.search }} replace />
+  );
 }
 
 function App() {
@@ -62,9 +77,16 @@ function App() {
         <Route path="/stage22" element={<Stage22 />} />
         <Route path="/stage23" element={<Stage23 />} />
         <Route path="/stage24" element={<Stage24 />} />
+        <Route path="/stage25" element={<Stage25 />} />
+        <Route path="/stage26" element={<Stage26 />} />
+        <Route path="/stage27" element={<Stage27 />} />
+        <Route path="/stage28" element={<Stage28 />} />
+        <Route path="/stage29" element={<Stage29 />} />
+        <Route path="/stage30" element={<Stage30 />} />
+        <Route path="/stage31" element={<Stage31 />} />
       </Routes>
     </BrowserRouter>
-  )
+  );
 }
 
-export default App
+export default App;
