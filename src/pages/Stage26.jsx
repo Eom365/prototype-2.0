@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import BottomBar from "../components/BottomBar";
 import { catalogApi, productsApi } from "../api";
@@ -9,7 +9,7 @@ import {
   variantFillStageHeading,
   variantFillStep,
 } from "../stageProgress";
-import { saveNameFeatures } from "../variantFlow";
+import { saveNameFeatures, sortByVariantAxisHierarchy, sortVariantAxisCodes, variantAxisRank } from "../variantFlow";
 import "./Stage2_3.css";
 import "./Stage25.css";
 import "./Stage26.css";
@@ -32,7 +32,7 @@ function valueText(saved) {
 }
 
 function axisOptions(product, catalog, variationId) {
-  const axes = product?.variantAxes || [];
+  const axes = sortVariantAxisCodes(product?.variantAxes || []);
   if (!axes.length) return [];
 
   const variation = variationId
@@ -71,13 +71,17 @@ function axisOptions(product, catalog, variationId) {
       value: filled,
     });
   }
-  return options;
+  return sortByVariantAxisHierarchy(options);
+}
+
+function orderedSelectedKeys(selectedKeys) {
+  return sortVariantAxisCodes(selectedKeys).slice(0, MAX_NAME_FEATURES);
 }
 
 function buildFormula(options, selectedKeys) {
   const byKey = new Map(options.map((item) => [item.key, item]));
   const parts = ["Логотип", "категория", "бренд", "линейка"];
-  for (const key of selectedKeys.slice(0, MAX_NAME_FEATURES)) {
+  for (const key of orderedSelectedKeys(selectedKeys)) {
     const label = byKey.get(key)?.label;
     if (label) parts.push(label);
   }
@@ -100,7 +104,9 @@ function composeDisplayName(product, options, selectedKeys) {
   const byKey = new Map(options.map((item) => [item.key, item]));
   const parts = [
     baseName(product),
-    ...selectedKeys.map((key) => byKey.get(key)?.value).filter(Boolean),
+    ...orderedSelectedKeys(selectedKeys)
+      .map((key) => byKey.get(key)?.value)
+      .filter(Boolean),
   ].filter(Boolean);
   return parts.join(" ");
 }
@@ -184,7 +190,7 @@ function Stage26() {
       throw new Error("Выберите от 1 до 3 характеристик для наименования");
     }
     const name = displayName;
-    saveNameFeatures(productId, features);
+    saveNameFeatures(productId, orderedSelectedKeys(features));
     await productsApi.saveVariationName(productId, variationId, {
       fullName: name,
       nameIncludesLogo: Boolean(logo),
@@ -251,10 +257,16 @@ function Stage26() {
               продукта.
             </p>
           )}
-          {options.map((opt) => {
+          {options.map((opt, index) => {
             const checked = features.includes(opt.key);
+            const previous = options[index - 1];
+            const split =
+              previous &&
+              variantAxisRank(previous.key) !== variantAxisRank(opt.key);
             return (
-              <div className="feature-row" key={opt.key}>
+              <Fragment key={opt.key}>
+                {split && <div className="feature-group-divider" />}
+                <div className="feature-row">
                 <label className="feature-item">
                   <span
                     className={`checkbox ${checked ? "checkbox--checked" : ""}`}
@@ -288,6 +300,7 @@ function Stage26() {
                   <span className="feature-item__label">{opt.label}</span>
                 </label>
               </div>
+              </Fragment>
             );
           })}
         </div>

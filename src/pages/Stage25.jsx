@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { catalogApi, productsApi } from "../api";
 import { sameId } from "../cardScope";
@@ -6,10 +6,15 @@ import { CUSTOM_CODE_PREFIX } from "../customCharacteristics";
 import {
   variantFillStageHeading,
 } from "../stageProgress";
+import {
+  sortByVariantAxisHierarchy,
+  sortVariantAxisCodes,
+  variantAxisRank,
+  VARIANT_AXIS_SKIP_CODES,
+} from "../variantFlow";
 import "./Stage25.css";
 
 const MAX_FEATURES = 5;
-const SKIP_CODES = new Set(["brand", "manufacturer", "country", "article"]);
 
 function findKind(catalog, kindCode) {
   if (!catalog || !kindCode) return null;
@@ -36,7 +41,7 @@ function filledCharacteristics(product, catalog, variationId) {
 
   const options = [];
   for (const item of source) {
-    if (!item.code || SKIP_CODES.has(item.code)) continue;
+    if (!item.code || VARIANT_AXIS_SKIP_CODES.has(item.code)) continue;
     if (item.code.startsWith(CUSTOM_CODE_PREFIX)) {
       const label = String(item.value || "").trim();
       const filled = String(item.customValue || "").trim();
@@ -54,7 +59,7 @@ function filledCharacteristics(product, catalog, variationId) {
       filled,
     });
   }
-  return options;
+  return sortByVariantAxisHierarchy(options);
 }
 
 function Stage25() {
@@ -142,8 +147,13 @@ function Stage25() {
       sessionStorage.setItem(`variantFlow:${productId}`, "create");
       await productsApi.saveWantsVariants(productId, { wantsVariants: true });
 
-      const codes = filled.map((item) => item.key);
+      const codes = sortVariantAxisCodes(filled.map((item) => item.key));
       await productsApi.saveVariantAxes(productId, { codes });
+
+      const filledByKey = new Map(filled.map((item) => [item.key, item]));
+      const orderedFilled = codes
+        .map((key) => filledByKey.get(key))
+        .filter(Boolean);
 
       let targetVariationId = variationId;
 
@@ -155,7 +165,7 @@ function Stage25() {
         const byCode = new Map(
           (variation?.values || []).map((item) => [item.code, item]),
         );
-        for (const item of filled) {
+        for (const item of orderedFilled) {
           const prev = byCode.get(item.key);
           if (item.key.startsWith(CUSTOM_CODE_PREFIX)) {
             byCode.set(item.key, {
@@ -180,7 +190,7 @@ function Stage25() {
         );
       } else {
         const created = await productsApi.addVariation(productId, {
-          values: filled.map((item) =>
+          values: orderedFilled.map((item) =>
             item.key.startsWith(CUSTOM_CODE_PREFIX)
               ? {
                   code: item.key,
@@ -238,10 +248,16 @@ function Stage25() {
               На этапе характеристик пока нет заполненных значений.
             </p>
           )}
-          {options.map((opt) => {
+          {options.map((opt, index) => {
             const checked = features.includes(opt.key);
+            const previous = options[index - 1];
+            const split =
+              previous &&
+              variantAxisRank(previous.key) !== variantAxisRank(opt.key);
             return (
-              <div className="feature-row" key={opt.key}>
+              <Fragment key={opt.key}>
+                {split && <div className="feature-group-divider" />}
+                <div className="feature-row">
                 <label className="feature-item">
                   <span
                     className={`checkbox ${checked ? "checkbox--checked" : ""}`}
@@ -287,6 +303,7 @@ function Stage25() {
                   disabled={!checked}
                 />
               </div>
+              </Fragment>
             );
           })}
         </div>

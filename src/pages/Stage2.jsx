@@ -455,6 +455,9 @@ function Stage2() {
     const save = () => {
         if (!productId) throw new Error('Сначала создайте карточку на главной странице')
         if (!loaded) throw new Error('Карточка ещё загружается, подождите секунду')
+        if (!kindCode || !String(categoryPath || '').trim()) {
+            throw new Error('Выберите категорию продукта')
+        }
         return productsApi.saveCategory(productId, {
             purpose,
             kindCode,

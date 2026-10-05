@@ -1,4 +1,45 @@
 import { CUSTOM_CODE_PREFIX } from './customCharacteristics'
+import { DIMENSION_CODES } from './productSpecs'
+
+export const VARIANT_AXIS_SKIP_CODES = new Set([
+  'brand',
+  'manufacturer',
+  'country',
+  'article',
+  'weightTolerance',
+])
+
+const DIMENSION_WEIGHT_CODES = new Set([...DIMENSION_CODES, 'weight'])
+
+export function variantAxisRank(code) {
+  if (code === 'model') return 0
+  if (String(code || '').startsWith(CUSTOM_CODE_PREFIX)) return 1
+  if (DIMENSION_WEIGHT_CODES.has(code)) return 3
+  return 2
+}
+
+export function sortVariantAxisCodes(codes) {
+  return [...(codes || [])]
+    .filter((code) => code && !VARIANT_AXIS_SKIP_CODES.has(code))
+    .map((code, index) => ({ code, index }))
+    .sort((a, b) => {
+      const rankDiff = variantAxisRank(a.code) - variantAxisRank(b.code)
+      if (rankDiff !== 0) return rankDiff
+      return a.index - b.index
+    })
+    .map((item) => item.code)
+}
+
+export function sortByVariantAxisHierarchy(items, keyFn = (item) => item.key || item.code) {
+  return [...(items || [])]
+    .map((item, index) => ({ item, index, code: keyFn(item) }))
+    .sort((a, b) => {
+      const rankDiff = variantAxisRank(a.code) - variantAxisRank(b.code)
+      if (rankDiff !== 0) return rankDiff
+      return a.index - b.index
+    })
+    .map((entry) => entry.item)
+}
 
 function isApproved(product) {
   if ((product?.reviewStatus || '').toLowerCase() === 'approved') return true
@@ -45,23 +86,24 @@ export function resolveVariantFlow(product) {
   }
 
   if (axes.length > 0 && (manual ? isApproved(product) : true)) {
-    const axis = axes[0]
+    const ordered = sortVariantAxisCodes(axes)
+    const axis = ordered[0] || axes[0]
     return {
       mode: 'known',
       label: axisLabel(product, axis),
       axis,
-      axes,
-      stabilized: manual || axes.length > 1,
+      axes: ordered,
+      stabilized: manual || ordered.length > 1,
     }
   }
 
-  return { mode: 'custom', axes }
+  return { mode: 'custom', axes: sortVariantAxisCodes(axes) }
 }
 
 export function variantAxisFields(product) {
   const flow = resolveVariantFlow(product)
   if (flow.mode !== 'known') return []
-  const codes = flow.axes?.length ? flow.axes : [flow.axis]
+  const codes = sortVariantAxisCodes(flow.axes?.length ? flow.axes : [flow.axis])
   return codes.filter(Boolean).map((code) => ({
     code,
     label: axisLabel(product, code),

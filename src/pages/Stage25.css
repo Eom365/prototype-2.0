@@ -183,6 +183,11 @@
   border-bottom: 1px solid #eee;
 }
 
+.feature-group-divider {
+  margin: 16px 0;
+  border-top: 3px solid #ddd;
+}
+
 .feature-row .feature-item {
   flex: 0 0 220px;
   display: flex;
