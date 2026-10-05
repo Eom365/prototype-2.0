@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { catalogApi, productsApi } from '../api'
 import { composeAddress, discountsFrom, isSameCharacteristicValue, packagingFrom, pointsFrom, sameId, useCardIds } from '../cardScope'
 import { CUSTOM_CODE_PREFIX, displayCustomCharacteristic } from '../customCharacteristics'
-import { isVariantAxisField } from '../variantAxes'
+import { VARIANT_AXIS_BY_KIND } from '../variantAxes'
 import './VariationPreview.css'
 
 const documentLabels = {
@@ -172,20 +172,35 @@ function PackagingPreview({ baseInfo, source, photos }) {
 
 function axisFeatures(product, catalog) {
     const kind = findKind(catalog, product.kindCode)
+    const axisCodes = product.variantAxes?.length
+        ? product.variantAxes
+        : (VARIANT_AXIS_BY_KIND[product.kindCode] || ['model'])
     const rows = []
-    for (const field of kind?.characteristics || []) {
-        if (!isVariantAxisField(product.kindCode, field.code)) continue
-        const value = (product.values || []).find((item) => item.code === field.code && !item.variationId)
-        const text = displayValue(field, value, catalog.unitGroups)
-        if (!text) continue
-        rows.push({ key: field.code, label: field.name, field })
+    for (const code of axisCodes) {
+        const field = (kind?.characteristics || []).find((item) => item.code === code)
+        if (field) {
+            rows.push({ key: field.code, label: field.name, field })
+            continue
+        }
+        rows.push({
+            key: code,
+            label: code === 'model' ? 'Модель' : code === 'volume' ? 'Объем' : code,
+            field: { code, name: code, options: [] },
+        })
     }
-    const selected = Object.fromEntries(
-        (product.variantAxes || [])
-            .filter((code) => rows.some((row) => row.key === code))
-            .map((code) => [code, true])
-    )
-    return rows.filter((item) => selected[item.key])
+    return rows
+}
+
+function variationAxisValue(variation, code) {
+    const saved = (variation.values || []).find((item) => item.code === code)
+    if (valueHasContent(saved)) return saved
+    if (code === 'model' && String(variation.model || '').trim()) {
+        return { value: variation.model, customValue: '', unit: null }
+    }
+    if (code === 'article' && String(variation.article || '').trim()) {
+        return { value: variation.article, customValue: '', unit: null }
+    }
+    return null
 }
 
 function baseValue(product, code) {
@@ -201,8 +216,9 @@ function ownVariationValue(variation, product, code) {
 }
 
 function variantChips(features, variation, product, unitGroups) {
+    void product
     return features.map((item) => {
-        const value = ownVariationValue(variation, product, item.key)
+        const value = variationAxisValue(variation, item.key)
         return displayValue(item.field, value, unitGroups)
     }).filter(Boolean)
 }
@@ -396,15 +412,16 @@ function BaseProductInfo14({ product, features, unitGroups }) {
 
 function BaseInfo14({ product, variation, features, unitGroups }) {
     const chips = variantChips(features, variation, product, unitGroups)
-    const title = variation.fullName || (chips.length ? chips.join(', ') : baseName(product))
+    const title = variation.fullName || baseName(product)
     return (
         <div className="variation-preview__info">
             <div className="variation-preview__title">{title}</div>
-            {variation.fullName && chips.length > 0 && (
+            {chips.length > 0 ? (
                 <div className="variation-preview__subtitle">{chips.join(', ')}</div>
-            )}
-            {!variation.fullName && chips.length === 0 && (
-                <p className="variation-preview__empty">Вариант не заполнен</p>
+            ) : (
+                !variation.fullName && (
+                    <p className="variation-preview__empty">Вариант не заполнен</p>
+                )
             )}
         </div>
     )
@@ -647,28 +664,15 @@ function VariationPreview({ stage }) {
     if (!productId || !product || !catalog) return null
 
     const variations = product.variations || []
-    const previewVariations = activeVariationId
-        ? variations.filter((variation) => !sameId(variation.id, activeVariationId))
-        : variations
-    if (!activeVariationId && !previewVariations.length) return null
+    const previewVariations = variations.filter((variation) => !sameId(variation.id, activeVariationId))
+    if (!previewVariations.length) return null
 
     const features = axisFeatures(product, catalog)
     const unitGroups = catalog.unitGroups || {}
 
     return (
         <div className={`variation-preview${stage === 16 ? ' variation-preview--stage-16' : ''}`}>
-            {activeVariationId && (
-                <article className="variation-preview__card variation-preview__card--base" key="base-product">
-                    {stage !== 16 && <PhotoStrip photos={basePhotos(product, 'product')} />}
-                    <BaseCardContent
-                        stage={stage}
-                        product={product}
-                        catalog={catalog}
-                        features={features}
-                        unitGroups={unitGroups}
-                    />
-                </article>
-            )}
+            <p className="variation-preview__caption">Ранее заполненные варианты</p>
             {previewVariations.map((variation) => (
                 <article
                     className="variation-preview__card"

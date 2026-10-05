@@ -2,17 +2,24 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import BottomBar from "../components/BottomBar";
+import HazardClassField from "../components/HazardClassField";
 import { productsApi } from "../api";
+import {
+  formatHazardClass,
+  resolveHazardGroup,
+  sanitizeHazardClass,
+} from "../hazardClassByCategory";
 import {
   emptyDescriptionForm,
   parseDescriptionForm,
   serializeDescriptionForm,
 } from "../descriptionForm";
 import {
-  VARIANT_FILL_STAGE_COUNT,
+  CUSTOM_VARIANT_FILL_STAGE_COUNT,
   variantFillStageHeading,
   variantFillStep,
 } from "../stageProgress";
+import "./Stage24.css";
 import "./Stage27.css";
 
 const TABS = [
@@ -144,19 +151,6 @@ function formatRange(from, to, unit) {
   return `до ${t} ${unit}`;
 }
 
-// ===== Хелпер для форматирования "Класс опасности" =====
-function formatHazardClass(value) {
-  if (!value) return "";
-  // "наконечники:2а" → "Стоматологические наконечники: 2а"
-  const [group, cls] = value.split(":");
-  const groupLabels = {
-    наконечники: "Стоматологические наконечники",
-    баллоны: "Баллоны",
-    иное: "Иное",
-  };
-  return `${groupLabels[group] || group}: ${cls}`;
-}
-
 // ===== Строка обзора =====
 function ReviewRow({ label, value }) {
   if (!value || !String(value).trim()) return null;
@@ -200,6 +194,7 @@ function Stage27() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const [hazardGroup, setHazardGroup] = useState(null);
 
   const go = (path) => navigate({ pathname: path, search: location.search });
   const currentIndex = TABS.findIndex((tab) => tab.key === activeTab);
@@ -210,23 +205,33 @@ function Stage27() {
     productsApi
       .get(productId)
       .then((product) => {
+        const group = resolveHazardGroup(product);
+        setHazardGroup(group);
+
+        const applyForm = (source) => {
+          const parsed = parseDescriptionForm(source);
+          parsed.precautions = {
+            ...parsed.precautions,
+            hazardClass: sanitizeHazardClass(parsed.precautions.hazardClass, group),
+          };
+          setForm(parsed);
+        };
+
         if (variationId) {
           const variation = (product.variations || []).find(
             (item) =>
               String(item.id).toLowerCase() ===
               String(variationId).toLowerCase(),
           );
-          setForm(
-            parseDescriptionForm({
-              description: variation?.description,
-              complectation: variation?.complectation,
-              applicationArea: variation?.applicationArea,
-              storageConditions: variation?.storageConditions,
-              precautions: variation?.precautions,
-            }),
-          );
+          applyForm({
+            description: variation?.description,
+            complectation: variation?.complectation,
+            applicationArea: variation?.applicationArea,
+            storageConditions: variation?.storageConditions,
+            precautions: variation?.precautions,
+          });
         } else {
-          setForm(parseDescriptionForm(product));
+          applyForm(product);
         }
         setLoaded(true);
       })
@@ -313,37 +318,45 @@ function Stage27() {
     }
 
     if (activeTab === "complectation") {
+      const items = form.complectation.items || [{ name: "", quantity: "" }];
+      const patchItem = (index, patch) => {
+        const next = items.map((item, i) =>
+          i === index ? { ...item, ...patch } : item,
+        );
+        const last = next[next.length - 1];
+        if ((last.name || "").trim() || (last.quantity || "").trim()) {
+          next.push({ name: "", quantity: "" });
+        }
+        patchForm("complectation", { items: next });
+      };
+
       return (
         <div className="desc-fields">
-          <div className="comp-row">
-            <span className="comp-row__label">Что находится в упаковке</span>
-            <input
-              type="text"
-              className="comp-row__input"
-              placeholder="Наименование"
-              value={form.complectation.name || ""}
-              onChange={(v) =>
-                patchForm("complectation", {
-                  ...form.complectation,
-                  name: v.target.value,
-                })
-              }
-            />
-            <span className="comp-row__dash">—</span>
-            <input
-              type="text"
-              className="comp-row__input comp-row__input--short"
-              placeholder="Количество"
-              value={form.complectation.quantity || ""}
-              onChange={(v) =>
-                patchForm("complectation", {
-                  ...form.complectation,
-                  quantity: v.target.value,
-                })
-              }
-            />
-            <span className="comp-row__unit">штук</span>
-          </div>
+          {items.map((item, index) => (
+            <div className="comp-row" key={index}>
+              <span className="comp-row__label">Что находится в упаковке</span>
+              <input
+                type="text"
+                className="comp-row__input"
+                placeholder="Наименование"
+                value={item.name || ""}
+                onChange={(event) =>
+                  patchItem(index, { name: event.target.value })
+                }
+              />
+              <span className="comp-row__dash">—</span>
+              <input
+                type="text"
+                className="comp-row__input comp-row__input--short"
+                placeholder="Количество"
+                value={item.quantity || ""}
+                onChange={(event) =>
+                  patchItem(index, { quantity: event.target.value })
+                }
+              />
+              <span className="comp-row__unit">штук</span>
+            </div>
+          ))}
         </div>
       );
     }
@@ -425,86 +438,20 @@ function Stage27() {
     if (activeTab === "precautions") {
       return (
         <div className="desc-fields">
-          <div className="desc-field">
-            <label className="desc-field__label">Класс опасности</label>
-
-            <div className="hazard-row">
-              <span className="hazard-row__label">
-                Стоматологические наконечники:
-              </span>
-              <div className="hazard-row__buttons">
-                {["1", "2а"].map((opt) => (
-                  <button
-                    type="button"
-                    key={`handpiece-${opt}`}
-                    className={`hazard-btn ${
-                      form.precautions.hazardClass === `наконечники:${opt}`
-                        ? "hazard-btn--active"
-                        : ""
-                    }`}
-                    onClick={() =>
-                      patchForm("precautions", {
-                        ...form.precautions,
-                        hazardClass: `наконечники:${opt}`,
-                      })
-                    }
-                  >
-                    {opt}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="hazard-row">
-              <span className="hazard-row__label">Баллоны:</span>
-              <div className="hazard-row__buttons">
-                {["1", "2а", "2б", "3", "4"].map((opt) => (
-                  <button
-                    type="button"
-                    key={`balloon-${opt}`}
-                    className={`hazard-btn ${
-                      form.precautions.hazardClass === `баллоны:${opt}`
-                        ? "hazard-btn--active"
-                        : ""
-                    }`}
-                    onClick={() =>
-                      patchForm("precautions", {
-                        ...form.precautions,
-                        hazardClass: `баллоны:${opt}`,
-                      })
-                    }
-                  >
-                    {opt}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="hazard-row">
-              <span className="hazard-row__label">Иное:</span>
-              <div className="hazard-row__buttons">
-                {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map((opt) => (
-                  <button
-                    type="button"
-                    key={`other-${opt}`}
-                    className={`hazard-btn ${
-                      form.precautions.hazardClass === `иное:${opt}`
-                        ? "hazard-btn--active"
-                        : ""
-                    }`}
-                    onClick={() =>
-                      patchForm("precautions", {
-                        ...form.precautions,
-                        hazardClass: `иное:${opt}`,
-                      })
-                    }
-                  >
-                    {opt}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
+          {!loaded || !hazardGroup ? (
+            <p className="paragraph">Загрузка категории продукта…</p>
+          ) : (
+            <HazardClassField
+              group={hazardGroup}
+              hazardClass={form.precautions.hazardClass}
+              onSelect={(value) =>
+                patchForm("precautions", {
+                  ...form.precautions,
+                  hazardClass: value,
+                })
+              }
+            />
+          )}
 
           <DescField
             label="Указание мер безопасности"
@@ -535,12 +482,14 @@ function Stage27() {
     const s = form.storageConditions;
     const p = form.precautions;
 
+    const complectationItems = (c.items || []).filter(
+      (item) => (item.name || "").trim() || (item.quantity || "").trim(),
+    );
     const hasAny =
       (d.purpose || "").trim() ||
       (d.usage || "").trim() ||
       (d.principle || "").trim() ||
-      (c.name || "").trim() ||
-      (c.quantity || "").trim() ||
+      complectationItems.length > 0 ||
       (a.sphere || "").trim() ||
       (a.method || "").trim() ||
       (s.shelfLife || "").trim() ||
@@ -584,14 +533,21 @@ function Stage27() {
 
         {/* Комплектация */}
         <ReviewBlock title="Комплектация">
-          <ReviewRow
-            label="Что находится в упаковке"
-            value={
-              (c.name || "").trim() && (c.quantity || "").trim()
-                ? `${c.name} — ${c.quantity} штук`
-                : c.name || (c.quantity ? `${c.quantity} штук` : "")
-            }
-          />
+          {complectationItems.length === 0 ? (
+            <ReviewRow label="Что находится в упаковке" value="" />
+          ) : (
+            complectationItems.map((item, index) => (
+              <ReviewRow
+                key={index}
+                label="Что находится в упаковке"
+                value={
+                  (item.name || "").trim() && (item.quantity || "").trim()
+                    ? `${item.name} — ${item.quantity} штук`
+                    : item.name || (item.quantity ? `${item.quantity} штук` : "")
+                }
+              />
+            ))
+          )}
         </ReviewBlock>
 
         {/* Область эксплуатации */}
@@ -682,8 +638,7 @@ function Stage27() {
     <>
       <div className="container stage24-page">
         <h1 className="title stage24-title">
-          {/* {variantFillStageHeading(24, "Описание продукта")} */}
-          Этап 6 - Описание продукта
+          {variantFillStageHeading(27, "Описание продукта")}
         </h1>
 
         {!productId && (
@@ -750,8 +705,8 @@ function Stage27() {
       </div>
 
       <BottomBar
-        current={variantFillStep(24)}
-        total={VARIANT_FILL_STAGE_COUNT}
+        current={variantFillStep(27)}
+        total={CUSTOM_VARIANT_FILL_STAGE_COUNT}
         prevPath="/stage26"
         nextPath="/stage28"
         onSave={persist}

@@ -66,8 +66,8 @@ export function knownUnitValues(unitGroups) {
 
 function sameValueScope(item, { variationId = null } = {}) {
     if (variationId != null) {
-        return item.variationId != null &&
-            String(item.variationId).toLowerCase() === String(variationId).toLowerCase()
+        if (item.variationId == null || item.variationId === '') return true
+        return String(item.variationId).toLowerCase() === String(variationId).toLowerCase()
     }
     return !item.variationId
 }

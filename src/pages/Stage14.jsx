@@ -1,17 +1,28 @@
-// Этап 2 - Фотографии варианта параметра продукта
+import { useEffect, useState } from "react";
 import BottomBar from "../components/BottomBar";
 import {
   VARIANT_FILL_STAGE_COUNT,
   variantFillStageHeading,
   variantFillStep,
+  variantFillTotal,
 } from "../stageProgress";
 import PhotoGallery from "../components/PhotoGallery";
 import VariationPreview from "../components/VariationPreview";
+import { productsApi } from "../api";
 import { useCardIds } from "../cardScope";
 import "./Stage3.css";
 
 function Stage14() {
   const { productId, variationId } = useCardIds();
+  const [product, setProduct] = useState(null);
+
+  useEffect(() => {
+    if (!productId) return;
+    productsApi
+      .get(productId)
+      .then(setProduct)
+      .catch(() => {});
+  }, [productId]);
 
   return (
     <>
@@ -20,6 +31,7 @@ function Stage14() {
           {variantFillStageHeading(
             14,
             "Фотографии варианта параметра продукта",
+            product,
           )}
         </h1>
         <h2 className="subtitle">
@@ -59,18 +71,23 @@ function Stage14() {
           <PhotoGallery productId={productId} role="product" />
         )}
         {productId && variationId && (
-          <PhotoGallery
-            key={variationId}
-            productId={productId}
-            role="product"
-            variationId={variationId}
-          />
+          <>
+            <h2 className="subtitle" style={{ marginTop: 24, textAlign: "left" }}>
+              Фотографии текущего варианта
+            </h2>
+            <PhotoGallery
+              key={variationId}
+              productId={productId}
+              role="product"
+              variationId={variationId}
+            />
+          </>
         )}
       </div>
 
       <BottomBar
-        current={variantFillStep(14)}
-        total={VARIANT_FILL_STAGE_COUNT}
+        current={variantFillStep(14, product)}
+        total={variantFillTotal(product) || VARIANT_FILL_STAGE_COUNT}
         prevPath="/stage7"
         nextPath="/stage23"
       />

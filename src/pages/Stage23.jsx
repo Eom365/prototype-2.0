@@ -5,17 +5,25 @@ import CustomCharacteristicsBlock from "../components/CustomCharacteristicsBlock
 import DimensionsGroup from "../components/DimensionsGroup";
 import ImageHint from "../components/ImageHint";
 import { catalogApi, productsApi } from "../api";
-import { useCardIds, variationSpecsFrom } from "../cardScope";
+import { axisValueFromVariation, sameId, useCardIds, variationSpecsFrom } from "../cardScope";
 import {
+  CUSTOM_CODE_PREFIX,
   customRowsFromValues,
   normalizeCustomRows,
   serializeCustomRows,
 } from "../customCharacteristics";
-import { DIMENSION_CODES, prefillSpecFromProduct } from "../productSpecs";
+import { DIMENSION_CODES } from "../productSpecs";
+import {
+  customTechFieldsFromProduct,
+  loadNameFeatures,
+  nextPathAfterCharacteristics,
+  resolveVariantFlow,
+} from "../variantFlow";
 import {
   VARIANT_FILL_STAGE_COUNT,
   variantFillStageHeading,
   variantFillStep,
+  variantFillTotal,
 } from "../stageProgress";
 import "./Stage5.css";
 import "./Stage24.css";
@@ -84,7 +92,16 @@ function formatSpecValue(field, value, unitGroups) {
 }
 
 function CharacteristicRow({ field, value, unitGroups, onChange }) {
-  const current = value || { value: "", customValue: "", unit: "" };
+  const raw = value || { value: "", customValue: "", unit: "" };
+  const optionValues = new Set((field.options || []).map((item) => item.value));
+  const current =
+    field.inputType === "choice" &&
+    field.allowCustom &&
+    raw.value &&
+    raw.value !== "other" &&
+    !optionValues.has(raw.value)
+      ? { ...raw, value: "other", customValue: raw.value }
+      : raw;
   const units = field.unitGroup ? unitGroups?.[field.unitGroup] || [] : [];
   const placeholder =
     field.code === "article" ? "Введите значение" : "Значение";
@@ -172,10 +189,15 @@ function Stage23() {
 
   const [catalog, setCatalog] = useState(null);
   const [kindCode, setKindCode] = useState("");
+  const [nextStage, setNextStage] = useState("/stage24");
   const [specs, setSpecs] = useState({});
   const [customRows, setCustomRows] = useState(() => normalizeCustomRows([]));
+  const [techCustomFields, setTechCustomFields] = useState([]);
+  const [techCustomValues, setTechCustomValues] = useState({});
   const [productLine, setProductLine] = useState("");
   const [categorySnapshot, setCategorySnapshot] = useState(null);
+  const [progressProduct, setProgressProduct] = useState(null);
+  const [stabilized, setStabilized] = useState(false);
   const [logo, setLogo] = useState(null);
   const [error, setError] = useState("");
   const [loaded, setLoaded] = useState(false);
@@ -208,25 +230,48 @@ function Stage23() {
           : null;
 
         setKindCode(product.kindCode || "");
+        setProgressProduct(product);
+        const flow = resolveVariantFlow(product);
+        setStabilized(Boolean(flow.stabilized));
+        setNextStage(nextPathAfterCharacteristics(product));
         setProductLine(product.productLine || "");
         setCategorySnapshot({
           purpose: product.purpose || "",
           kindCode: product.kindCode || "",
           productName: product.productName || "",
           categoryPath: product.categoryPath || "",
+          productLine: product.productLine || "",
         });
 
         const kind = findKind(catalog, product.kindCode);
         const fields = kind?.characteristics || [];
+        const techFields = flow.stabilized
+          ? customTechFieldsFromProduct(product)
+          : [];
+        setTechCustomFields(techFields);
 
         if (variation) {
           setSpecs(
             variationSpecsFrom(product, variation, fields, defaultUnits),
           );
+          const techValues = {};
+          for (const field of techFields) {
+            const saved = (variation.values || []).find(
+              (item) => item.code === field.code,
+            );
+            techValues[field.code] = String(saved?.customValue || "").trim();
+          }
+          setTechCustomValues(techValues);
+
+          const knownTechCodes = new Set(techFields.map((item) => item.code));
           setCustomRows(
             normalizeCustomRows(
               customRowsFromValues(
-                variation.values,
+                (variation.values || []).filter(
+                  (item) =>
+                    item.code?.startsWith(CUSTOM_CODE_PREFIX) &&
+                    !knownTechCodes.has(item.code),
+                ),
                 { variationId },
                 catalog.unitGroups,
               ),
@@ -238,39 +283,22 @@ function Stage23() {
                 file.role === "logo" &&
                 String(file.variationId || "").toLowerCase() ===
                   String(variationId).toLowerCase(),
-            ) ||
-              (product.files || []).find(
-                (file) => file.role === "logo" && !file.variationId,
-              ) ||
-              null,
+            ) || null,
           );
         } else {
           const next = {};
           for (const field of fields) {
-            const saved = (product.values || []).find(
-              (value) => value.code === field.code && !value.variationId,
-            );
             const defaultUnit = field.unitGroup
               ? defaultUnits[field.unitGroup]
               : "";
-            next[field.code] = prefillSpecFromProduct(
-              field.code,
-              saved,
-              product,
-              defaultUnit,
-            );
+            next[field.code] = { value: "", customValue: "", unit: defaultUnit };
           }
           setSpecs(next);
-          setCustomRows(
-            normalizeCustomRows(
-              customRowsFromValues(product.values, {}, catalog.unitGroups),
-            ),
-          );
-          setLogo(
-            (product.files || []).find(
-              (file) => file.role === "logo" && !file.variationId,
-            ) || null,
-          );
+          setCustomRows(normalizeCustomRows([]));
+          const techValues = {};
+          for (const field of techFields) techValues[field.code] = "";
+          setTechCustomValues(techValues);
+          setLogo(null);
         }
         setLoaded(true);
       })
@@ -298,7 +326,8 @@ function Stage23() {
     (field) => !WEIGHT_CODES.includes(field.code),
   );
 
-  const currentIndex = TABS.findIndex((tab) => tab.key === activeTab);
+  const tabs = TABS;
+  const currentIndex = tabs.findIndex((tab) => tab.key === activeTab);
 
   const updateSpec = (code, patch) => {
     setSpecs((prev) => {
@@ -358,22 +387,146 @@ function Stage23() {
     if (categorySnapshot) {
       await productsApi.saveCategory(productId, {
         ...categorySnapshot,
-        productLine,
+        productLine: productLine.trim() || categorySnapshot.productLine || "",
       });
     }
+    const latest = variationId ? await productsApi.get(productId) : null;
+    const variation = variationId && latest
+      ? (latest.variations || []).find((item) => sameId(item.id, variationId))
+      : null;
+    const axes = new Set(latest?.variantAxes || []);
+
+    const techCodes = new Set(techCustomFields.map((item) => item.code));
     const values = [
-      ...Object.entries(specs).map(([code, value]) => ({
-        code,
-        value: value.value,
-        customValue: value.customValue,
-        unit: value.unit || null,
+      ...Object.entries(specs).map(([code, spec]) => {
+        let value = spec.value;
+        let customValue = spec.customValue;
+        const empty =
+          !String(value || "").trim() && !String(customValue || "").trim();
+        if (empty && variation && axes.has(code)) {
+          const axisText = axisValueFromVariation(variation, code);
+          if (axisText) value = axisText;
+        }
+        return {
+          code,
+          value,
+          customValue,
+          unit: spec.unit || null,
+        };
+      }),
+      ...techCustomFields.map((field) => ({
+        code: field.code,
+        value: field.name,
+        customValue: String(techCustomValues[field.code] || "").trim(),
+        unit: null,
       })),
-      ...serializeCustomRows(customRows),
+      ...serializeCustomRows(customRows).filter(
+        (row) => !techCodes.has(row.code),
+      ),
     ];
     if (variationId) {
       await productsApi.saveVariationCharacteristics(productId, variationId, {
         values,
       });
+      if (stabilized && progressProduct) {
+        let featureCodes = loadNameFeatures(productId);
+        if (!featureCodes.length) {
+          const approved = (progressProduct.variations || []).find(
+            (item) =>
+              (item.reviewStatus || "").toLowerCase() === "approved" &&
+              (item.fullName || "").trim(),
+          );
+          const fullName = (approved?.fullName || "").trim();
+          if (fullName) {
+            const candidates = [
+              ...techCustomFields.map((item) => ({
+                code: item.code,
+                label: item.name,
+              })),
+              ...(progressProduct.variantAxes || []).map((code) => ({
+                code,
+                label:
+                  code === "model"
+                    ? "Модель"
+                    : code === "volume"
+                      ? "Объем"
+                      : code === "width"
+                        ? "Ширина"
+                        : code === "height"
+                          ? "Высота"
+                          : code === "length"
+                            ? "Длина"
+                            : code === "weight"
+                              ? "Вес"
+                              : code,
+              })),
+            ];
+            featureCodes = candidates
+              .filter((item) => item.label && fullName.includes(item.label))
+              .map((item) => item.code)
+              .slice(0, 3);
+          }
+        }
+        const nameParts = [];
+        for (const code of featureCodes) {
+          const tech = techCustomFields.find((item) => item.code === code);
+          if (tech) {
+            const text = String(techCustomValues[code] || "").trim();
+            if (text) nameParts.push(text);
+            continue;
+          }
+          const spec = specs[code];
+          if (spec) {
+            const text =
+              spec.value === "other"
+                ? String(spec.customValue || "").trim()
+                : String(spec.value || "").trim();
+            if (text) nameParts.push(text);
+            continue;
+          }
+          const fromValues = values.find((item) => item.code === code);
+          if (fromValues) {
+            const text =
+              fromValues.value === "other" ||
+              String(fromValues.code || "").startsWith("custom:")
+                ? String(fromValues.customValue || "").trim() ||
+                  String(fromValues.value || "").trim()
+                : String(fromValues.value || "").trim();
+            if (text) nameParts.push(text);
+          }
+        }
+        const base = [
+          (progressProduct.fullName || "").trim() ||
+            [
+              (progressProduct.productName || "").trim(),
+              (progressProduct.brandName || "").trim(),
+              (productLine || progressProduct.productLine || "").trim(),
+            ]
+              .filter(Boolean)
+              .join(" "),
+          ...nameParts,
+        ]
+          .filter(Boolean)
+          .join(" ");
+        const logoFile =
+          (progressProduct.files || []).find(
+            (file) =>
+              file.role === "logo" &&
+              String(file.variationId || "").toLowerCase() ===
+                String(variationId).toLowerCase(),
+          ) ||
+          (progressProduct.files || []).find(
+            (file) => file.role === "logo" && !file.variationId,
+          );
+        await productsApi.saveVariationName(productId, variationId, {
+          fullName: base,
+          nameIncludesLogo: Boolean(logoFile),
+          nameIncludesType: false,
+          nameIncludesBrand: false,
+          nameIncludesLine: false,
+          nameIncludesModel: featureCodes.includes("model"),
+        });
+      }
     } else {
       await productsApi.saveCharacteristics(productId, { values });
     }
@@ -388,7 +541,7 @@ function Stage23() {
 
       // Если на вкладке "Просмотр" — сразу на следующий этап
       if (activeTab === "review") {
-        go("/stage24");
+        go(nextStage);
         return;
       }
 
@@ -396,8 +549,8 @@ function Stage23() {
         prev.includes(activeTab) ? prev : [...prev, activeTab],
       );
       const nextIndex = currentIndex + 1;
-      if (nextIndex < TABS.length) {
-        setActiveTab(TABS[nextIndex].key);
+      if (nextIndex < tabs.length) {
+        setActiveTab(tabs[nextIndex].key);
       }
     } catch (saveError) {
       setError(saveError.message || "Не удалось сохранить");
@@ -409,11 +562,11 @@ function Stage23() {
   const handleCancel = () => {
     if (phase === "review") {
       setPhase("edit");
-      setActiveTab(TABS[TABS.length - 1].key);
+      setActiveTab(tabs[tabs.length - 1].key);
       return;
     }
     if (currentIndex > 0) {
-      setActiveTab(TABS[currentIndex - 1].key);
+      setActiveTab(tabs[currentIndex - 1].key);
       return;
     }
     go("/stage14");
@@ -444,6 +597,7 @@ function Stage23() {
           {variantFillStageHeading(
             23,
             "Характеристики варианта параметра продукта",
+            progressProduct,
           )}
         </h1>
 
@@ -457,7 +611,7 @@ function Stage23() {
         {phase === "edit" ? (
           <>
             <div className="stage24-tabs" role="tablist">
-              {TABS.map((tab) => {
+              {tabs.map((tab) => {
                 const done = completedTabs.includes(tab.key);
                 const active = activeTab === tab.key;
                 return (
@@ -614,7 +768,7 @@ function Stage23() {
                 </h2>
                 <p className="stage23-subtitle-line">Введите значения:</p>
 
-                {techGroups.length === 0 && (
+                {techGroups.length === 0 && techCustomFields.length === 0 && (
                   <p className="paragraph">
                     Для выбранной категории технические характеристики не
                     заданы.
@@ -626,6 +780,36 @@ function Stage23() {
                     {renderFields(group.fields)}
                   </div>
                 ))}
+                {techCustomFields.length > 0 && (
+                  <div>
+                    {techGroups.length > 0 && (
+                      <h3 className="subtitle subtitle--spaced">
+                        Добавленные характеристики
+                      </h3>
+                    )}
+                    {techCustomFields.map((field) => (
+                      <div className="field-row" key={field.code}>
+                        <span className="info-icon" title="Подсказка">
+                          ⓘ
+                        </span>
+                        <span className="required-mark-slot" aria-hidden="true" />
+                        <span className="field-name">{field.name}</span>
+                        <input
+                          type="text"
+                          className="field-input"
+                          placeholder="Значение"
+                          value={techCustomValues[field.code] || ""}
+                          onChange={(event) =>
+                            setTechCustomValues((prev) => ({
+                              ...prev,
+                              [field.code]: event.target.value,
+                            }))
+                          }
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
@@ -890,6 +1074,16 @@ function Stage23() {
                     }
                   }
 
+                  for (const field of techCustomFields) {
+                    const text = String(techCustomValues[field.code] || "").trim();
+                    if (text) {
+                      rows.push({
+                        label: field.name,
+                        value: text,
+                      });
+                    }
+                  }
+
                   if (rows.length === 0) return null;
 
                   return (
@@ -1133,10 +1327,10 @@ function Stage23() {
       </div>
 
       <BottomBar
-        current={variantFillStep(23)}
-        total={VARIANT_FILL_STAGE_COUNT}
+        current={variantFillStep(23, progressProduct)}
+        total={variantFillTotal(progressProduct) || VARIANT_FILL_STAGE_COUNT}
         prevPath="/stage14"
-        nextPath="/stage25"
+        nextPath={nextStage}
         onSave={persist}
       />
     </>

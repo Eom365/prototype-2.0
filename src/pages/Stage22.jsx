@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import BottomBar from "../components/BottomBar";
 import { productsApi } from "../api";
+import { resolveVariantFlow, variantAxisFields } from "../variantFlow";
 import "./Stage22.css";
 
 function LinePhotos({ photos }) {
@@ -37,28 +38,13 @@ function LinePhotos({ photos }) {
 }
 
 function resolveAxis(product) {
-  const kindCode = (product?.kindCode || "").toLowerCase();
-  const categoryCode = (product?.categoryCode || "").toLowerCase();
-  const path = (product?.categoryPath || "").toLowerCase();
+  const flow = resolveVariantFlow(product);
+  if (flow.mode === "known" && flow.axis) {
+    return { code: flow.axis, label: flow.label || flow.axis };
+  }
   const axes = product?.variantAxes || [];
-
-  if (
-    axes.includes("volume") ||
-    categoryCode === "aerosols" ||
-    path.includes("аэрозол")
-  ) {
-    return { code: "volume", label: "Объем" };
-  }
-  if (
-    axes.includes("model") ||
-    categoryCode === "handpieces" ||
-    path.includes("наконечник") ||
-    kindCode
-  ) {
-    return { code: "model", label: "Модель" };
-  }
   if (axes[0]) {
-    return { code: axes[0], label: axes[0] === "volume" ? "Объем" : "Модель" };
+    return { code: axes[0], label: axes[0] };
   }
   return { code: "model", label: "Модель" };
 }
@@ -69,11 +55,22 @@ function axisValue(variation, axis) {
     if (axis === "model") return (variation.model || "").trim();
     return "";
   }
+  if (String(axis || "").startsWith("custom:")) {
+    return (row.customValue || "").trim();
+  }
   if (row.value === "other") return (row.customValue || "").trim();
   return (row.value || "").trim();
 }
 
-function variantLabel(variation, axis) {
+function variantLabel(variation, product) {
+  const fields = variantAxisFields(product);
+  if (fields.length) {
+    const parts = fields
+      .map((field) => axisValue(variation, field.code))
+      .filter(Boolean);
+    return parts.join(" · ") || "—";
+  }
+  const axis = resolveAxis(product);
   return axisValue(variation, axis.code) || "—";
 }
 
@@ -183,8 +180,6 @@ function Stage22() {
     product?.fullName ||
     "";
   const brandStatus = brandName.trim() && brandDoc ? "Подтвержден" : "";
-
-  const axis = resolveAxis(product);
   const variations = product?.variations || [];
   const created = variations.filter(
     (item) => (item.reviewStatus || "filling") !== "pending",
@@ -327,7 +322,7 @@ function Stage22() {
                 {created.map((variation) => (
                   <VariantCard
                     key={variation.id}
-                    label={variantLabel(variation, axis)}
+                    label={variantLabel(variation, product)}
                     photoUrl={variantPhoto(files, variation.id)}
                     onEdit={() => openEdit(variation)}
                     onDelete={() => removeVariant(variation)}
@@ -346,7 +341,7 @@ function Stage22() {
                 {pending.map((variation) => (
                   <VariantCard
                     key={variation.id}
-                    label={variantLabel(variation, axis)}
+                    label={variantLabel(variation, product)}
                     photoUrl={variantPhoto(files, variation.id)}
                     bordered
                     onDelete={() => removeVariant(variation)}

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import BottomBar from "../components/BottomBar";
 import { productsApi } from "../api";
-import { VARIANT_FILL_STAGE_COUNT, variantFillStep } from "../stageProgress";
+import { VARIANT_FILL_STAGE_COUNT, variantFillStep, variantFillTotal } from "../stageProgress";
 import "./Stage7.css";
 
 const documentFields = [
@@ -40,6 +40,7 @@ function Stage7() {
   const productId = params.get("id");
   const variationId = params.get("variationId");
   const [files, setFiles] = useState({});
+  const [product, setProduct] = useState(null);
   const [requiredFields, setRequiredFields] = useState(
     new Set(["warranty", "manual"]),
   );
@@ -53,28 +54,66 @@ function Stage7() {
 
   const load = async () => {
     const product = await productsApi.get(productId);
+    setProduct(product);
+    const variations = [...(product.variations || [])].sort(
+      (a, b) => (a.sortOrder || 0) - (b.sortOrder || 0),
+    );
     const variation = variationId
-      ? (product.variations || []).find(
+      ? variations.find(
           (item) => String(item.id).toLowerCase() === String(variationId).toLowerCase(),
         )
       : null;
+    const firstVariation = variations[0] || null;
+    const isLaterVariation = Boolean(
+      variationId &&
+        firstVariation &&
+        String(firstVariation.id).toLowerCase() !== String(variationId).toLowerCase(),
+    );
+
     const next = {};
     for (const file of product.files || []) {
       if (file.role === "document" && file.documentType && sameVariation(file.variationId)) {
         next[file.documentType] = file;
       }
     }
-    // Бренд-документ с основной карточки подтягиваем в вариант, если своего ещё нет
+
     if (variationId && !next.brand) {
-      const productBrandDoc = (product.files || []).find(
-        (file) => file.role === "document" && file.documentType === "brand" && !file.variationId,
+      const brandFromStage3 = (product.files || []).find(
+        (file) =>
+          file.role === "document" &&
+          file.documentType === "brand" &&
+          !file.variationId,
       );
-      if (productBrandDoc) next.brand = productBrandDoc;
+      const brandFromFirst =
+        !brandFromStage3 && isLaterVariation
+          ? (product.files || []).find(
+              (file) =>
+                file.role === "document" &&
+                file.documentType === "brand" &&
+                String(file.variationId || "").toLowerCase() ===
+                  String(firstVariation.id).toLowerCase(),
+            )
+          : null;
+      if (brandFromStage3 || brandFromFirst) {
+        next.brand = brandFromStage3 || brandFromFirst;
+      }
     }
+
+    if (!variationId && !next.brand) {
+      const brandFromStage3 = (product.files || []).find(
+        (file) =>
+          file.role === "document" &&
+          file.documentType === "brand" &&
+          !file.variationId,
+      );
+      if (brandFromStage3) next.brand = brandFromStage3;
+    }
+
     const hasBrand = Boolean(
       valueText(variation?.values, "brand") ||
         valueText(product.values, "brand") ||
-        product.brandName?.trim(),
+        product.brandName?.trim() ||
+        next.brand,
     );
     setRequiredFields(getRequiredFields(product.categoryCode || "", hasBrand));
     setFiles(next);
@@ -106,8 +145,15 @@ function Stage7() {
   const handleFileRemove = async (name) => {
     const file = files[name];
     if (!file) return;
-    // Документ бренда с основной карточки не удаляем при заполнении варианта
-    if (variationId && name === "brand" && !file.variationId) {
+    const borrowedBrand =
+      name === "brand" &&
+      (
+        !file.variationId ||
+        (variationId &&
+          String(file.variationId || "").toLowerCase() !==
+            String(variationId).toLowerCase())
+      );
+    if (borrowedBrand) {
       setFiles((prev) => {
         const next = { ...prev };
         delete next.brand;
@@ -228,8 +274,8 @@ function Stage7() {
       </div>
 
       <BottomBar
-        current={variantFillStep(7)}
-        total={VARIANT_FILL_STAGE_COUNT}
+        current={variantFillStep(7, product)}
+        total={variantFillTotal(product) || VARIANT_FILL_STAGE_COUNT}
         prevPath={variationId ? "/stage22" : "/stage12"}
         nextPath="/stage14"
       />

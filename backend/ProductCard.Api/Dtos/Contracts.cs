@@ -99,6 +99,7 @@ public class ProductDetailDto
 {
     public Guid Id { get; set; }
     public string Status { get; set; } = "draft";
+    public string ReviewStatus { get; set; } = "filling";
     public int CurrentStage { get; set; }
 
     public string? AuthorLastName { get; set; }

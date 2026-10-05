@@ -239,6 +239,10 @@
   flex-wrap: wrap;
 }
 
+.desc-fields > .comp-row + .comp-row {
+  margin-top: 12px;
+}
+
 .comp-row__label {
   font-size: 15px;
   color: #222;

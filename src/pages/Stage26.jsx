@@ -1,71 +1,226 @@
-// Этап 5 - наименование продукта
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import BottomBar from "../components/BottomBar";
-import { productsApi } from "../api";
+import { catalogApi, productsApi } from "../api";
+import { sameId } from "../cardScope";
+import { CUSTOM_CODE_PREFIX } from "../customCharacteristics";
+import {
+  CUSTOM_VARIANT_FILL_STAGE_COUNT,
+  variantFillStageHeading,
+  variantFillStep,
+} from "../stageProgress";
+import { saveNameFeatures } from "../variantFlow";
+import "./Stage2_3.css";
+import "./Stage25.css";
 import "./Stage26.css";
 
-// Характеристики, которые выводятся под наименованием
-const FEATURE_OPTIONS = [
-  { key: "model", label: "Модель" },
-  { key: "other1", label: "Иное" },
-  { key: "other2", label: "Иное" },
-];
+const MAX_NAME_FEATURES = 3;
+
+function findKind(catalog, kindCode) {
+  if (!catalog || !kindCode) return null;
+  for (const category of catalog.categories || []) {
+    const kind = (category.kinds || []).find((item) => item.code === kindCode);
+    if (kind) return kind;
+  }
+  return null;
+}
+
+function valueText(saved) {
+  if (!saved) return "";
+  if (saved.value === "other") return String(saved.customValue || "").trim();
+  return String(saved.value || "").trim();
+}
+
+function axisOptions(product, catalog, variationId) {
+  const axes = product?.variantAxes || [];
+  if (!axes.length) return [];
+
+  const variation = variationId
+    ? (product?.variations || []).find((item) => sameId(item.id, variationId))
+    : null;
+  const values = variation?.values || [];
+  const names = new Map(
+    (findKind(catalog, product?.kindCode)?.characteristics || []).map((field) => [
+      field.code,
+      field.name,
+    ]),
+  );
+
+  const options = [];
+  for (const code of axes) {
+    const saved = values.find((item) => item.code === code);
+    if (!saved) continue;
+
+    if (code.startsWith(CUSTOM_CODE_PREFIX)) {
+      const name = String(saved.value || "").trim();
+      const filled = String(saved.customValue || "").trim();
+      if (!name && !filled) continue;
+      if (filled) {
+        options.push({ key: code, label: name, value: filled });
+      } else {
+        options.push({ key: code, label: name, value: name });
+      }
+      continue;
+    }
+
+    const filled = valueText(saved);
+    if (!filled) continue;
+    options.push({
+      key: code,
+      label: names.get(code) || code,
+      value: filled,
+    });
+  }
+  return options;
+}
+
+function buildFormula(options, selectedKeys) {
+  const byKey = new Map(options.map((item) => [item.key, item]));
+  const parts = ["Логотип", "категория", "бренд", "линейка"];
+  for (const key of selectedKeys.slice(0, MAX_NAME_FEATURES)) {
+    const label = byKey.get(key)?.label;
+    if (label) parts.push(label);
+  }
+  return parts.join(" + ");
+}
+
+function baseName(product) {
+  const stored = (product?.fullName || "").trim();
+  if (stored) return stored;
+  return [
+    (product?.productName || product?.categoryName || "").trim(),
+    (product?.brandName || "").trim(),
+    (product?.productLine || "").trim(),
+  ]
+    .filter(Boolean)
+    .join(" ");
+}
+
+function composeDisplayName(product, options, selectedKeys) {
+  const byKey = new Map(options.map((item) => [item.key, item]));
+  const parts = [
+    baseName(product),
+    ...selectedKeys.map((key) => byKey.get(key)?.value).filter(Boolean),
+  ].filter(Boolean);
+  return parts.join(" ");
+}
 
 function Stage26() {
   const [params] = useSearchParams();
   const productId = params.get("id");
-  const [fullName, setFullName] = useState("");
+  const variationId = params.get("variationId");
+  const [options, setOptions] = useState([]);
+  const [productSnapshot, setProductSnapshot] = useState(null);
   const [logo, setLogo] = useState(null);
   const [error, setError] = useState("");
   const [features, setFeatures] = useState([]);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     if (!productId) return;
-    productsApi
-      .get(productId)
-      .then((product) => {
+    Promise.all([productsApi.get(productId), catalogApi.get()])
+      .then(([product, catalog]) => {
+        setProductSnapshot(product);
+        const nextOptions = axisOptions(product, catalog, variationId);
+        setOptions(nextOptions);
+
         const logoFile =
           (product.files || []).find(
+            (file) =>
+              file.role === "logo" &&
+              variationId &&
+              sameId(file.variationId, variationId),
+          ) ||
+          (product.files || []).find(
             (file) => file.role === "logo" && !file.variationId,
-          ) || null;
-        const composed = [
-          (product.productName || "").trim(),
-          (product.brandName || "").trim(),
-          (product.productLine || "").trim(),
-        ]
-          .filter(Boolean)
-          .join(" ");
+          ) ||
+          null;
         setLogo(logoFile);
-        setFullName(composed);
+
+        const variation = variationId
+          ? (product.variations || []).find((item) =>
+              sameId(item.id, variationId),
+            )
+          : null;
+
+        const savedName = (variation?.fullName || "").trim();
+        const matched = savedName
+          ? nextOptions
+              .filter((item) => savedName.includes(item.label))
+              .map((item) => item.key)
+              .slice(0, MAX_NAME_FEATURES)
+          : [];
+        const selected = matched.length ? matched : [];
+        setFeatures(selected);
+        setLoaded(true);
       })
       .catch((loadError) => setError(loadError.message));
-  }, [productId]);
+  }, [productId, variationId]);
 
   const toggleFeature = (key) => {
-    setFeatures((prev) =>
-      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key],
-    );
+    setFeatures((prev) => {
+      let next;
+      if (prev.includes(key)) {
+        next = prev.filter((item) => item !== key);
+      } else {
+        if (prev.length >= MAX_NAME_FEATURES) {
+          setError(`Можно выбрать не больше ${MAX_NAME_FEATURES} характеристик`);
+          return prev;
+        }
+        setError("");
+        next = [...prev, key];
+      }
+      return next;
+    });
+  };
+
+  const displayName = composeDisplayName(productSnapshot, options, features);
+
+  const save = async () => {
+    if (!productId) throw new Error("Сначала создайте карточку на главной странице");
+    if (!variationId) throw new Error("Сначала создайте вариант");
+    if (!loaded) throw new Error("Карточка ещё загружается, подождите секунду");
+    if (!features.length) {
+      throw new Error("Выберите от 1 до 3 характеристик для наименования");
+    }
+    const name = displayName;
+    saveNameFeatures(productId, features);
+    await productsApi.saveVariationName(productId, variationId, {
+      fullName: name,
+      nameIncludesLogo: Boolean(logo),
+      nameIncludesType: false,
+      nameIncludesBrand: false,
+      nameIncludesLine: false,
+      nameIncludesModel: features.some((key) => key === "model"),
+    });
   };
 
   return (
     <>
       <div className="container stage3-page stage4-page">
         <h1 className="title stage3-title">
-          Этап 5 - Наименование варианта параметра продукта
+          {variantFillStageHeading(
+            26,
+            "Наименование варианта параметра продукта",
+          )}
         </h1>
         {!productId && (
           <p className="form-error">
             Откройте создание карточки с главной страницы.
           </p>
         )}
+        {productId && !variationId && (
+          <p className="form-error">Сначала создайте вариант параметра продукта.</p>
+        )}
         {error && <p className="form-error">{error}</p>}
 
         <p className="stage4-lead">
           Наименование продукта - формируется из заполненных характеристик
-          товара, которые моуг изменяться при добавлении вариантов параметров
+          товара, которые могут изменяться при добавлении вариантов параметров
           товара
         </p>
+
+        <p className="stage26-formula">{buildFormula(options, features)}</p>
 
         <div className="stage4-name-box">
           {logo && (
@@ -78,20 +233,25 @@ function Stage26() {
           <input
             type="text"
             className="stage4-name-box__text"
-            value={fullName}
+            value={displayName}
             readOnly
-            placeholder="Логотип Категория Бренд Линейка"
+            placeholder="Наименование из выбранных характеристик"
           />
         </div>
 
         <p className="standart">
           Выберите от 1 до 3 характеристик, которые будут отображаться в
-          наименовании варианта параметра продукта:{" "}
+          наименовании варианта параметра продукта:
         </p>
 
-        {/* ===== Список чекбоксов с характеристиками ===== */}
         <div className="feature-list">
-          {FEATURE_OPTIONS.map((opt) => {
+          {options.length === 0 && (
+            <p className="paragraph">
+              На этапе 4 пока не выбраны характеристики варианта параметра
+              продукта.
+            </p>
+          )}
+          {options.map((opt) => {
             const checked = features.includes(opt.key);
             return (
               <div className="feature-row" key={opt.key}>
@@ -134,10 +294,11 @@ function Stage26() {
       </div>
 
       <BottomBar
-        current={4}
-        total={5}
+        current={variantFillStep(26)}
+        total={CUSTOM_VARIANT_FILL_STAGE_COUNT}
         prevPath="/stage25"
         nextPath="/stage27"
+        onSave={save}
       />
     </>
   );

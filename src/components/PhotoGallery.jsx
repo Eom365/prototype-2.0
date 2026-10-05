@@ -11,22 +11,22 @@ function PhotoGallery({ productId, role, variationId = null, buttonLabel = 'До
 
     variationIdRef.current = variationId
 
-    const loadPhotos = async (product) => {
+    const loadPhotos = (product) => {
         const scopeId = variationIdRef.current
-        setPhotos(
-            (product.files || [])
-                .filter((file) => file.role === role && (scopeId ? sameId(file.variationId, scopeId) : !file.variationId))
-                .sort((a, b) => a.sortOrder - b.sortOrder)
-        )
+        const next = (product.files || [])
+            .filter((file) => file.role === role && (scopeId ? sameId(file.variationId, scopeId) : !file.variationId))
+            .sort((a, b) => a.sortOrder - b.sortOrder)
+        setPhotos(next)
     }
 
     const load = async ({ notify = false } = {}) => {
         const product = await productsApi.get(productId)
-        await loadPhotos(product)
+        loadPhotos(product)
         if (notify) notifyProductUpdated(productId)
     }
 
     useEffect(() => {
+        setPhotos([])
         if (!productId) return
         load().catch((loadError) => setError(loadError.message))
     }, [productId, role, variationId])

@@ -24,32 +24,39 @@ export function isSameCharacteristicValue(saved, base) {
         (saved.unit || null) === (base.unit || null)
 }
 
+export function axisValueFromVariation(variation, code) {
+    const row = (variation?.values || []).find((item) => item.code === code)
+    if (row?.value === 'other') return (row.customValue || '').trim()
+    if (row?.value) return String(row.value).trim()
+    if (row?.customValue) return String(row.customValue).trim()
+    if (code === 'model') return (variation?.model || '').trim()
+    if (code === 'article') return (variation?.article || '').trim()
+    return ''
+}
+
 export function variationSpecsFrom(product, variation, characteristics, defaultUnits = {}) {
-    const axisCodes = new Set(product.variantAxes || [])
+    const axes = new Set(product?.variantAxes || [])
     const next = {}
     for (const field of characteristics) {
         const saved = (variation.values || []).find((item) => item.code === field.code)
-        const base = (product.values || []).find((item) => item.code === field.code && !item.variationId)
         const defaultUnit = field.unitGroup ? defaultUnits[field.unitGroup] : ''
-        let value = ''
-        let customValue = ''
-        let unit = defaultUnit
+        let value = saved?.value ?? ''
+        let customValue = saved?.customValue ?? ''
+        if (value == null) value = ''
+        if (customValue == null) customValue = ''
 
-        if (axisCodes.has(field.code) && saved) {
-            value = saved.value || ''
-            customValue = saved.customValue || ''
-            unit = saved.unit || defaultUnit
-        } else if (saved && !isSameCharacteristicValue(saved, base)) {
-            value = saved.value || ''
-            customValue = saved.customValue || ''
-            unit = saved.unit || defaultUnit
-        } else if (base) {
-            value = base.value || ''
-            customValue = base.customValue || ''
-            unit = base.unit || defaultUnit
+        if (!String(value).trim() && !String(customValue).trim()) {
+            const axisText = axisValueFromVariation(variation, field.code)
+            if (axisText && axes.has(field.code)) {
+                value = axisText
+            }
         }
 
-        next[field.code] = { value, customValue, unit }
+        next[field.code] = {
+            value,
+            customValue,
+            unit: saved?.unit || defaultUnit,
+        }
     }
     return next
 }

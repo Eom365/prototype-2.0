@@ -1122,6 +1122,7 @@ public class ProductsController : ControllerBase
     {
         Id = product.Id,
         Status = product.Status,
+        ReviewStatus = string.IsNullOrWhiteSpace(product.ReviewStatus) ? "filling" : product.ReviewStatus,
         CurrentStage = product.CurrentStage,
         AuthorLastName = product.AuthorLastName,
         AuthorFirstName = product.AuthorFirstName,

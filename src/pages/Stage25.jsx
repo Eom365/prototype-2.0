@@ -1,18 +1,71 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { catalogApi, productsApi } from "../api";
+import { sameId } from "../cardScope";
+import { CUSTOM_CODE_PREFIX } from "../customCharacteristics";
+import {
+  variantFillStageHeading,
+} from "../stageProgress";
 import "./Stage25.css";
 
-// Доступные характеристики для выбора (можешь менять)
-const FEATURE_OPTIONS = [{ key: "model", label: "Модель" }];
+const MAX_FEATURES = 5;
+const SKIP_CODES = new Set(["brand", "manufacturer", "country", "article"]);
+
+function findKind(catalog, kindCode) {
+  if (!catalog || !kindCode) return null;
+  for (const category of catalog.categories || []) {
+    const kind = (category.kinds || []).find((item) => item.code === kindCode);
+    if (kind) return kind;
+  }
+  return null;
+}
+
+function filledCharacteristics(product, catalog, variationId) {
+  const names = new Map(
+    (findKind(catalog, product?.kindCode)?.characteristics || []).map((field) => [
+      field.code,
+      field.name,
+    ]),
+  );
+  const variation = variationId
+    ? (product?.variations || []).find((item) => sameId(item.id, variationId))
+    : null;
+  const source = variation
+    ? variation.values || []
+    : (product?.values || []).filter((item) => !item.variationId);
+
+  const options = [];
+  for (const item of source) {
+    if (!item.code || SKIP_CODES.has(item.code)) continue;
+    if (item.code.startsWith(CUSTOM_CODE_PREFIX)) {
+      const label = String(item.value || "").trim();
+      const filled = String(item.customValue || "").trim();
+      if (!label || !filled) continue;
+      options.push({ key: item.code, label, filled });
+      continue;
+    }
+    const filled = String(
+      item.value === "other" ? item.customValue : item.value || "",
+    ).trim();
+    if (!filled) continue;
+    options.push({
+      key: item.code,
+      label: names.get(item.code) || item.code,
+      filled,
+    });
+  }
+  return options;
+}
 
 function Stage25() {
   const navigate = useNavigate();
   const location = useLocation();
   const [params] = useSearchParams();
   const productId = params.get("id");
+  const variationId = params.get("variationId");
 
   const [product, setProduct] = useState(null);
+  const [catalog, setCatalog] = useState(null);
   const [features, setFeatures] = useState([]);
   const [drafts, setDrafts] = useState({});
   const [busy, setBusy] = useState(false);
@@ -21,30 +74,44 @@ function Stage25() {
   useEffect(() => {
     if (!productId) return;
     Promise.all([productsApi.get(productId), catalogApi.get()])
-      .then(([loaded]) => {
+      .then(([loaded, loadedCatalog]) => {
         setProduct(loaded);
+        setCatalog(loadedCatalog);
+        const nextDrafts = {};
+        for (const opt of filledCharacteristics(loaded, loadedCatalog, variationId)) {
+          nextDrafts[opt.key] = opt.filled;
+        }
+        setDrafts(nextDrafts);
       })
       .catch((err) => setError(err.message));
-  }, [productId]);
+  }, [productId, variationId]);
 
-  const search = productId ? `?id=${productId}` : location.search || "";
+  const search = productId
+    ? `?id=${productId}${variationId ? `&variationId=${variationId}` : ""}`
+    : location.search || "";
 
   const go = (path) =>
     navigate({ pathname: path, search: path === "/" ? "" : search });
 
-  // Переключить чекбокс
   const toggleFeature = (key) => {
-    setFeatures((prev) =>
-      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key],
-    );
+    setFeatures((prev) => {
+      if (prev.includes(key)) return prev.filter((item) => item !== key);
+      if (prev.length >= MAX_FEATURES) {
+        setError(`Можно выбрать не больше ${MAX_FEATURES} характеристик`);
+        return prev;
+      }
+      setError("");
+      return [...prev, key];
+    });
   };
 
-  // Изменить значение в поле ввода
+  const options = filledCharacteristics(product, catalog, variationId);
+
   const setDraft = (key, value) => {
     setDrafts((prev) => ({ ...prev, [key]: value }));
   };
 
-  const handleCancel = () => go("/stage22");
+  const handleCancel = () => go(variationId ? "/stage23" : "/stage22");
 
   const handleConfirm = async () => {
     if (!productId) {
@@ -53,9 +120,15 @@ function Stage25() {
     }
     if (busy) return;
 
-    // Собираем непустые значения
     const filled = features
-      .map((key) => ({ key, value: (drafts[key] || "").trim() }))
+      .map((key) => {
+        const opt = options.find((item) => item.key === key);
+        return {
+          key,
+          value: (drafts[key] || "").trim(),
+          label: opt?.label || "",
+        };
+      })
       .filter((item) => item.value);
 
     if (filled.length === 0) {
@@ -72,26 +145,58 @@ function Stage25() {
       const codes = filled.map((item) => item.key);
       await productsApi.saveVariantAxes(productId, { codes });
 
-      let latest = await productsApi.get(productId);
-      let variationId = null;
+      let targetVariationId = variationId;
 
-      // Создаём по одному варианту на каждое значение
-      for (const item of filled) {
-        const created = await productsApi.addVariation(productId, {
-          values: [{ code: item.key, value: item.value }],
-        });
-        if (created?.id) {
-          if (!variationId) variationId = created.id;
-          latest = {
-            ...latest,
-            variations: [...(latest.variations || []), created],
-          };
+      if (targetVariationId) {
+        const latest = await productsApi.get(productId);
+        const variation = (latest.variations || []).find((item) =>
+          sameId(item.id, targetVariationId),
+        );
+        const byCode = new Map(
+          (variation?.values || []).map((item) => [item.code, item]),
+        );
+        for (const item of filled) {
+          const prev = byCode.get(item.key);
+          if (item.key.startsWith(CUSTOM_CODE_PREFIX)) {
+            byCode.set(item.key, {
+              code: item.key,
+              value: item.label || prev?.value || "",
+              customValue: item.value,
+              unit: prev?.unit || null,
+            });
+          } else {
+            byCode.set(item.key, {
+              code: item.key,
+              value: item.value,
+              customValue: prev?.customValue || "",
+              unit: prev?.unit || null,
+            });
+          }
         }
+        await productsApi.saveVariationCharacteristics(
+          productId,
+          targetVariationId,
+          { values: [...byCode.values()] },
+        );
+      } else {
+        const created = await productsApi.addVariation(productId, {
+          values: filled.map((item) =>
+            item.key.startsWith(CUSTOM_CODE_PREFIX)
+              ? {
+                  code: item.key,
+                  value: item.label,
+                  customValue: item.value,
+                }
+              : { code: item.key, value: item.value },
+          ),
+        });
+        if (!created?.id) throw new Error("Не удалось создать вариант");
+        targetVariationId = created.id;
       }
 
       const next = new URLSearchParams();
       next.set("id", productId);
-      if (variationId) next.set("variationId", variationId);
+      next.set("variationId", targetVariationId);
       navigate({ pathname: "/stage26", search: `?${next.toString()}` });
     } catch (err) {
       setError(err.message || "Не удалось сохранить");
@@ -103,7 +208,9 @@ function Stage25() {
   return (
     <>
       <div className="container">
-        <h1 className="title">Этап 4 - Вариант параметра продукта</h1>
+        <h1 className="title">
+          {variantFillStageHeading(25, "Вариант параметра продукта")}
+        </h1>
 
         <p className="description">
           Вариант параметра продукта позволяет объединить продукты одной
@@ -126,7 +233,12 @@ function Stage25() {
         {error && <p className="form-error">{error}</p>}
 
         <div className="feature-list">
-          {FEATURE_OPTIONS.map((opt) => {
+          {options.length === 0 && (
+            <p className="paragraph">
+              На этапе характеристик пока нет заполненных значений.
+            </p>
+          )}
+          {options.map((opt) => {
             const checked = features.includes(opt.key);
             return (
               <div className="feature-row" key={opt.key}>
@@ -161,7 +273,7 @@ function Stage25() {
                   />
 
                   <span className="feature-item__label">{opt.label}</span>
-                  <span className="info-icon" title="Подсказка">
+                  <span className="info-icon" title={`Заполнено: ${opt.filled}`}>
                     ?
                   </span>
                 </label>
@@ -177,7 +289,6 @@ function Stage25() {
               </div>
             );
           })}
-          <p>Иное подгрузить</p>
         </div>
       </div>
 

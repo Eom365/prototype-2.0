@@ -34,6 +34,7 @@ function Stage15() {
     const [descriptionForm, setDescriptionForm] = useState(emptyDescriptionForm)
     const [specs, setSpecs] = useState({})
     const [customRows, setCustomRows] = useState(() => normalizeCustomRows([]))
+    const [productLine, setProductLine] = useState('')
     const [logo, setLogo] = useState(null)
     const [error, setError] = useState('')
     const [loaded, setLoaded] = useState(false)
@@ -50,6 +51,7 @@ function Stage15() {
             if (!variation) throw new Error('Вариация не найдена')
 
             setKindCode(product.kindCode || '')
+            setProductLine(product.productLine || '')
             setDescriptionForm(parseDescriptionForm({
                 description: variation.description,
                 complectation: variation.complectation,
@@ -128,6 +130,14 @@ function Stage15() {
         if (!productId) throw new Error('Сначала создайте карточку на главной странице')
         if (!variationId) throw new Error('Сначала создайте вариант на этапе 13')
         if (!loaded) throw new Error('Карточка ещё загружается, подождите секунду')
+        const product = await productsApi.get(productId)
+        await productsApi.saveCategory(productId, {
+            purpose: product.purpose || '',
+            kindCode: product.kindCode || '',
+            productName: product.productName || '',
+            categoryPath: product.categoryPath || '',
+            productLine: productLine.trim(),
+        })
         await productsApi.saveVariationDescription(productId, variationId, serializeDescriptionForm(descriptionForm))
         const values = [
             ...Object.entries(specs).map(([code, value]) => ({
@@ -197,6 +207,7 @@ function Stage15() {
                                 />
                             )}
                             {group.name === 'Производитель' && (
+                                <>
                                 <div className="field-row">
                                     <span className="info-icon" title="Подсказка">ⓘ</span>
                                     <span className="required-mark-slot" aria-hidden="true" />
@@ -216,6 +227,21 @@ function Stage15() {
                                         </button>
                                     )}
                                 </div>
+                                <div className="field-row product-line-row">
+                                    <span className="info-icon" title="Подсказка">ⓘ</span>
+                                    <span className="required-mark-slot" aria-hidden="true" />
+                                    <span className="field-name">Линейка продукции</span>
+                                    <div className="product-line-control">
+                                        <input
+                                            type="text"
+                                            className="field-input"
+                                            placeholder="Линейка продукции"
+                                            value={productLine}
+                                            onChange={(event) => setProductLine(event.target.value)}
+                                        />
+                                    </div>
+                                </div>
+                                </>
                             )}
                             {group.fields
                                 .filter((field) => !(field.code === 'lightSource' && specs.light?.value === 'no'))
