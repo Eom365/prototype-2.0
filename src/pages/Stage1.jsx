@@ -25,6 +25,7 @@ function Stage1() {
   const [params] = useSearchParams();
   const productId = params.get("id");
   const [fields, setFields] = useState(emptyFields);
+  const [savedBrandName, setSavedBrandName] = useState("");
   const [matches, setMatches] = useState([]);
   const [error, setError] = useState("");
   const [loaded, setLoaded] = useState(false);
@@ -34,12 +35,13 @@ function Stage1() {
     productsApi
       .get(productId)
       .then((product) => {
+        setSavedBrandName(product.brandName || "");
         setFields({
           authorLastName: product.authorLastName || "",
           authorFirstName: product.authorFirstName || "",
           authorMiddleName: product.authorMiddleName || "",
           tradeName: product.tradeName || "",
-          brandName: product.brandName || "",
+          brandName: "",
           manufacturerName: product.manufacturerName || "",
           manufacturerCountry: product.manufacturerCountry || "",
           productIdentifier: product.productIdentifier || "",
@@ -81,7 +83,10 @@ function Stage1() {
     if (!productId)
       throw new Error("Сначала создайте карточку на главной странице");
     if (!loaded) throw new Error("Карточка ещё загружается, подождите секунду");
-    return productsApi.saveIdentity(productId, fields);
+    return productsApi.saveIdentity(productId, {
+      ...fields,
+      brandName: savedBrandName,
+    });
   };
 
   return (
