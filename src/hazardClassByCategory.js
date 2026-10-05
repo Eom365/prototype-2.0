@@ -12,9 +12,13 @@ export const HAZARD_CLASS_OPTIONS = {
 
 /** Класс опасности по категории карточки (наконечники / аэрозоли / прочее). */
 export function resolveHazardGroup(product) {
+  const kindCode = (product?.kindCode || '').toLowerCase()
   const categoryCode = (product?.categoryCode || '').toLowerCase()
   const path = (product?.categoryPath || '').toLowerCase()
 
+  if (kindCode === 'other') {
+    return 'иное'
+  }
   if (categoryCode === 'handpieces' || path.includes('наконечник')) {
     return 'наконечники'
   }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { productsApi } from '../api'
+import { countPageQuestions } from '../pageQuestions'
 import './Home.css'
 
 function Home() {
@@ -9,10 +10,12 @@ function Home() {
     const [filter, setFilter] = useState('all')
     const [creating, setCreating] = useState(false)
     const [error, setError] = useState('')
+    const [questionsTick, setQuestionsTick] = useState(0)
 
     const load = async () => {
         const products = await productsApi.list()
         setItems(products)
+        setQuestionsTick((value) => value + 1)
     }
 
     useEffect(() => {
@@ -55,12 +58,6 @@ function Home() {
                 <button className="home__button" onClick={handleCreate} disabled={creating}>
                     {creating ? 'Создание...' : 'Создать карточку товара'}
                 </button>
-                {/* <button className="home__button" onClick={() => setFilter('draft')}>
-                    Черновики
-                </button>
-                <button className="home__button" onClick={() => navigate('/stage3')}>
-                    Объединение товара
-                </button> */}
             </div>
 
             {error && <p className="form-error">{error}</p>}
@@ -81,10 +78,11 @@ function Home() {
                 {visible.length === 0 && <p>Карточек пока нет</p>}
                 {visible.map((item) => {
                     const reviewApproved = item.reviewStatus === 'approved'
+                    const questionsCount = countPageQuestions(item.id)
                     return (
                         <article
                             className={`product-card${reviewApproved ? ' product-card--review-approved' : ''}`}
-                            key={item.id}
+                            key={`${item.id}-${questionsTick}`}
                         >
                             {reviewApproved && (
                                 <span className="product-card__approved" title="Проверка пройдена">✓</span>
@@ -112,6 +110,14 @@ function Home() {
                                     onClick={() => navigate(`/stage22?id=${item.id}`)}
                                 >
                                     Редактировать
+                                </button>
+                                <button
+                                    type="button"
+                                    className="bottom-bar__btn"
+                                    onClick={() => navigate(`/questions?id=${item.id}`)}
+                                >
+                                    Вопросы по заполнению
+                                    {questionsCount > 0 ? ` (${questionsCount})` : ''}
                                 </button>
                                 {reviewApproved && (
                                     <div className="tooltip-wrapper">

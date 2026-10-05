@@ -1092,7 +1092,12 @@ public class ProductsController : ControllerBase
         return string.Join("|", axes.OrderBy(code => code).Select(code =>
         {
             var value = list.FirstOrDefault(item => item.Code == code);
-            var text = value == null ? "" : value.Value == "other" ? value.CustomValue : value.Value;
+            if (value == null)
+                return "";
+            var text = code.StartsWith("custom:", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(value.Value, "other", StringComparison.OrdinalIgnoreCase)
+                ? value.CustomValue
+                : value.Value;
             return (text ?? "").Trim().ToLower();
         }));
     }

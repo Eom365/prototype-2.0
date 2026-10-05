@@ -5,7 +5,9 @@ import {
   Route,
   useLocation,
 } from "react-router-dom";
+import PageHelp from "./components/PageHelp";
 import Home from "./pages/Home";
+import FillingQuestions from "./pages/FillingQuestions";
 import Review from "./pages/Review";
 import Stage1 from "./pages/Stage1";
 import Stage2 from "./pages/Stage2";
@@ -49,8 +51,10 @@ function Stage13Redirect() {
 function App() {
   return (
     <BrowserRouter>
+      <PageHelp />
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/questions" element={<FillingQuestions />} />
         <Route path="/review" element={<Review />} />
         <Route path="/stage1" element={<Stage1 />} />
         <Route path="/stage2" element={<Stage2 />} />

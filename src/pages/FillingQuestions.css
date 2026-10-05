@@ -1,0 +1,76 @@
+.filling-questions {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 40px 20px 80px;
+  text-align: left;
+}
+
+.filling-questions__back {
+  border: none;
+  background: none;
+  color: #8eadd4;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: 20px;
+}
+
+.filling-questions__back:hover {
+  color: #4d79b5;
+}
+
+.filling-questions__title {
+  margin: 0 0 8px;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: normal;
+  color: #111;
+  text-align: left;
+}
+
+.filling-questions__product {
+  margin: 0 0 28px;
+  font-size: 15px;
+  color: #777;
+}
+
+.filling-questions__empty {
+  margin: 0;
+  color: #777;
+  font-size: 15px;
+}
+
+.filling-questions__list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.filling-questions__item {
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  padding: 16px 18px;
+  background: #fff;
+}
+
+.filling-questions__meta {
+  margin: 0 0 6px;
+  font-size: 13px;
+  color: #888;
+}
+
+.filling-questions__page {
+  margin: 0 0 10px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  letter-spacing: normal;
+}
+
+.filling-questions__text {
+  margin: 0;
+  font-size: 15px;
+  color: #222;
+  white-space: pre-wrap;
+  line-height: 1.5;
+}
