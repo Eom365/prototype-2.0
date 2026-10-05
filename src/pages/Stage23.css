@@ -53,15 +53,6 @@
   min-width: 100px;
 }
 
-.stage23-page .stage23-tabs {
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-}
-
-.stage23-page .stage23-tabs .stage24-tab {
-  font-size: 11px;
-  padding: 10px 4px;
-}
-
 .stage23-page .field-row--options {
   grid-template-columns: 24px 30px minmax(140px, 200px) minmax(160px, 1fr);
   align-items: start;

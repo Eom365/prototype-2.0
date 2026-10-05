@@ -660,7 +660,7 @@ function Stage23() {
 
         {phase === "edit" ? (
           <>
-            <div className="stage24-tabs stage23-tabs" role="tablist">
+            <div className="stage24-tabs" role="tablist">
               {tabs.map((tab) => {
                 const done = completedTabs.includes(tab.key);
                 const active = activeTab === tab.key;
