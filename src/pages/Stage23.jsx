@@ -655,6 +655,7 @@ function Stage23() {
                     />
                   ))}
 
+                {/*
                 <div className="field-row field-row--logo">
                   <span className="info-icon" title="Подсказка">
                     ⓘ
@@ -689,6 +690,7 @@ function Stage23() {
                     </button>
                   )}
                 </div>
+                */}
 
                 <div className="field-row product-line-row">
                   <span className="info-icon" title="Подсказка">

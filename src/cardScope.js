@@ -34,8 +34,26 @@ export function axisValueFromVariation(variation, code) {
     return ''
 }
 
+const INHERIT_FROM_FIRST_VARIANT = new Set(['manufacturer'])
+
+export function sourceVariationForPrefill(product, variationId) {
+    const list = product?.variations || []
+    return (
+        list.find(
+            (item) =>
+                !sameId(item.id, variationId) &&
+                (item.values || []).some(
+                    (row) =>
+                        String(row?.value || '').trim() ||
+                        String(row?.customValue || '').trim(),
+                ),
+        ) || null
+    )
+}
+
 export function variationSpecsFrom(product, variation, characteristics, defaultUnits = {}) {
     const axes = new Set(product?.variantAxes || [])
+    const source = sourceVariationForPrefill(product, variation?.id)
     const next = {}
     for (const field of characteristics) {
         const saved = (variation.values || []).find((item) => item.code === field.code)
@@ -44,6 +62,7 @@ export function variationSpecsFrom(product, variation, characteristics, defaultU
         let customValue = saved?.customValue ?? ''
         if (value == null) value = ''
         if (customValue == null) customValue = ''
+        let unit = saved?.unit || defaultUnit
 
         if (!String(value).trim() && !String(customValue).trim()) {
             const axisText = axisValueFromVariation(variation, field.code)
@@ -52,10 +71,25 @@ export function variationSpecsFrom(product, variation, characteristics, defaultU
             }
         }
 
+        if (
+            INHERIT_FROM_FIRST_VARIANT.has(field.code) &&
+            !axes.has(field.code) &&
+            !String(value).trim() &&
+            !String(customValue).trim() &&
+            source
+        ) {
+            const base = (source.values || []).find((item) => item.code === field.code)
+            if (base) {
+                value = base.value ?? ''
+                customValue = base.customValue ?? ''
+                unit = base.unit || unit
+            }
+        }
+
         next[field.code] = {
             value,
             customValue,
-            unit: saved?.unit || defaultUnit,
+            unit,
         }
     }
     return next
