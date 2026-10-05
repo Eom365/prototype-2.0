@@ -125,6 +125,10 @@
     box-sizing: border-box;
 }
 
+.category-picker__input {
+    font-weight: 600;
+}
+
 .input--readonly {
     background: #f5f5f5;
     color: #333;
@@ -441,3 +445,6 @@
     font-size: 14px;
     vertical-align: middle;
 }
+
+
+

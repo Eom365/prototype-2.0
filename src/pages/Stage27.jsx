@@ -422,7 +422,7 @@ function Stage27() {
             }
           />
           <DescField
-            label="Срок службы"
+            label="Срок службы продукта"
             value={form.storageConditions.shelfLife}
             onChange={(v) =>
               patchForm("storageConditions", {

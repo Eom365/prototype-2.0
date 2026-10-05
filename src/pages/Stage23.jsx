@@ -655,43 +655,6 @@ function Stage23() {
                     />
                   ))}
 
-                {/*
-                <div className="field-row field-row--logo">
-                  <span className="info-icon" title="Подсказка">
-                    ⓘ
-                  </span>
-                  <span className="required-mark-slot" aria-hidden="true" />
-                  <span className="field-name">Логотип</span>
-                  {logo ? (
-                    <div className="field-input field-input--file field-input--has-file">
-                      <img
-                        src={logo.url}
-                        alt="Логотип"
-                        className="file-preview"
-                      />
-                      <span className="file-text">{logo.name}</span>
-                      <button
-                        type="button"
-                        className="file-remove"
-                        onClick={handleLogoRemove}
-                        title="Удалить"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      type="button"
-                      className="field-input field-input--file"
-                      onClick={() => logoInputRef.current?.click()}
-                    >
-                      <span className="file-icon">📎</span>
-                      <span className="file-text">Загрузить фотографию</span>
-                    </button>
-                  )}
-                </div>
-                */}
-
                 <div className="field-row product-line-row">
                   <span className="info-icon" title="Подсказка">
                     ⓘ
