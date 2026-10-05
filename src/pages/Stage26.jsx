@@ -9,6 +9,7 @@ import {
   variantFillStageHeading,
   variantFillStep,
 } from "../stageProgress";
+import { formatVariantAxisValue } from "../variantAxisDisplay";
 import { saveNameFeatures, sortByVariantAxisHierarchy, sortVariantAxisCodes, variantAxisRank } from "../variantFlow";
 import "./Stage2_3.css";
 import "./Stage25.css";
@@ -25,12 +26,6 @@ function findKind(catalog, kindCode) {
   return null;
 }
 
-function valueText(saved) {
-  if (!saved) return "";
-  if (saved.value === "other") return String(saved.customValue || "").trim();
-  return String(saved.value || "").trim();
-}
-
 function axisOptions(product, catalog, variationId) {
   const axes = sortVariantAxisCodes(product?.variantAxes || []);
   if (!axes.length) return [];
@@ -38,7 +33,7 @@ function axisOptions(product, catalog, variationId) {
   const variation = variationId
     ? (product?.variations || []).find((item) => sameId(item.id, variationId))
     : null;
-  const values = variation?.values || [];
+  if (!variation) return [];
   const names = new Map(
     (findKind(catalog, product?.kindCode)?.characteristics || []).map((field) => [
       field.code,
@@ -48,23 +43,18 @@ function axisOptions(product, catalog, variationId) {
 
   const options = [];
   for (const code of axes) {
-    const saved = values.find((item) => item.code === code);
-    if (!saved) continue;
-
+    const filled = formatVariantAxisValue(product, catalog, variation, code);
+    if (!filled) continue;
     if (code.startsWith(CUSTOM_CODE_PREFIX)) {
-      const name = String(saved.value || "").trim();
-      const filled = String(saved.customValue || "").trim();
-      if (!name && !filled) continue;
-      if (filled) {
-        options.push({ key: code, label: name, value: filled });
-      } else {
-        options.push({ key: code, label: name, value: name });
-      }
+      const saved = (variation.values || []).find((item) => item.code === code);
+      const name = String(saved?.value || "").trim();
+      options.push({
+        key: code,
+        label: name || "Иное",
+        value: filled,
+      });
       continue;
     }
-
-    const filled = valueText(saved);
-    if (!filled) continue;
     options.push({
       key: code,
       label: names.get(code) || code,
@@ -152,7 +142,11 @@ function Stage26() {
         const savedName = (variation?.fullName || "").trim();
         const matched = savedName
           ? nextOptions
-              .filter((item) => savedName.includes(item.label))
+              .filter(
+                (item) =>
+                  savedName.includes(item.value) ||
+                  savedName.includes(item.label),
+              )
               .map((item) => item.key)
               .slice(0, MAX_NAME_FEATURES)
           : [];

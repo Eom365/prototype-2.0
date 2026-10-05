@@ -8,11 +8,13 @@ import { catalogApi, productsApi } from "../api";
 import { axisValueFromVariation, sameId, useCardIds, variationSpecsFrom } from "../cardScope";
 import {
   CUSTOM_CODE_PREFIX,
+  allUnitOptions,
   customRowsFromValues,
+  displayCustomCharacteristic,
   normalizeCustomRows,
   serializeCustomRows,
 } from "../customCharacteristics";
-import { DIMENSION_CODES } from "../productSpecs";
+import { DIMENSION_CODES, dimensionUnitLabel } from "../productSpecs";
 import {
   customTechFieldsFromProduct,
   loadNameFeatures,
@@ -72,7 +74,24 @@ function buildGroups(kind) {
   return groups;
 }
 
-// Возвращает "человеческое" значение поля (с учётом "Иное" и единиц измерения)
+function unitLabelForSpec(field, unitCode, unitGroups) {
+  if (!unitCode) return "";
+  if (field?.unitGroup) {
+    const match = (unitGroups?.[field.unitGroup] || []).find(
+      (item) => item.value === unitCode,
+    );
+    if (match) return match.label;
+  }
+  for (const group of Object.values(unitGroups || {})) {
+    const match = group.find((item) => item.value === unitCode);
+    if (match) return match.label;
+  }
+  if (field?.code && DIMENSION_CODES.includes(field.code)) {
+    return dimensionUnitLabel(unitCode);
+  }
+  return unitCode;
+}
+
 function formatSpecValue(field, value, unitGroups) {
   if (!value) return "";
   const raw =
@@ -82,13 +101,23 @@ function formatSpecValue(field, value, unitGroups) {
   if (!raw) return "";
   const option = (field.options || []).find((o) => o.value === raw);
   let text = option ? option.label : raw;
-  if (value.unit && field.unitGroup) {
-    const unit = (unitGroups?.[field.unitGroup] || []).find(
-      (u) => u.value === value.unit,
-    );
-    if (unit) text = `${text} ${unit.label}`;
-  }
+  const unitLabel = unitLabelForSpec(field, value.unit, unitGroups);
+  if (unitLabel) text = `${text} ${unitLabel}`;
   return text;
+}
+
+function formatCustomRowDisplay(row, unitGroups) {
+  const value = String(row.value || "").trim();
+  if (!value) return "";
+  const unit =
+    row.unitMode === "other"
+      ? String(row.customUnit || "").trim()
+      : String(row.unit || "").trim();
+  if (!unit) return value;
+  return displayCustomCharacteristic(
+    { customValue: value, unit },
+    unitGroups,
+  );
 }
 
 function CharacteristicRow({ field, value, unitGroups, onChange }) {
@@ -194,6 +223,7 @@ function Stage23() {
   const [customRows, setCustomRows] = useState(() => normalizeCustomRows([]));
   const [techCustomFields, setTechCustomFields] = useState([]);
   const [techCustomValues, setTechCustomValues] = useState({});
+  const [techCustomUnits, setTechCustomUnits] = useState({});
   const [productLine, setProductLine] = useState("");
   const [categorySnapshot, setCategorySnapshot] = useState(null);
   const [progressProduct, setProgressProduct] = useState(null);
@@ -255,13 +285,18 @@ function Stage23() {
             variationSpecsFrom(product, variation, fields, defaultUnits),
           );
           const techValues = {};
+          const techUnits = {};
           for (const field of techFields) {
             const saved = (variation.values || []).find(
               (item) => item.code === field.code,
             );
             techValues[field.code] = String(saved?.customValue || "").trim();
+            techUnits[field.code] = String(
+              saved?.unit || field.unit || "",
+            ).trim();
           }
           setTechCustomValues(techValues);
+          setTechCustomUnits(techUnits);
 
           const knownTechCodes = new Set(techFields.map((item) => item.code));
           setCustomRows(
@@ -296,8 +331,13 @@ function Stage23() {
           setSpecs(next);
           setCustomRows(normalizeCustomRows([]));
           const techValues = {};
-          for (const field of techFields) techValues[field.code] = "";
+          const techUnits = {};
+          for (const field of techFields) {
+            techValues[field.code] = "";
+            techUnits[field.code] = String(field.unit || "").trim();
+          }
           setTechCustomValues(techValues);
+          setTechCustomUnits(techUnits);
           setLogo(null);
         }
         setLoaded(true);
@@ -418,7 +458,7 @@ function Stage23() {
         code: field.code,
         value: field.name,
         customValue: String(techCustomValues[field.code] || "").trim(),
-        unit: null,
+        unit: String(techCustomUnits[field.code] || field.unit || "").trim() || null,
       })),
       ...serializeCustomRows(customRows).filter(
         (row) => !techCodes.has(row.code),
@@ -471,14 +511,24 @@ function Stage23() {
         for (const code of featureCodes) {
           const tech = techCustomFields.find((item) => item.code === code);
           if (tech) {
-            const text = String(techCustomValues[code] || "").trim();
+            const text = displayCustomCharacteristic(
+              {
+                customValue: String(techCustomValues[code] || "").trim(),
+                unit: String(techCustomUnits[code] || tech.unit || "").trim(),
+              },
+              catalog?.unitGroups,
+            );
             if (text) nameParts.push(text);
             continue;
           }
           const spec = specs[code];
           if (spec) {
-            const text =
-              spec.value === "other"
+            const field = (kind?.characteristics || []).find(
+              (item) => item.code === code,
+            );
+            const text = field
+              ? formatSpecValue(field, spec, catalog?.unitGroups)
+              : spec.value === "other"
                 ? String(spec.customValue || "").trim()
                 : String(spec.value || "").trim();
             if (text) nameParts.push(text);
@@ -610,7 +660,7 @@ function Stage23() {
 
         {phase === "edit" ? (
           <>
-            <div className="stage24-tabs" role="tablist">
+            <div className="stage24-tabs stage23-tabs" role="tablist">
               {tabs.map((tab) => {
                 const done = completedTabs.includes(tab.key);
                 const active = activeTab === tab.key;
@@ -752,27 +802,91 @@ function Stage23() {
                         Добавленные характеристики
                       </h3>
                     )}
-                    {techCustomFields.map((field) => (
-                      <div className="field-row" key={field.code}>
-                        <span className="info-icon" title="Подсказка">
-                          ⓘ
-                        </span>
-                        <span className="required-mark-slot" aria-hidden="true" />
-                        <span className="field-name">{field.name}</span>
-                        <input
-                          type="text"
-                          className="field-input"
-                          placeholder="Значение"
-                          value={techCustomValues[field.code] || ""}
-                          onChange={(event) =>
-                            setTechCustomValues((prev) => ({
-                              ...prev,
-                              [field.code]: event.target.value,
-                            }))
-                          }
-                        />
-                      </div>
-                    ))}
+                    {techCustomFields.map((field) => {
+                      const units = allUnitOptions(catalog?.unitGroups);
+                      const known = new Set(units.map((item) => item.value));
+                      const currentUnit = String(
+                        techCustomUnits[field.code] || field.unit || "",
+                      ).trim();
+                      const unitMode =
+                        currentUnit && !known.has(currentUnit)
+                          ? "other"
+                          : "preset";
+                      return (
+                        <div
+                          className="field-row field-row--tech-custom"
+                          key={field.code}
+                        >
+                          <span className="info-icon" title="Подсказка">
+                            ⓘ
+                          </span>
+                          <span
+                            className="required-mark-slot"
+                            aria-hidden="true"
+                          />
+                          <span className="field-name">{field.name}</span>
+                          <div className="tech-custom-control">
+                            <input
+                              type="text"
+                              className="field-input"
+                              placeholder="Значение"
+                              value={techCustomValues[field.code] || ""}
+                              onChange={(event) =>
+                                setTechCustomValues((prev) => ({
+                                  ...prev,
+                                  [field.code]: event.target.value,
+                                }))
+                              }
+                            />
+                            <select
+                              className="field-select"
+                              value={
+                                unitMode === "other" ? "other" : currentUnit
+                              }
+                              onChange={(event) => {
+                                const next = event.target.value;
+                                if (next === "other") {
+                                  setTechCustomUnits((prev) => ({
+                                    ...prev,
+                                    [field.code]:
+                                      currentUnit && !known.has(currentUnit)
+                                        ? currentUnit
+                                        : "",
+                                  }));
+                                  return;
+                                }
+                                setTechCustomUnits((prev) => ({
+                                  ...prev,
+                                  [field.code]: next,
+                                }));
+                              }}
+                            >
+                              <option value="">Единица измерения</option>
+                              {units.map((unit) => (
+                                <option key={unit.value} value={unit.value}>
+                                  {unit.label}
+                                </option>
+                              ))}
+                              <option value="other">Иное</option>
+                            </select>
+                            {unitMode === "other" && (
+                              <input
+                                type="text"
+                                className="field-input tech-custom-control__unit"
+                                placeholder="Своя единица"
+                                value={currentUnit}
+                                onChange={(event) =>
+                                  setTechCustomUnits((prev) => ({
+                                    ...prev,
+                                    [field.code]: event.target.value,
+                                  }))
+                                }
+                              />
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -1040,7 +1154,17 @@ function Stage23() {
                   }
 
                   for (const field of techCustomFields) {
-                    const text = String(techCustomValues[field.code] || "").trim();
+                    const text = displayCustomCharacteristic(
+                      {
+                        customValue: String(
+                          techCustomValues[field.code] || "",
+                        ).trim(),
+                        unit: String(
+                          techCustomUnits[field.code] || field.unit || "",
+                        ).trim(),
+                      },
+                      catalog?.unitGroups,
+                    );
                     if (text) {
                       rows.push({
                         label: field.name,
@@ -1089,10 +1213,10 @@ function Stage23() {
                       </h3>
                       <div className="review-list">
                         {filled.map((row, i) => {
-                          let valueText = row.value;
-                          if (row.unit) {
-                            valueText = `${valueText} ${row.unit}`;
-                          }
+                          const valueText = formatCustomRowDisplay(
+                            row,
+                            catalog?.unitGroups,
+                          );
                           return (
                             <div className="review-row" key={i}>
                               <span className="review-row__label">

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { productsApi } from '../api'
-import { resolveVariantFlow, variantAxisFields } from '../variantFlow'
+import { resolveVariantFlow, variantAxisFields, customAxisUnitFromProduct } from '../variantFlow'
 import './Stage12.css'
 
 function axisValueFromVariation(variation, axis) {
@@ -119,6 +119,7 @@ function Stage12() {
                                 code: field.code,
                                 value: field.label,
                                 customValue: field.value,
+                                unit: customAxisUnitFromProduct(product, field.code) || null,
                             }
                             : { code: field.code, value: field.value },
                     ),

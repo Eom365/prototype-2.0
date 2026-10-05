@@ -46,7 +46,12 @@ function filledCharacteristics(product, catalog, variationId) {
       const label = String(item.value || "").trim();
       const filled = String(item.customValue || "").trim();
       if (!label || !filled) continue;
-      options.push({ key: item.code, label, filled });
+      options.push({
+        key: item.code,
+        label,
+        filled,
+        unit: item.unit || null,
+      });
       continue;
     }
     const filled = String(
@@ -57,6 +62,7 @@ function filledCharacteristics(product, catalog, variationId) {
       key: item.code,
       label: names.get(item.code) || item.code,
       filled,
+      unit: item.unit || null,
     });
   }
   return sortByVariantAxisHierarchy(options);
@@ -98,6 +104,8 @@ function Stage25() {
   const go = (path) =>
     navigate({ pathname: path, search: path === "/" ? "" : search });
 
+  const options = filledCharacteristics(product, catalog, variationId);
+
   const toggleFeature = (key) => {
     setFeatures((prev) => {
       if (prev.includes(key)) return prev.filter((item) => item !== key);
@@ -106,11 +114,16 @@ function Stage25() {
         return prev;
       }
       setError("");
+      const opt = options.find((item) => item.key === key);
+      if (opt?.filled) {
+        setDrafts((draftsPrev) => ({
+          ...draftsPrev,
+          [key]: draftsPrev[key] || opt.filled,
+        }));
+      }
       return [...prev, key];
     });
   };
-
-  const options = filledCharacteristics(product, catalog, variationId);
 
   const setDraft = (key, value) => {
     setDrafts((prev) => ({ ...prev, [key]: value }));
@@ -130,8 +143,9 @@ function Stage25() {
         const opt = options.find((item) => item.key === key);
         return {
           key,
-          value: (drafts[key] || "").trim(),
+          value: (drafts[key] || opt?.filled || "").trim(),
           label: opt?.label || "",
+          unit: opt?.unit || null,
         };
       })
       .filter((item) => item.value);
@@ -172,14 +186,14 @@ function Stage25() {
               code: item.key,
               value: item.label || prev?.value || "",
               customValue: item.value,
-              unit: prev?.unit || null,
+              unit: item.unit || prev?.unit || null,
             });
           } else {
             byCode.set(item.key, {
               code: item.key,
               value: item.value,
               customValue: prev?.customValue || "",
-              unit: prev?.unit || null,
+              unit: item.unit || prev?.unit || null,
             });
           }
         }
@@ -196,8 +210,13 @@ function Stage25() {
                   code: item.key,
                   value: item.label,
                   customValue: item.value,
+                  unit: item.unit || null,
                 }
-              : { code: item.key, value: item.value },
+              : {
+                  code: item.key,
+                  value: item.value,
+                  unit: item.unit || null,
+                },
           ),
         });
         if (!created?.id) throw new Error("Не удалось создать вариант");
@@ -298,7 +317,13 @@ function Stage25() {
                   type="text"
                   className="feature-input"
                   placeholder="Введите значение"
-                  value={drafts[opt.key] || ""}
+                  value={
+                    Object.prototype.hasOwnProperty.call(drafts, opt.key)
+                      ? drafts[opt.key]
+                      : checked
+                        ? opt.filled || ""
+                        : ""
+                  }
                   onChange={(e) => setDraft(opt.key, e.target.value)}
                   disabled={!checked}
                 />

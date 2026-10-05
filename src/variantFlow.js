@@ -49,7 +49,7 @@ function isApproved(product) {
   )
 }
 
-function axisLabel(product, code) {
+export function variantAxisLabel(product, code) {
   if (code === 'model') return 'Модель'
   if (code === 'volume') return 'Объем'
   if (code === 'article') return 'Артикул'
@@ -90,7 +90,7 @@ export function resolveVariantFlow(product) {
     const axis = ordered[0] || axes[0]
     return {
       mode: 'known',
-      label: axisLabel(product, axis),
+      label: variantAxisLabel(product, axis),
       axis,
       axes: ordered,
       stabilized: manual || ordered.length > 1,
@@ -106,7 +106,7 @@ export function variantAxisFields(product) {
   const codes = sortVariantAxisCodes(flow.axes?.length ? flow.axes : [flow.axis])
   return codes.filter(Boolean).map((code) => ({
     code,
-    label: axisLabel(product, code),
+    label: variantAxisLabel(product, code),
   }))
 }
 
@@ -140,24 +140,42 @@ export function loadNameFeatures(productId) {
 
 export function customTechFieldsFromProduct(product) {
   const byCode = new Map()
-  for (const variation of product?.variations || []) {
-    for (const item of variation.values || []) {
-      if (!item?.code?.startsWith(CUSTOM_CODE_PREFIX)) continue
-      const name = String(item.value || '').trim()
-      if (!name) continue
-      if (!byCode.has(item.code)) {
-        byCode.set(item.code, { code: item.code, name })
-      }
+  const remember = (item) => {
+    if (!item?.code?.startsWith(CUSTOM_CODE_PREFIX)) return
+    const name = String(item.value || '').trim()
+    if (!name) return
+    const unit = String(item.unit || '').trim()
+    const prev = byCode.get(item.code)
+    if (!prev) {
+      byCode.set(item.code, { code: item.code, name, unit })
+      return
     }
+    if (!prev.unit && unit) {
+      byCode.set(item.code, { ...prev, unit })
+    }
+  }
+  for (const variation of product?.variations || []) {
+    for (const item of variation.values || []) remember(item)
   }
   for (const item of product?.values || []) {
     if (item.variationId) continue
-    if (!item?.code?.startsWith(CUSTOM_CODE_PREFIX)) continue
-    const name = String(item.value || '').trim()
-    if (!name) continue
-    if (!byCode.has(item.code)) {
-      byCode.set(item.code, { code: item.code, name })
-    }
+    remember(item)
   }
   return [...byCode.values()]
+}
+
+export function customAxisUnitFromProduct(product, code) {
+  if (!code) return ''
+  for (const variation of product?.variations || []) {
+    const row = (variation.values || []).find((item) => item.code === code)
+    const unit = String(row?.unit || '').trim()
+    if (unit) return unit
+  }
+  for (const item of product?.values || []) {
+    if (item.variationId) continue
+    if (item.code !== code) continue
+    const unit = String(item.unit || '').trim()
+    if (unit) return unit
+  }
+  return ''
 }

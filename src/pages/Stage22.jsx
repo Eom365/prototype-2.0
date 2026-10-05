@@ -2,8 +2,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import BottomBar from "../components/BottomBar";
-import { productsApi } from "../api";
-import { resolveVariantFlow, variantAxisFields } from "../variantFlow";
+import { catalogApi, productsApi } from "../api";
+import { formatVariantParameterLabel } from "../variantAxisDisplay";
 import "./Stage22.css";
 
 function LinePhotos({ photos }) {
@@ -35,43 +35,6 @@ function LinePhotos({ photos }) {
       </div>
     </div>
   );
-}
-
-function resolveAxis(product) {
-  const flow = resolveVariantFlow(product);
-  if (flow.mode === "known" && flow.axis) {
-    return { code: flow.axis, label: flow.label || flow.axis };
-  }
-  const axes = product?.variantAxes || [];
-  if (axes[0]) {
-    return { code: axes[0], label: axes[0] };
-  }
-  return { code: "model", label: "Модель" };
-}
-
-function axisValue(variation, axis) {
-  const row = (variation.values || []).find((item) => item.code === axis);
-  if (!row) {
-    if (axis === "model") return (variation.model || "").trim();
-    return "";
-  }
-  if (String(axis || "").startsWith("custom:")) {
-    return (row.customValue || "").trim();
-  }
-  if (row.value === "other") return (row.customValue || "").trim();
-  return (row.value || "").trim();
-}
-
-function variantLabel(variation, product) {
-  const fields = variantAxisFields(product);
-  if (fields.length) {
-    const parts = fields
-      .map((field) => axisValue(variation, field.code))
-      .filter(Boolean);
-    return parts.join(" · ") || "—";
-  }
-  const axis = resolveAxis(product);
-  return axisValue(variation, axis.code) || "—";
 }
 
 function variantPhoto(files, variationId) {
@@ -141,14 +104,17 @@ function Stage22() {
   const [params] = useSearchParams();
   const productId = params.get("id");
   const [product, setProduct] = useState(null);
+  const [catalog, setCatalog] = useState(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
   const reload = () => {
     if (!productId) return;
-    return productsApi
-      .get(productId)
-      .then(setProduct)
+    return Promise.all([productsApi.get(productId), catalogApi.get()])
+      .then(([loadedProduct, loadedCatalog]) => {
+        setProduct(loadedProduct);
+        setCatalog(loadedCatalog);
+      })
       .catch((loadError) => setError(loadError.message));
   };
 
@@ -181,6 +147,8 @@ function Stage22() {
     "";
   const brandStatus = brandName.trim() && brandDoc ? "Подтвержден" : "";
   const variations = product?.variations || [];
+  const variantLabel = (variation) =>
+    formatVariantParameterLabel(product, variation, catalog);
   const created = variations.filter(
     (item) => (item.reviewStatus || "filling") !== "pending",
   );
@@ -322,7 +290,7 @@ function Stage22() {
                 {created.map((variation) => (
                   <VariantCard
                     key={variation.id}
-                    label={variantLabel(variation, product)}
+                    label={variantLabel(variation)}
                     photoUrl={variantPhoto(files, variation.id)}
                     onEdit={() => openEdit(variation)}
                     onDelete={() => removeVariant(variation)}
@@ -341,7 +309,7 @@ function Stage22() {
                 {pending.map((variation) => (
                   <VariantCard
                     key={variation.id}
-                    label={variantLabel(variation, product)}
+                    label={variantLabel(variation)}
                     photoUrl={variantPhoto(files, variation.id)}
                     bordered
                     onDelete={() => removeVariant(variation)}

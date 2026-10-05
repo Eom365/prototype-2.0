@@ -24,6 +24,44 @@
   margin: 0;
 }
 
+.stage23-page .field-row--tech-custom {
+  grid-template-columns: 24px 30px minmax(120px, 180px) minmax(220px, 1fr);
+}
+
+.stage23-page .tech-custom-control {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  width: 100%;
+  flex-wrap: wrap;
+}
+
+.stage23-page .tech-custom-control .field-input {
+  flex: 1 1 140px;
+  min-width: 120px;
+}
+
+.stage23-page .tech-custom-control .field-select {
+  flex: 0 0 160px;
+  width: 160px;
+  max-width: 100%;
+}
+
+.stage23-page .tech-custom-control__unit {
+  flex: 1 1 120px;
+  min-width: 100px;
+}
+
+.stage23-page .stage23-tabs {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.stage23-page .stage23-tabs .stage24-tab {
+  font-size: 11px;
+  padding: 10px 4px;
+}
+
 .stage23-page .field-row--options {
   grid-template-columns: 24px 30px minmax(140px, 200px) minmax(160px, 1fr);
   align-items: start;
