@@ -1,19 +1,33 @@
-// Этап 5 - Презентация продукции
-import { useState } from "react";
+// Этап 3 - Презентация продукции
+import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import BottomBar from "../components/BottomBar";
 import PhotoGallery from "../components/PhotoGallery";
+import { productsApi } from "../api";
+import { fillProgressTotal, isProductWizard, setProductWizard } from "../stageProgress";
 import "./Stage3.css";
 
 function Stage3() {
   const [params] = useSearchParams();
   const productId = params.get("id");
   const [showNoSub, setShowNoSub] = useState(false);
+  const [product, setProduct] = useState(null);
+
+  useEffect(() => {
+    if (!productId) return;
+    if (!isProductWizard(productId)) setProductWizard(productId, true);
+    productsApi
+      .get(productId)
+      .then(setProduct)
+      .catch(() => {});
+  }, [productId]);
+
+  const total = fillProgressTotal(product, productId) || 3;
 
   return (
     <>
       <div className="container">
-        <h1 className="title">Этап 5 - Презентация продукции</h1>
+        <h1 className="title">Этап 3 - Презентация продукции</h1>
 
         <h2 className="subtitle hyt">Презентационное видео продукта</h2>
         <div className="video-row">
@@ -71,7 +85,12 @@ function Stage3() {
         )}
       </div>
 
-      <BottomBar current={5} total={5} prevPath="/stage4" nextPath="/stage22" />
+      <BottomBar
+        current={3}
+        total={total}
+        prevPath="/stage2"
+        nextPath="/stage12"
+      />
     </>
   );
 }

@@ -15,6 +15,7 @@ import {
 } from "../descriptionForm";
 import {
   VARIANT_FILL_STAGE_COUNT,
+  productWizardOffset,
   variantFillStageHeading,
   variantFillStep,
 } from "../stageProgress";
@@ -636,7 +637,7 @@ function Stage24() {
     <>
       <div className="container stage24-page">
         <h1 className="title stage24-title">
-          {variantFillStageHeading(24, "Описание продукта")}
+          {variantFillStageHeading(24, "Описание продукта", null, productId)}
         </h1>
 
         {!productId && (
@@ -703,8 +704,8 @@ function Stage24() {
       </div>
 
       <BottomBar
-        current={variantFillStep(24)}
-        total={VARIANT_FILL_STAGE_COUNT}
+        current={variantFillStep(24) + productWizardOffset(productId)}
+        total={VARIANT_FILL_STAGE_COUNT + productWizardOffset(productId)}
         prevPath="/stage23"
         nextPath="/stage18"
         onSave={persist}

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import BottomBar from "../components/BottomBar";
 import {
   CUSTOM_VARIANT_FILL_STAGE_COUNT,
+  productWizardOffset,
   variantFillStageHeading,
   variantFillStep,
 } from "../stageProgress";
@@ -136,7 +137,7 @@ function Stage30() {
     <>
       <div className="container stage20-page">
         <h1 className="title">
-          {variantFillStageHeading(30, "Доставка продукта")}
+          {variantFillStageHeading(30, "Доставка продукта", null, productId)}
         </h1>
         <VariationPreview stage={20} />
         {!productId && (
@@ -284,8 +285,8 @@ function Stage30() {
       </div>
 
       <BottomBar
-        current={variantFillStep(30)}
-        total={CUSTOM_VARIANT_FILL_STAGE_COUNT}
+        current={variantFillStep(30) + productWizardOffset(productId)}
+        total={CUSTOM_VARIANT_FILL_STAGE_COUNT + productWizardOffset(productId)}
         prevPath="/stage29"
         nextPath="/stage31"
         onSave={save}

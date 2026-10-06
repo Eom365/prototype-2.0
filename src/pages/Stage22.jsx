@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import BottomBar from "../components/BottomBar";
 import { catalogApi, productsApi } from "../api";
 import { formatVariantParameterLabel } from "../variantAxisDisplay";
+import { setProductWizard } from "../stageProgress";
 import "./Stage22.css";
 
 function LinePhotos({ photos }) {
@@ -119,6 +120,7 @@ function Stage22() {
   };
 
   useEffect(() => {
+    if (productId) setProductWizard(productId, false);
     reload();
   }, [productId]);
 
@@ -152,7 +154,6 @@ function Stage22() {
   const created = variations.filter(
     (item) => (item.reviewStatus || "filling") !== "pending",
   );
-  const pending = variations.filter((item) => item.reviewStatus === "pending");
 
   const openCreate = () => {
     setVariantFlow(productId, "create");
@@ -293,25 +294,6 @@ function Stage22() {
                     label={variantLabel(variation)}
                     photoUrl={variantPhoto(files, variation.id)}
                     onEdit={() => openEdit(variation)}
-                    onDelete={() => removeVariant(variation)}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div className="variants-group">
-            <h3 className="variants-group__title">На проверке</h3>
-            {pending.length === 0 ? (
-              <p className="variants-group__empty">Нет вариантов на проверке</p>
-            ) : (
-              <div className="variants-group__list">
-                {pending.map((variation) => (
-                  <VariantCard
-                    key={variation.id}
-                    label={variantLabel(variation)}
-                    photoUrl={variantPhoto(files, variation.id)}
-                    bordered
                     onDelete={() => removeVariant(variation)}
                   />
                 ))}

@@ -1,15 +1,18 @@
 import { useState } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { productsApi } from '../api'
 import BottomBar from '../components/BottomBar'
-import { VARIANT_FILL_STAGE_COUNT, variantFillStageHeading, variantFillStep } from '../stageProgress'
+import { VARIANT_FILL_STAGE_COUNT, productWizardOffset, variantFillStageHeading, variantFillStep } from '../stageProgress'
 import './Stage21.css'
 
 function Stage21() {
     const navigate = useNavigate()
     const location = useLocation()
+    const [params] = useSearchParams()
+    const productId = params.get('id')
     const [showModal, setShowModal] = useState(false)
     const [busy, setBusy] = useState(false)
+    const offset = productWizardOffset(productId)
 
     const clearFlow = (id, variationId) => {
         if (id) sessionStorage.removeItem(`variantFlow:${id}`)
@@ -75,13 +78,13 @@ function Stage21() {
     return (
         <>
             <div className="container">
-                <h1 className="title">{variantFillStageHeading(21, 'Предварительный просмотр')}</h1>
+                <h1 className="title">{variantFillStageHeading(21, 'Предварительный просмотр', null, productId)}</h1>
                 <h2 className="subtitle">*Открывается заполненная карточка товара для просмотра*</h2>
             </div>
 
             <BottomBar
-                current={variantFillStep(21)}
-                total={VARIANT_FILL_STAGE_COUNT}
+                current={variantFillStep(21) + offset}
+                total={VARIANT_FILL_STAGE_COUNT + offset}
                 prevPath="/stage20"
                 onNext={handleNext}
             />

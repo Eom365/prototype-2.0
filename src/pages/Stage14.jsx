@@ -2,9 +2,9 @@ import { useEffect, useState } from "react";
 import BottomBar from "../components/BottomBar";
 import {
   VARIANT_FILL_STAGE_COUNT,
+  fillProgressStep,
+  fillProgressTotal,
   variantFillStageHeading,
-  variantFillStep,
-  variantFillTotal,
 } from "../stageProgress";
 import PhotoGallery from "../components/PhotoGallery";
 import VariationPreview from "../components/VariationPreview";
@@ -32,6 +32,7 @@ function Stage14() {
             14,
             "Фотографии варианта параметра продукта",
             product,
+            productId,
           )}
         </h1>
         <h2 className="subtitle">
@@ -86,8 +87,8 @@ function Stage14() {
       </div>
 
       <BottomBar
-        current={variantFillStep(14, product)}
-        total={variantFillTotal(product) || VARIANT_FILL_STAGE_COUNT}
+        current={fillProgressStep(14, product, productId)}
+        total={fillProgressTotal(product, productId) || VARIANT_FILL_STAGE_COUNT}
         prevPath="/stage7"
         nextPath="/stage23"
       />

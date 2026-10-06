@@ -1,10 +1,17 @@
 import { Fragment, useEffect, useState } from "react";
-import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import BottomBar from "../components/BottomBar";
+import ExcelImportModal from "../components/ExcelImportModal";
 import { catalogApi, productsApi } from "../api";
 import { sameId } from "../cardScope";
 import { CUSTOM_CODE_PREFIX } from "../customCharacteristics";
 import {
+  CUSTOM_VARIANT_FILL_STAGE_COUNT,
+  fillProgressStep,
+  fillProgressTotal,
+  productWizardOffset,
   variantFillStageHeading,
+  variantFillStep,
 } from "../stageProgress";
 import {
   sortByVariantAxisHierarchy,
@@ -70,7 +77,6 @@ function filledCharacteristics(product, catalog, variationId) {
 
 function Stage25() {
   const navigate = useNavigate();
-  const location = useLocation();
   const [params] = useSearchParams();
   const productId = params.get("id");
   const variationId = params.get("variationId");
@@ -97,14 +103,8 @@ function Stage25() {
       .catch((err) => setError(err.message));
   }, [productId, variationId]);
 
-  const search = productId
-    ? `?id=${productId}${variationId ? `&variationId=${variationId}` : ""}`
-    : location.search || "";
-
-  const go = (path) =>
-    navigate({ pathname: path, search: path === "/" ? "" : search });
-
   const options = filledCharacteristics(product, catalog, variationId);
+  const offset = productWizardOffset(productId);
 
   const toggleFeature = (key) => {
     setFeatures((prev) => {
@@ -129,14 +129,11 @@ function Stage25() {
     setDrafts((prev) => ({ ...prev, [key]: value }));
   };
 
-  const handleCancel = () => go(variationId ? "/stage23" : "/stage22");
-
-  const handleConfirm = async () => {
+  const save = async () => {
     if (!productId) {
-      window.alert("Сначала создайте карточку на главной странице");
-      return;
+      throw new Error("Сначала создайте карточку на главной странице");
     }
-    if (busy) return;
+    if (busy) throw new Error("Сохранение уже выполняется");
 
     const filled = features
       .map((key) => {
@@ -151,8 +148,7 @@ function Stage25() {
       .filter((item) => item.value);
 
     if (filled.length === 0) {
-      window.alert("Добавьте хотя бы одну характеристику со значением");
-      return;
+      throw new Error("Добавьте хотя бы одну характеристику со значением");
     }
 
     setBusy(true);
@@ -229,6 +225,7 @@ function Stage25() {
       navigate({ pathname: "/stage26", search: `?${next.toString()}` });
     } catch (err) {
       setError(err.message || "Не удалось сохранить");
+      throw err;
     } finally {
       setBusy(false);
     }
@@ -238,7 +235,12 @@ function Stage25() {
     <>
       <div className="container">
         <h1 className="title">
-          {variantFillStageHeading(25, "Вариант параметра продукта")}
+          {variantFillStageHeading(
+            25,
+            "Вариант параметра продукта",
+            product,
+            productId,
+          )}
         </h1>
 
         <p className="description">
@@ -248,6 +250,7 @@ function Stage25() {
         </p>
 
         <p className="pBold">Пример вариантов параметра продукта:</p>
+        <ExcelImportModal />
         <img
           src="/images/productParameterOption.png"
           alt="Вариант параметра продукта - пример"
@@ -277,84 +280,70 @@ function Stage25() {
               <Fragment key={opt.key}>
                 {split && <div className="feature-group-divider" />}
                 <div className="feature-row">
-                <label className="feature-item">
-                  <span
-                    className={`checkbox ${checked ? "checkbox--checked" : ""}`}
-                  >
-                    {checked && (
-                      <svg
-                        className="checkbox__tick"
-                        width="22"
-                        height="22"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                      >
-                        <path
-                          d="M5 12.5L10 17.5L19 7"
-                          stroke="white"
-                          strokeWidth="3"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    )}
-                  </span>
+                  <label className="feature-item">
+                    <span
+                      className={`checkbox ${checked ? "checkbox--checked" : ""}`}
+                    >
+                      {checked && (
+                        <svg
+                          className="checkbox__tick"
+                          width="22"
+                          height="22"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                        >
+                          <path
+                            d="M5 12.5L10 17.5L19 7"
+                            stroke="white"
+                            strokeWidth="3"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      )}
+                    </span>
+
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() => toggleFeature(opt.key)}
+                      className="feature-item__input"
+                    />
+
+                    <span className="feature-item__label">{opt.label}</span>
+                    <span className="info-icon" title={`Заполнено: ${opt.filled}`}>
+                      ?
+                    </span>
+                  </label>
 
                   <input
-                    type="checkbox"
-                    checked={checked}
-                    onChange={() => toggleFeature(opt.key)}
-                    className="feature-item__input"
+                    type="text"
+                    className="feature-input"
+                    placeholder="Введите значение"
+                    value={
+                      Object.prototype.hasOwnProperty.call(drafts, opt.key)
+                        ? drafts[opt.key]
+                        : checked
+                          ? opt.filled || ""
+                          : ""
+                    }
+                    onChange={(e) => setDraft(opt.key, e.target.value)}
+                    disabled={!checked}
                   />
-
-                  <span className="feature-item__label">{opt.label}</span>
-                  <span className="info-icon" title={`Заполнено: ${opt.filled}`}>
-                    ?
-                  </span>
-                </label>
-
-                <input
-                  type="text"
-                  className="feature-input"
-                  placeholder="Введите значение"
-                  value={
-                    Object.prototype.hasOwnProperty.call(drafts, opt.key)
-                      ? drafts[opt.key]
-                      : checked
-                        ? opt.filled || ""
-                        : ""
-                  }
-                  onChange={(e) => setDraft(opt.key, e.target.value)}
-                  disabled={!checked}
-                />
-              </div>
+                </div>
               </Fragment>
             );
           })}
         </div>
       </div>
 
-      <div className="action-bar">
-        <button
-          type="button"
-          className="action-btn action-btn--no"
-          onClick={handleCancel}
-          title="Нет"
-          disabled={busy}
-        >
-          <span className="action-btn__circle">✕</span>
-        </button>
-
-        <button
-          type="button"
-          className="action-btn action-btn--yes"
-          onClick={handleConfirm}
-          title="Да"
-          disabled={busy}
-        >
-          <span className="action-btn__circle">✓</span>
-        </button>
-      </div>
+      <BottomBar
+        current={fillProgressStep(25, product, productId) || variantFillStep(25) + offset}
+        total={fillProgressTotal(product, productId) || CUSTOM_VARIANT_FILL_STAGE_COUNT + offset}
+        prevPath="/stage23"
+        onSave={save}
+        onNext={() => {}}
+      />
     </>
   );
 }

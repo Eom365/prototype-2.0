@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import BottomBar from "../components/BottomBar";
-import { VARIANT_FILL_STAGE_COUNT, variantFillStageHeading, variantFillStep } from "../stageProgress";
+import { VARIANT_FILL_STAGE_COUNT, productWizardOffset, variantFillStageHeading, variantFillStep } from "../stageProgress";
 import VariationPreview from "../components/VariationPreview";
 import { productsApi } from "../api";
 import { discountsFrom, emptyDiscounts, useCardIds } from "../cardScope";
@@ -73,7 +73,7 @@ function Stage19() {
     <>
       <div className="container stage19-page">
         <h1 className="title">
-          {variantFillStageHeading(19, 'Добавьте стоимость товара и систему лояльности')}
+          {variantFillStageHeading(19, 'Добавьте стоимость товара и систему лояльности', null, productId)}
         </h1>
         <VariationPreview stage={19} />
         {!productId && (
@@ -198,8 +198,8 @@ function Stage19() {
       </div>
 
       <BottomBar
-        current={variantFillStep(19)}
-        total={VARIANT_FILL_STAGE_COUNT}
+        current={variantFillStep(19) + productWizardOffset(productId)}
+        total={VARIANT_FILL_STAGE_COUNT + productWizardOffset(productId)}
         prevPath="/stage18"
         nextPath="/stage20"
         onSave={save}

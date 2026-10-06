@@ -48,8 +48,8 @@ function Stage4() {
         {error && <p className="form-error">{error}</p>}
 
         <p className="stage4-lead">
-          Наименование линейки продукта сформировалось из Логотипа + Категории +
-          Бренда + Линейки.
+          Наименование линейки продукта сформировалось из Логотипа + Типа
+          продукта + Бренда + Линейки.
         </p>
 
         <div className="stage4-name-box">
@@ -65,7 +65,7 @@ function Stage4() {
             className="stage4-name-box__text"
             value={fullName}
             readOnly
-            placeholder="Логотип Категория Бренд Линейка"
+            placeholder="Логотип Тип продукта Бренд Линейка"
           />
         </div>
       </div>

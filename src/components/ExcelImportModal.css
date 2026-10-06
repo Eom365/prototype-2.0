@@ -1,0 +1,151 @@
+.excel-import-trigger {
+  display: flex;
+  justify-content: flex-start;
+  margin: 0 0 20px;
+}
+
+.excel-import-trigger__btn {
+  padding: 12px 18px;
+  font-size: 14px;
+  font-family: inherit;
+  background: #eef1ff;
+  color: #2c3ecc;
+  border: 1.5px solid #2c3ecc;
+  border-radius: 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: background 0.2s;
+}
+
+.excel-import-trigger__btn:hover {
+  background: #dde3ff;
+}
+
+.excel-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.excel-modal {
+  background: #fff;
+  border-radius: 12px;
+  padding: 28px 24px;
+  max-width: 440px;
+  width: 100%;
+  text-align: left;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+}
+
+.excel-modal__title {
+  margin: 0 0 20px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  line-height: 1.35;
+  text-align: center;
+}
+
+.excel-modal__download {
+  display: block;
+  width: 100%;
+  margin-bottom: 18px;
+  padding: 12px 16px;
+  font-size: 14px;
+  font-family: inherit;
+  font-weight: 600;
+  background: #eef1ff;
+  color: #2c3ecc;
+  border: 1.5px solid #2c3ecc;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.excel-modal__download:hover {
+  background: #dde3ff;
+}
+
+.excel-modal__upload {
+  margin-bottom: 22px;
+}
+
+.excel-modal__upload-label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
+.excel-modal__file-input {
+  position: relative;
+  display: flex;
+  align-items: center;
+  border: 1.5px solid #222;
+  border-radius: 4px;
+  background: #fff;
+  min-height: 44px;
+  cursor: pointer;
+}
+
+.excel-modal__file-text {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-family: inherit;
+  color: #222;
+  cursor: pointer;
+}
+
+.excel-modal__file-text::placeholder {
+  color: #999;
+}
+
+.excel-modal__file-clear,
+.excel-modal__file-clip {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  margin-right: 4px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  color: #333;
+}
+
+.excel-modal__file-clear:hover,
+.excel-modal__file-clip:hover {
+  opacity: 0.7;
+}
+
+.excel-modal__ok {
+  display: block;
+  width: 100%;
+  padding: 10px 32px;
+  font-size: 15px;
+  font-family: inherit;
+  border: none;
+  border-radius: 8px;
+  background: #2ecc71;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.excel-modal__ok:hover {
+  background: #27ae60;
+}

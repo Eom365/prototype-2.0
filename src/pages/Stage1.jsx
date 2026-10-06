@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import BottomBar from "../components/BottomBar";
 import { productsApi } from "../api";
+import { setProductWizard } from "../stageProgress";
 import "./Stage1.css";
 
 const BRAND_DESCRIPTION = `Бренд - это название товарного знака, под которым продается товар.`;
@@ -26,9 +27,20 @@ function Stage1() {
   const productId = params.get("id");
   const [fields, setFields] = useState(emptyFields);
   const [savedBrandName, setSavedBrandName] = useState("");
+  const [savedAuthor, setSavedAuthor] = useState({
+    authorLastName: "",
+    authorFirstName: "",
+    authorMiddleName: "",
+  });
   const [matches, setMatches] = useState([]);
+  const [sellerModalOpen, setSellerModalOpen] = useState(false);
   const [error, setError] = useState("");
   const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    if (!productId) return;
+    setProductWizard(productId, true);
+  }, [productId]);
 
   useEffect(() => {
     if (!productId) return;
@@ -36,10 +48,15 @@ function Stage1() {
       .get(productId)
       .then((product) => {
         setSavedBrandName(product.brandName || "");
-        setFields({
+        setSavedAuthor({
           authorLastName: product.authorLastName || "",
           authorFirstName: product.authorFirstName || "",
           authorMiddleName: product.authorMiddleName || "",
+        });
+        setFields({
+          authorLastName: "",
+          authorFirstName: "",
+          authorMiddleName: "",
           tradeName: product.tradeName || "",
           brandName: "",
           manufacturerName: product.manufacturerName || "",
@@ -85,6 +102,7 @@ function Stage1() {
     if (!loaded) throw new Error("Карточка ещё загружается, подождите секунду");
     return productsApi.saveIdentity(productId, {
       ...fields,
+      ...savedAuthor,
       brandName: savedBrandName,
     });
   };
@@ -98,46 +116,6 @@ function Stage1() {
           карточек товаров
         </h2>
 
-        <h2 className="section-title">Заполните информацию о себе</h2>
-        <div className="form">
-          <div className="field">
-            <label className="label">Фамилия</label>
-            <input
-              type="text"
-              value={fields.authorLastName}
-              onChange={(event) =>
-                handleChange("authorLastName", event.target.value)
-              }
-              className="input"
-              placeholder="Введите значение..."
-            />
-          </div>
-          <div className="field">
-            <label className="label">Имя</label>
-            <input
-              type="text"
-              value={fields.authorFirstName}
-              onChange={(event) =>
-                handleChange("authorFirstName", event.target.value)
-              }
-              className="input"
-              placeholder="Введите значение..."
-            />
-          </div>
-          <div className="field">
-            <label className="label">Отчество</label>
-            <input
-              type="text"
-              value={fields.authorMiddleName}
-              onChange={(event) =>
-                handleChange("authorMiddleName", event.target.value)
-              }
-              className="input"
-              placeholder="Введите значение..."
-            />
-          </div>
-        </div>
-
         {!productId && (
           <p className="form-error">
             Откройте создание карточки с главной страницы.
@@ -148,10 +126,6 @@ function Stage1() {
         <div className="form">
           <div className="field">
             <label className="label">Наименование продукта</label>
-            {/* <p className="standart">
-              Укажите полное наименование продукта в соответствии с
-              сопроводительными документами или маркировкой производителя.
-            </p> */}
             <p className="pInfo">При заполнении ориентируйтесь на следующие документы:<br /> 1.Руководство по эксплуатации<br />2.Сертификат соответствия или декларация о соответствии <br />3.Регистрационное удостоверение</p>
             <p className="pBold">
               Пример правильного заполнения: Ноутбук HUAWEI MateBook D 15;
@@ -221,48 +195,57 @@ function Stage1() {
               />
             </div>
           </div>
-
-          {/* <div className="field">
-            <label className="label">Идентификатор товара</label>
-            <input
-              type="text"
-              value={fields.productIdentifier}
-              onChange={(event) =>
-                handleChange("productIdentifier", event.target.value)
-              }
-              className="input"
-              placeholder="Введите значение..."
-            />
-          </div>
-          <div className="field">
-            <label className="label">Внутренний артикул производителя</label>
-            <input
-              type="text"
-              value={fields.internalArticle}
-              onChange={(event) =>
-                handleChange("internalArticle", event.target.value)
-              }
-              className="input"
-              placeholder="Введите значение..."
-            />
-          </div> */}
         </div>
 
         {matches.length > 0 && (
           <div className="matches">
-            <h3>Похожие карточки</h3>
+            <div className="matches-divider" />
+            <h3>Результат проверки</h3>
             {matches.map((match) => (
               <div className="match-card" key={match.id}>
-                <strong>{match.title}</strong>
-                <span>{match.status === "ready" ? "Готово" : "Черновик"}</span>
-                <p>Совпало: {match.reasons.join(", ")}</p>
+                <div className="match-card__info">
+                  <strong>{match.title}</strong>
+                  <span>
+                    {match.status === "ready" ? "Готово" : "Черновик"}
+                  </span>
+                  <p>Совпало: {match.reasons.join(", ")}</p>
+                </div>
+                <button
+                  type="button"
+                  className="match-card__seller-btn"
+                  onClick={() => setSellerModalOpen(true)}
+                >
+                  Стать продавцом этого товара
+                </button>
               </div>
             ))}
           </div>
         )}
       </div>
 
-      <BottomBar current={1} total={5} nextPath="/stage2" onSave={save} />
+      <BottomBar current={1} total={3} nextPath="/stage2" onSave={save} />
+
+      {sellerModalOpen && (
+        <div
+          className="seller-modal"
+          onClick={() => setSellerModalOpen(false)}
+        >
+          <div
+            className="seller-modal__card"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <p className="seller-modal__text">В разработке</p>
+            <button
+              type="button"
+              className="seller-modal__ok"
+              onClick={() => setSellerModalOpen(false)}
+              aria-label="Закрыть"
+            >
+              ✓
+            </button>
+          </div>
+        </div>
+      )}
     </>
   );
 }

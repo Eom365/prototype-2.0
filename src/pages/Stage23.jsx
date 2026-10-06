@@ -23,9 +23,9 @@ import {
 } from "../variantFlow";
 import {
   VARIANT_FILL_STAGE_COUNT,
+  fillProgressStep,
+  fillProgressTotal,
   variantFillStageHeading,
-  variantFillStep,
-  variantFillTotal,
 } from "../stageProgress";
 import "./Stage5.css";
 import "./Stage24.css";
@@ -648,6 +648,7 @@ function Stage23() {
             23,
             "Характеристики варианта параметра продукта",
             progressProduct,
+            productId,
           )}
         </h1>
 
@@ -1416,8 +1417,8 @@ function Stage23() {
       </div>
 
       <BottomBar
-        current={variantFillStep(23, progressProduct)}
-        total={variantFillTotal(progressProduct) || VARIANT_FILL_STAGE_COUNT}
+        current={fillProgressStep(23, progressProduct, productId)}
+        total={fillProgressTotal(progressProduct, productId) || VARIANT_FILL_STAGE_COUNT}
         prevPath="/stage14"
         nextPath={nextStage}
         onSave={persist}

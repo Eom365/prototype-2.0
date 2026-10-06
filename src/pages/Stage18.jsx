@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import BottomBar from '../components/BottomBar'
-import { VARIANT_FILL_STAGE_COUNT, variantFillStageHeading, variantFillStep } from '../stageProgress'
+import { VARIANT_FILL_STAGE_COUNT, productWizardOffset, variantFillStageHeading, variantFillStep } from '../stageProgress'
 import PackTypeHint from '../components/PackTypeHint'
 import PhotoGallery from '../components/PhotoGallery'
 import VariationPreview from '../components/VariationPreview'
@@ -67,7 +67,7 @@ function Stage18() {
     return (
         <>
             <div className="container">
-                <h1 className="title">{variantFillStageHeading(18, 'Добавьте упаковку')}</h1>
+                <h1 className="title">{variantFillStageHeading(18, 'Добавьте упаковку', null, productId)}</h1>
                 <VariationPreview stage={18} />
                 {!productId && <p className="form-error">Откройте создание карточки с главной страницы.</p>}
                 {productId && !variationId && <p className="form-error">Сначала создайте вариант на этапе 13.</p>}
@@ -341,7 +341,7 @@ function Stage18() {
                 </div>
             </div>
 
-            <BottomBar current={variantFillStep(18)} total={VARIANT_FILL_STAGE_COUNT} prevPath="/stage24" nextPath="/stage19" onSave={save} />
+            <BottomBar current={variantFillStep(18) + productWizardOffset(productId)} total={VARIANT_FILL_STAGE_COUNT + productWizardOffset(productId)} prevPath="/stage24" nextPath="/stage19" onSave={save} />
         </>
     )
 }

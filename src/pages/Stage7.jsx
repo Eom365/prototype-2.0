@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import BottomBar from "../components/BottomBar";
 import { productsApi } from "../api";
-import { VARIANT_FILL_STAGE_COUNT, variantFillStep, variantFillTotal } from "../stageProgress";
+import { VARIANT_FILL_STAGE_COUNT, fillProgressStep, fillProgressTotal, variantFillStageHeading } from "../stageProgress";
 import "./Stage7.css";
 
 const documentFields = [
@@ -24,15 +24,46 @@ function valueText(values, code) {
   return field.value === "other" ? field.customValue || "" : field.value;
 }
 
-function getRequiredFields(categoryCode, hasBrand) {
+function resolveDocumentGroup(product) {
+  const kindCode = (product?.kindCode || "").toLowerCase();
+  const categoryCode = (product?.categoryCode || "").toLowerCase();
+  const path = (product?.categoryPath || "").toLowerCase();
+  if (kindCode === "other") return "other";
+  if (
+    categoryCode === "handpieces" ||
+    path.includes("наконечник")
+  ) {
+    return "handpieces";
+  }
+  if (
+    categoryCode === "aerosols" ||
+    path.includes("аэрозол") ||
+    path.includes("баллон")
+  ) {
+    return "aerosols";
+  }
+  return "other";
+}
+
+function getRequiredFields(product, hasBrand) {
+  const group = resolveDocumentGroup(product);
   const required = new Set(["warranty", "manual"]);
-  if (categoryCode === "handpieces") required.add("registration");
-  if (categoryCode === "aerosols") {
+  if (group === "handpieces") required.add("registration");
+  if (group === "aerosols") {
     required.add("certificate");
     required.add("declaration");
   }
   if (hasBrand) required.add("brand");
   return required;
+}
+
+function getVisibleDocumentFields(product, requiredFields, brandAlreadyAttached) {
+  const group = resolveDocumentGroup(product);
+  return documentFields.filter(([name]) => {
+    if (name === "brand" && brandAlreadyAttached) return false;
+    if (group === "other") return true;
+    return requiredFields.has(name);
+  });
 }
 
 function Stage7() {
@@ -109,13 +140,20 @@ function Stage7() {
       if (brandFromStage3) next.brand = brandFromStage3;
     }
 
+    const brandAlreadyOnProduct = (product.files || []).some(
+      (file) =>
+        file.role === "document" &&
+        file.documentType === "brand" &&
+        !file.variationId,
+    );
     const hasBrand = Boolean(
       valueText(variation?.values, "brand") ||
         valueText(product.values, "brand") ||
-        product.brandName?.trim() ||
-        next.brand,
+        product.brandName?.trim(),
     );
-    setRequiredFields(getRequiredFields(product.categoryCode || "", hasBrand));
+    setRequiredFields(
+      getRequiredFields(product, hasBrand && !brandAlreadyOnProduct),
+    );
     setFiles(next);
   };
 
@@ -170,14 +208,28 @@ function Stage7() {
     }
   };
 
-  const uploadedFiles = documentFields
+  const brandAlreadyAttached = (product?.files || []).some(
+    (file) =>
+      file.role === "document" &&
+      file.documentType === "brand" &&
+      !file.variationId,
+  );
+  const visibleFields = getVisibleDocumentFields(
+    product,
+    requiredFields,
+    brandAlreadyAttached,
+  );
+
+  const uploadedFiles = visibleFields
     .map(([name, label]) => ({ name, label, file: files[name] }))
     .filter((item) => item.file);
 
   return (
     <>
       <div className="container stage7-page">
-        <h1 className="title">Этап 1 — Документы на продукт</h1>
+        <h1 className="title">
+          {variantFillStageHeading(7, "Документы на продукт", product, productId)}
+        </h1>
         <h2 className="subtitle">Добавьте документы</h2>
         {/* {!productId && (
           <p className="form-error">
@@ -187,7 +239,7 @@ function Stage7() {
         {error && <p className="form-error">{error}</p>}
 
         <div className="form">
-          {documentFields.map(([name, label, placeholder]) => (
+          {visibleFields.map(([name, label, placeholder]) => (
             <div className="field" key={name}>
               <label className="label">{label}</label>
               <input
@@ -274,9 +326,14 @@ function Stage7() {
       </div>
 
       <BottomBar
-        current={variantFillStep(7, product)}
-        total={variantFillTotal(product) || VARIANT_FILL_STAGE_COUNT}
-        prevPath={variationId ? "/stage22" : "/stage12"}
+        current={fillProgressStep(7, product, productId)}
+        total={fillProgressTotal(product, productId) || VARIANT_FILL_STAGE_COUNT}
+        prevPath={
+          (typeof sessionStorage !== "undefined" &&
+            sessionStorage.getItem(`variantFlow:${productId}`) === "edit")
+            ? "/stage22"
+            : "/stage12"
+        }
         nextPath="/stage14"
       />
     </>

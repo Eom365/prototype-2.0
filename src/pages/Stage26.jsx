@@ -6,6 +6,7 @@ import { sameId } from "../cardScope";
 import { CUSTOM_CODE_PREFIX } from "../customCharacteristics";
 import {
   CUSTOM_VARIANT_FILL_STAGE_COUNT,
+  productWizardOffset,
   variantFillStageHeading,
   variantFillStep,
 } from "../stageProgress";
@@ -70,7 +71,7 @@ function orderedSelectedKeys(selectedKeys) {
 
 function buildFormula(options, selectedKeys) {
   const byKey = new Map(options.map((item) => [item.key, item]));
-  const parts = ["Логотип", "категория", "бренд", "линейка"];
+  const parts = ["Логотип", "тип продукта", "бренд", "линейка"];
   for (const key of orderedSelectedKeys(selectedKeys)) {
     const label = byKey.get(key)?.label;
     if (label) parts.push(label);
@@ -202,6 +203,8 @@ function Stage26() {
           {variantFillStageHeading(
             26,
             "Наименование варианта параметра продукта",
+            null,
+            productId,
           )}
         </h1>
         {!productId && (
@@ -301,8 +304,8 @@ function Stage26() {
       </div>
 
       <BottomBar
-        current={variantFillStep(26)}
-        total={CUSTOM_VARIANT_FILL_STAGE_COUNT}
+        current={variantFillStep(26) + productWizardOffset(productId)}
+        total={CUSTOM_VARIANT_FILL_STAGE_COUNT + productWizardOffset(productId)}
         prevPath="/stage25"
         nextPath="/stage27"
         onSave={save}

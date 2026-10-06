@@ -1,7 +1,15 @@
 import { useEffect, useState } from 'react'
-import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import BottomBar from '../components/BottomBar'
+import ExcelImportModal from '../components/ExcelImportModal'
 import { productsApi } from '../api'
 import { resolveVariantFlow, variantAxisFields, customAxisUnitFromProduct } from '../variantFlow'
+import {
+    fillProgressStep,
+    fillProgressTotal,
+    isProductWizard,
+    variantFillStageHeading,
+} from '../stageProgress'
 import './Stage12.css'
 
 function axisValueFromVariation(variation, axis) {
@@ -32,12 +40,12 @@ function valuesFromProduct(product, axis) {
 
 function Stage12() {
     const navigate = useNavigate()
-    const location = useLocation()
     const [params] = useSearchParams()
     const productId = params.get('id')
     const [product, setProduct] = useState(null)
     const [drafts, setDrafts] = useState({})
     const [busy, setBusy] = useState(false)
+    const inWizard = isProductWizard(productId)
 
     useEffect(() => {
         if (!productId) return
@@ -49,22 +57,16 @@ function Stage12() {
 
     const flow = resolveVariantFlow(product)
     const fields = variantAxisFields(product)
-    const search = productId ? `?id=${productId}` : (location.search || '')
-
-    const go = (path) => navigate({ pathname: path, search: path === '/' ? '' : search })
 
     const setDraft = (code, value) => {
         setDrafts((prev) => ({ ...prev, [code]: value }))
     }
 
-    const handleCancel = () => go('/stage22')
-
-    const handleConfirm = async () => {
+    const save = async () => {
         if (!productId) {
-            window.alert('Сначала создайте карточку на главной странице')
-            return
+            throw new Error('Сначала создайте карточку на главной странице')
         }
-        if (busy) return
+        if (busy) throw new Error('Сохранение уже выполняется')
 
         const filled = fields
             .map((field) => ({
@@ -73,9 +75,8 @@ function Stage12() {
             }))
             .filter((field) => field.value)
 
-        if (flow.mode === 'known' && filled.length !== fields.length) {
-            window.alert('Заполните значение для каждой характеристики варианта')
-            return
+        if (flow.mode === 'known' && fields.length > 0 && filled.length !== fields.length) {
+            throw new Error('Заполните значение для каждой характеристики варианта')
         }
 
         if (fields.length) {
@@ -88,8 +89,7 @@ function Stage12() {
                 (variation) => signature(variation) === nextSignature,
             )
             if (duplicate) {
-                window.alert('Вариант с такими значениями уже есть')
-                return
+                throw new Error('Вариант с такими значениями уже есть')
             }
         }
 
@@ -103,8 +103,7 @@ function Stage12() {
             if (flow.mode === 'custom') {
                 const created = await productsApi.addVariation(productId, { values: [] })
                 if (!created?.id) {
-                    window.alert('Не удалось создать новый вариант')
-                    return
+                    throw new Error('Не удалось создать новый вариант')
                 }
                 variationId = created.id
             } else if (flow.mode === 'known') {
@@ -128,38 +127,38 @@ function Stage12() {
             }
 
             if (!variationId) {
-                window.alert('Не удалось создать новый вариант')
-                return
+                throw new Error('Не удалось создать новый вариант')
             }
 
             const next = new URLSearchParams()
             next.set('id', productId)
             next.set('variationId', variationId)
             navigate({ pathname: '/stage7', search: `?${next.toString()}` })
-        } catch (error) {
-            window.alert(error.message || 'Не удалось сохранить')
         } finally {
             setBusy(false)
         }
     }
 
+    const title = variantFillStageHeading(12, 'Вариант параметра продукта', product, productId)
+
     return (
         <>
             <div className="container">
-                <h1 className="title">Вариант параметра продукта</h1>
+                <h1 className="title">{title}</h1>
 
                 <p className="description">
                     Вариант параметра продукта — это характеристики, по которым покупатель может выбрать один из нескольких вариантов внутри одной карточки продукта.
                 </p>
 
                 <p className="pBold">Пример вариантов параметра продукта:<br /></p>
+                <ExcelImportModal />
                 <img
                     src="/images/example.png"
                     alt="Вариант параметра продукта - пример"
                     className="imgOne"
                 />
 
-                {flow.mode === 'known' && (
+                {flow.mode === 'known' && fields.length > 0 && (
                     <div className="stage12-values-block">
                         <h2 className="stage12-values-title">
                             Введите значение варианта параметра продукта
@@ -187,27 +186,13 @@ function Stage12() {
                 )}
             </div>
 
-            <div className="action-bar">
-                <button
-                    type="button"
-                    className="action-btn action-btn--no"
-                    onClick={handleCancel}
-                    title="Нет"
-                    disabled={busy}
-                >
-                    <span className="action-btn__circle">✕</span>
-                </button>
-
-                <button
-                    type="button"
-                    className="action-btn action-btn--yes"
-                    onClick={handleConfirm}
-                    title="Да"
-                    disabled={busy}
-                >
-                    <span className="action-btn__circle">✓</span>
-                </button>
-            </div>
+            <BottomBar
+                current={fillProgressStep(12, product, productId)}
+                total={fillProgressTotal(product, productId)}
+                prevPath={inWizard ? '/stage3' : '/stage22'}
+                onSave={save}
+                onNext={() => {}}
+            />
         </>
     )
 }

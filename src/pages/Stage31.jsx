@@ -4,6 +4,7 @@ import BottomBar from "../components/BottomBar";
 import { productsApi } from "../api";
 import {
   CUSTOM_VARIANT_FILL_STAGE_COUNT,
+  productWizardOffset,
   variantFillStageHeading,
   variantFillStep,
 } from "../stageProgress";
@@ -12,8 +13,10 @@ import "./Stage11.css";
 function Stage31() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
+  const productId = params.get("id");
   const [showModal, setShowModal] = useState(false);
   const [busy, setBusy] = useState(false);
+  const offset = productWizardOffset(productId);
 
   const handleNext = () => {
     setShowModal(true);
@@ -23,7 +26,7 @@ function Stage31() {
     <>
       <div className="container">
         <h1 className="title">
-          {variantFillStageHeading(31, "Предварительный просмотр")}
+          {variantFillStageHeading(31, "Предварительный просмотр", null, productId)}
         </h1>
         <h2 className="subtitle">
           *Открывается заполненная карточка товара для просмотра*
@@ -31,10 +34,9 @@ function Stage31() {
       </div>
 
       <BottomBar
-        current={variantFillStep(31)}
-        total={CUSTOM_VARIANT_FILL_STAGE_COUNT}
+        current={variantFillStep(31) + offset}
+        total={CUSTOM_VARIANT_FILL_STAGE_COUNT + offset}
         prevPath="/stage30"
-        nextPath="/stage22"
         onNext={handleNext}
       />
 
@@ -50,13 +52,15 @@ function Stage31() {
               className="modal__btn"
               disabled={busy}
               onClick={async () => {
-                const productId = params.get("id");
                 setBusy(true);
                 try {
                   if (productId) {
                     await productsApi.submitProductReview(productId);
                   }
-                  navigate("/");
+                  navigate({
+                    pathname: "/stage22",
+                    search: productId ? `?id=${productId}` : "",
+                  });
                 } catch (error) {
                   window.alert(
                     error.message || "Не удалось отправить на проверку",
