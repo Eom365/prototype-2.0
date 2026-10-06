@@ -1,7 +1,7 @@
 // Варианты параметров продукта
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import BottomBar from "../components/BottomBar";
+import BottomBar2 from "../components/BottomBar2";
 import { catalogApi, productsApi } from "../api";
 import { formatVariantParameterLabel } from "../variantAxisDisplay";
 import { setProductWizard } from "../stageProgress";
@@ -338,7 +338,7 @@ function Stage22() {
         </div>
       </div>
 
-      <BottomBar showStep={false} prevPath="/stage3" />
+      <BottomBar2 showStep={false} homeLabel="На главную" nextLabel="Управление товарами" />
     </>
   );
 }

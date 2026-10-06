@@ -200,6 +200,7 @@ function Stage1() {
         {matches.length > 0 && (
           <div className="matches">
             <div className="matches-divider" />
+            <p>Чтобы продолжить создание карточки товара, нажмите "Далее"</p>
             <h3>Результат проверки</h3>
             {matches.map((match) => (
               <div className="match-card" key={match.id}>
