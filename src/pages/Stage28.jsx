@@ -354,7 +354,7 @@ function Stage28() {
       <BottomBar
         current={variantFillStep(28) + productWizardOffset(productId)}
         total={CUSTOM_VARIANT_FILL_STAGE_COUNT + productWizardOffset(productId)}
-        prevPath="/stage27"
+        prevPath="/stage24"
         nextPath="/stage29"
         onSave={save}
       />

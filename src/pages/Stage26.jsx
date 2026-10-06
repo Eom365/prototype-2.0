@@ -307,7 +307,7 @@ function Stage26() {
         current={variantFillStep(26) + productWizardOffset(productId)}
         total={CUSTOM_VARIANT_FILL_STAGE_COUNT + productWizardOffset(productId)}
         prevPath="/stage25"
-        nextPath="/stage27"
+        nextPath="/stage24"
         onSave={save}
       />
     </>

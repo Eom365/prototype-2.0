@@ -33,7 +33,6 @@ import Stage23 from "./pages/Stage23";
 import Stage24 from "./pages/Stage24";
 import Stage25 from "./pages/Stage25";
 import Stage26 from "./pages/Stage26";
-import Stage27 from "./pages/Stage27";
 import Stage28 from "./pages/Stage28";
 import Stage29 from "./pages/Stage29";
 import Stage30 from "./pages/Stage30";
@@ -50,6 +49,13 @@ function Stage2Redirect() {
   const location = useLocation();
   return (
     <Navigate to={{ pathname: "/stage2", search: location.search }} replace />
+  );
+}
+
+function Stage27Redirect() {
+  const location = useLocation();
+  return (
+    <Navigate to={{ pathname: "/stage24", search: location.search }} replace />
   );
 }
 
@@ -88,7 +94,7 @@ function App() {
         <Route path="/stage24" element={<Stage24 />} />
         <Route path="/stage25" element={<Stage25 />} />
         <Route path="/stage26" element={<Stage26 />} />
-        <Route path="/stage27" element={<Stage27 />} />
+        <Route path="/stage27" element={<Stage27Redirect />} />
         <Route path="/stage28" element={<Stage28 />} />
         <Route path="/stage29" element={<Stage29 />} />
         <Route path="/stage30" element={<Stage30 />} />

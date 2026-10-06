@@ -1,13 +1,19 @@
 // Этап 3 - Презентация продукции
 import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import BottomBar from "../components/BottomBar";
 import PhotoGallery from "../components/PhotoGallery";
 import { productsApi } from "../api";
-import { fillProgressTotal, isProductWizard, setProductWizard } from "../stageProgress";
+import {
+  fillProgressTotal,
+  isProductWizard,
+  setProductWizard,
+} from "../stageProgress";
+import { skipsVariantParamStage } from "../variantFlow";
 import "./Stage3.css";
 
 function Stage3() {
+  const navigate = useNavigate();
   const [params] = useSearchParams();
   const productId = params.get("id");
   const [showNoSub, setShowNoSub] = useState(false);
@@ -23,6 +29,19 @@ function Stage3() {
   }, [productId]);
 
   const total = fillProgressTotal(product, productId) || 3;
+  const skipParamStage = Boolean(product) && skipsVariantParamStage(product);
+
+  const goDocuments = async () => {
+    if (!productId) throw new Error("Сначала создайте карточку на главной странице");
+    sessionStorage.setItem(`variantFlow:${productId}`, "create");
+    await productsApi.saveWantsVariants(productId, { wantsVariants: true });
+    const created = await productsApi.addVariation(productId, { values: [] });
+    if (!created?.id) throw new Error("Не удалось создать новый вариант");
+    const next = new URLSearchParams();
+    next.set("id", productId);
+    next.set("variationId", created.id);
+    navigate({ pathname: "/stage7", search: `?${next.toString()}` });
+  };
 
   return (
     <>
@@ -89,7 +108,9 @@ function Stage3() {
         current={3}
         total={total}
         prevPath="/stage2"
-        nextPath="/stage12"
+        nextPath={skipParamStage ? undefined : "/stage12"}
+        onSave={skipParamStage ? goDocuments : undefined}
+        onNext={skipParamStage ? () => {} : undefined}
       />
     </>
   );

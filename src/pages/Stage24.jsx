@@ -14,10 +14,10 @@ import {
   serializeDescriptionForm,
 } from "../descriptionForm";
 import {
-  VARIANT_FILL_STAGE_COUNT,
-  productWizardOffset,
+  fillProgressStep,
+  fillProgressTotal,
+  variantFillMode,
   variantFillStageHeading,
-  variantFillStep,
 } from "../stageProgress";
 import "./Stage24.css";
 
@@ -194,17 +194,22 @@ function Stage24() {
   const [busy, setBusy] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [hazardGroup, setHazardGroup] = useState(null);
+  const [product, setProduct] = useState(null);
 
   const go = (path) => navigate({ pathname: path, search: location.search });
   const currentIndex = TABS.findIndex((tab) => tab.key === activeTab);
   const currentTab = TABS[currentIndex];
+  const isCustomFlow = variantFillMode(product) === "custom";
+  const prevStagePath = isCustomFlow ? "/stage26" : "/stage23";
+  const nextStagePath = isCustomFlow ? "/stage28" : "/stage18";
 
   useEffect(() => {
     if (!productId) return;
     productsApi
       .get(productId)
-      .then((product) => {
-        const group = resolveHazardGroup(product);
+      .then((loadedProduct) => {
+        setProduct(loadedProduct);
+        const group = resolveHazardGroup(loadedProduct);
         setHazardGroup(group);
 
         const applyForm = (source) => {
@@ -217,7 +222,7 @@ function Stage24() {
         };
 
         if (variationId) {
-          const variation = (product.variations || []).find(
+          const variation = (loadedProduct.variations || []).find(
             (item) =>
               String(item.id).toLowerCase() ===
               String(variationId).toLowerCase(),
@@ -230,7 +235,7 @@ function Stage24() {
             precautions: variation?.precautions,
           });
         } else {
-          applyForm(product);
+          applyForm(loadedProduct);
         }
         setLoaded(true);
       })
@@ -260,7 +265,7 @@ function Stage24() {
 
       // Если на вкладке "Просмотр" — сразу на следующий этап
       if (activeTab === "review") {
-        go("/stage18");
+        go(nextStagePath);
         return;
       }
 
@@ -283,7 +288,7 @@ function Stage24() {
       setActiveTab(TABS[currentIndex - 1].key);
       return;
     }
-    go("/stage23");
+    go(prevStagePath);
   };
 
   // ===== Рендер полей для редактируемых табов =====
@@ -637,7 +642,7 @@ function Stage24() {
     <>
       <div className="container stage24-page">
         <h1 className="title stage24-title">
-          {variantFillStageHeading(24, "Описание продукта", null, productId)}
+          {variantFillStageHeading(24, "Описание продукта", product, productId)}
         </h1>
 
         {!productId && (
@@ -704,10 +709,10 @@ function Stage24() {
       </div>
 
       <BottomBar
-        current={variantFillStep(24) + productWizardOffset(productId)}
-        total={VARIANT_FILL_STAGE_COUNT + productWizardOffset(productId)}
-        prevPath="/stage23"
-        nextPath="/stage18"
+        current={fillProgressStep(24, product, productId)}
+        total={fillProgressTotal(product, productId)}
+        prevPath={prevStagePath}
+        nextPath={nextStagePath}
         onSave={persist}
       />
     </>

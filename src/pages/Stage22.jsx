@@ -5,6 +5,7 @@ import BottomBar from "../components/BottomBar";
 import { catalogApi, productsApi } from "../api";
 import { formatVariantParameterLabel } from "../variantAxisDisplay";
 import { setProductWizard } from "../stageProgress";
+import { skipsVariantParamStage } from "../variantFlow";
 import "./Stage22.css";
 
 function LinePhotos({ photos }) {
@@ -155,8 +156,27 @@ function Stage22() {
     (item) => (item.reviewStatus || "filling") !== "pending",
   );
 
-  const openCreate = () => {
+  const openCreate = async () => {
+    if (!productId || busy) return;
     setVariantFlow(productId, "create");
+    if (skipsVariantParamStage(product)) {
+      setBusy(true);
+      setError("");
+      try {
+        await productsApi.saveWantsVariants(productId, { wantsVariants: true });
+        const created = await productsApi.addVariation(productId, { values: [] });
+        if (!created?.id) throw new Error("Не удалось создать новый вариант");
+        const next = new URLSearchParams();
+        next.set("id", productId);
+        next.set("variationId", created.id);
+        navigate({ pathname: "/stage7", search: `?${next.toString()}` });
+      } catch (createError) {
+        setError(createError.message || "Не удалось создать вариант");
+      } finally {
+        setBusy(false);
+      }
+      return;
+    }
     navigate({
       pathname: "/stage12",
       search: productId ? `?id=${productId}` : "",

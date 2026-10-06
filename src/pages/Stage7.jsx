@@ -4,7 +4,14 @@ import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import BottomBar from "../components/BottomBar";
 import { productsApi } from "../api";
-import { VARIANT_FILL_STAGE_COUNT, fillProgressStep, fillProgressTotal, variantFillStageHeading } from "../stageProgress";
+import {
+  VARIANT_FILL_STAGE_COUNT,
+  fillProgressStep,
+  fillProgressTotal,
+  isProductWizard,
+  variantFillStageHeading,
+} from "../stageProgress";
+import { skipsVariantParamStage } from "../variantFlow";
 import "./Stage7.css";
 
 const documentFields = [
@@ -332,7 +339,11 @@ function Stage7() {
           (typeof sessionStorage !== "undefined" &&
             sessionStorage.getItem(`variantFlow:${productId}`) === "edit")
             ? "/stage22"
-            : "/stage12"
+            : skipsVariantParamStage(product)
+              ? isProductWizard(productId)
+                ? "/stage3"
+                : "/stage22"
+              : "/stage12"
         }
         nextPath="/stage14"
       />

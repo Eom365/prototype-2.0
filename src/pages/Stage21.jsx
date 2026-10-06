@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { productsApi } from '../api'
 import BottomBar from '../components/BottomBar'
-import { VARIANT_FILL_STAGE_COUNT, productWizardOffset, variantFillStageHeading, variantFillStep } from '../stageProgress'
+import { productWizardOffset, variantFillStageHeading, variantFillStep, variantFillTotal } from '../stageProgress'
 import './Stage21.css'
 
 function Stage21() {
@@ -83,8 +83,8 @@ function Stage21() {
             </div>
 
             <BottomBar
-                current={variantFillStep(21) + offset}
-                total={VARIANT_FILL_STAGE_COUNT + offset}
+                current={variantFillStep(21, null, productId) + offset}
+                total={variantFillTotal(null, productId) + offset}
                 prevPath="/stage20"
                 onNext={handleNext}
             />

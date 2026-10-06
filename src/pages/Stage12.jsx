@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import BottomBar from '../components/BottomBar'
 import ExcelImportModal from '../components/ExcelImportModal'
 import { productsApi } from '../api'
-import { resolveVariantFlow, variantAxisFields, customAxisUnitFromProduct } from '../variantFlow'
+import { resolveVariantFlow, variantAxisFields, customAxisUnitFromProduct, skipsVariantParamStage } from '../variantFlow'
 import {
     fillProgressStep,
     fillProgressTotal,
@@ -46,6 +46,7 @@ function Stage12() {
     const [drafts, setDrafts] = useState({})
     const [busy, setBusy] = useState(false)
     const inWizard = isProductWizard(productId)
+    const skipStarted = useRef(false)
 
     useEffect(() => {
         if (!productId) return
@@ -54,6 +55,38 @@ function Stage12() {
             setDrafts({})
         }).catch(() => {})
     }, [productId])
+
+    useEffect(() => {
+        if (!productId || !product || skipStarted.current) return
+        if (!skipsVariantParamStage(product)) return
+        skipStarted.current = true
+        let cancelled = false
+        const skip = async () => {
+            setBusy(true)
+            try {
+                sessionStorage.setItem(`variantFlow:${productId}`, 'create')
+                await productsApi.saveWantsVariants(productId, { wantsVariants: true })
+                const created = await productsApi.addVariation(productId, { values: [] })
+                if (cancelled) return
+                if (!created?.id) throw new Error('Не удалось создать новый вариант')
+                const next = new URLSearchParams()
+                next.set('id', productId)
+                next.set('variationId', created.id)
+                navigate({ pathname: '/stage7', search: `?${next.toString()}` }, { replace: true })
+            } catch (error) {
+                if (!cancelled) {
+                    skipStarted.current = false
+                    window.alert(error.message || 'Не удалось сохранить')
+                }
+            } finally {
+                if (!cancelled) setBusy(false)
+            }
+        }
+        skip()
+        return () => {
+            cancelled = true
+        }
+    }, [productId, product, navigate])
 
     const flow = resolveVariantFlow(product)
     const fields = variantAxisFields(product)

@@ -114,6 +114,11 @@ export function nextPathAfterCharacteristics(product) {
   return resolveVariantFlow(product).mode === 'custom' ? '/stage25' : '/stage24'
 }
 
+/** Manual category / custom flow has no axis values on Stage12 yet. */
+export function skipsVariantParamStage(product) {
+  return resolveVariantFlow(product).mode === 'custom'
+}
+
 export function nameFeaturesKey(productId) {
   return `nameFeatures:${productId}`
 }

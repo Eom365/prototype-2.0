@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import BottomBar from '../components/BottomBar'
-import { VARIANT_FILL_STAGE_COUNT, productWizardOffset, variantFillStageHeading, variantFillStep } from '../stageProgress'
+import { productWizardOffset, variantFillStageHeading, variantFillStep, variantFillTotal } from '../stageProgress'
 import PackTypeHint from '../components/PackTypeHint'
 import PhotoGallery from '../components/PhotoGallery'
 import VariationPreview from '../components/VariationPreview'
@@ -328,7 +328,7 @@ function Stage18() {
                 </div>
             </div>
 
-            <BottomBar current={variantFillStep(18) + productWizardOffset(productId)} total={VARIANT_FILL_STAGE_COUNT + productWizardOffset(productId)} prevPath="/stage24" nextPath="/stage19" onSave={save} />
+            <BottomBar current={variantFillStep(18, null, productId) + productWizardOffset(productId)} total={variantFillTotal(null, productId) + productWizardOffset(productId)} prevPath="/stage24" nextPath="/stage19" onSave={save} />
         </>
     )
 }
