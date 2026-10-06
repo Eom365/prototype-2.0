@@ -39,7 +39,7 @@ const FIELD_LABELS = {
 
 const TABS = [
   { key: "main", label: "Основные" },
-  { key: "dimensions", label: "Габариты и вес" },
+  { key: "dimensions", label: "Габаритные размеры и вес" },
   { key: "manufacturer", label: "Производитель" },
   { key: "tech", label: "Технические характеристики" },
   { key: "custom", label: "Добавьте характеристики" },
@@ -692,7 +692,7 @@ function Stage23() {
             {activeTab === "main" && (
               <div className="form">
                 <h2 className="stage24-section-title">Основные</h2>
-                <p className="stage23-subtitle-line">Введите значения:</p>
+                <p className="stage23-subtitle-line">Заполните основные характеристики продукта:</p>
 
                 {mainFields
                   .filter((field) => field.code === "brand")
@@ -733,16 +733,17 @@ function Stage23() {
             {activeTab === "dimensions" && (
               <div className="form">
                 <h2 className="stage24-section-title">
-                  Габариты и вес
-                  <ImageHint
-                    src={DIMENSIONS_HINT_IMAGE}
-                    alt="Длина, ширина и высота"
-                    title="Как измерять габариты"
-                    size="large"
-                  />
+                  Габаритные размеры и вес
+                
                 </h2>
-                <p className="stage23-subtitle-line">Введите значения:</p>
-                <p className="io">Габариты</p>
+              
+                <p className="io">Габаритные размеры<ImageHint
+                  src={DIMENSIONS_HINT_IMAGE}
+                  alt="Длина, ширина и высота"
+                  title="Как измерять габариты"
+                  size="large"
+                /></p>
+                <p className="stage23-subtitle-line">Заполните габариты продукта (длина × ширина × высота):</p>
                 {dimensionsGroup && (
                   <DimensionsGroup
                     fields={dimensionsGroup.fields}
@@ -752,6 +753,7 @@ function Stage23() {
                   />
                 )}
                 <p className="io">Вес</p>
+                <p className="stage23-subtitle-line">Заполните вес продукта:</p>
                 {renderFields(weightFields)}
               </div>
             )}
@@ -760,7 +762,7 @@ function Stage23() {
             {activeTab === "manufacturer" && (
               <div className="form">
                 <h2 className="stage24-section-title">Производитель</h2>
-                <p className="stage23-subtitle-line">Введите значения:</p>
+                <p className="stage23-subtitle-line">Заполните сведения о производителе продукта. <br />При заполнении ориентируйтесь на следующие документы:<br /> 1.Руководство по эксплуатации<br /></p>
 
                 {renderFields(
                   (manufacturerGroup?.fields || []).filter(
@@ -782,7 +784,7 @@ function Stage23() {
                 <h2 className="stage24-section-title">
                   Технические характеристики
                 </h2>
-                <p className="stage23-subtitle-line">Введите значения:</p>
+                <p className="stage23-subtitle-line">Заполните технические характеристики продукта:</p>
 
                 {techGroups.length === 0 && techCustomFields.length === 0 && (
                   <p className="paragraph">
@@ -899,7 +901,7 @@ function Stage23() {
                 <h2 className="stage24-section-title">
                   Добавьте характеристики
                 </h2>
-                <p className="stage23-subtitle-line">Введите значения:</p>
+                <p className="stage23-subtitle-line">Заполните наименование характеристики, ее значение и выберите единицу измерения:</p>
 
                 <CustomCharacteristicsBlock
                   rows={customRows}
@@ -1056,7 +1058,7 @@ function Stage23() {
                   return (
                     <div className="review-block">
                       <h3 className="subtitle subtitle--spaced">
-                        Габариты и вес
+                        Габаритные размеры и вес
                       </h3>
                       <div className="review-list">
                         {rows.map((row, i) => (
@@ -1362,7 +1364,7 @@ function Stage23() {
                     renderFields(
                       group.fields.filter(
                         (field) =>
-                          group.name !== "Габариты" ||
+                          group.name !== "Габаритные размеры" ||
                           !DIMENSION_CODES.includes(field.code),
                       ),
                     )}
@@ -1385,14 +1387,10 @@ function Stage23() {
           </p>
         ) : (
           <p className="modal-sheet__subhint nm">
-            Если вы заполнили все значения — нажмите{" "}
-            <span className="modal-sheet__subhint-check" aria-hidden>
-              ✓
-            </span>
           </p>
         )}
         {/* ===== Панель ✕/✓ — ВНУТРИ контейнера, под полями ===== */}
-        {phase !== "review" && (
+        {/* {phase !== "review" && (
           <div className="wizard-action-bar">
             <button
               type="button"
@@ -1413,7 +1411,7 @@ function Stage23() {
               <span className="wizard-action-btn__circle">✓</span>
             </button>
           </div>
-        )}
+        )} */}
       </div>
 
       <BottomBar
