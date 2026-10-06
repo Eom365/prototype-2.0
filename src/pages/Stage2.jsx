@@ -532,6 +532,7 @@ function CategoryModal({
 
                 <div className="modal-sheet__suggest">
                     <p className="paragraph">Добавьте категорию</p>
+                    <p className="paragraph">Заполните категорию в поле для ввода</p>
                     <img
                         className="modal-sheet__example"
                         src="/images/category-path-example.png"
