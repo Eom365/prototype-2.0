@@ -21,7 +21,7 @@ function Stage14() {
     productsApi
       .get(productId)
       .then(setProduct)
-      .catch(() => {});
+      .catch(() => { });
   }, [productId]);
 
   return (
@@ -68,19 +68,24 @@ function Stage14() {
           </p>
         )}
         {productId && !variationId && (
-          <PhotoGallery productId={productId} role="product" />
+          <div className="stage14-gallery">
+            <PhotoGallery productId={productId} role="product" />
+          </div>
         )}
+
         {productId && variationId && (
           <>
             <h2 className="subtitle" style={{ marginTop: 24, textAlign: "left" }}>
               Фотографии текущего варианта
             </h2>
-            <PhotoGallery
-              key={variationId}
-              productId={productId}
-              role="product"
-              variationId={variationId}
-            />
+            <div className="stage14-gallery">
+              <PhotoGallery
+                key={variationId}
+                productId={productId}
+                role="product"
+                variationId={variationId}
+              />
+            </div>
           </>
         )}
       </div>

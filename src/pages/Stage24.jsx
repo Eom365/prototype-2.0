@@ -680,7 +680,7 @@ function Stage24() {
         </p>
 
         {/* ===== Панель ✕/✓ ===== */}
-        <div className="wizard-action-bar">
+        {/* <div className="wizard-action-bar">
           <button
             type="button"
             className="wizard-action-btn wizard-action-btn--no"
@@ -699,7 +699,7 @@ function Stage24() {
           >
             <span className="wizard-action-btn__circle">✓</span>
           </button>
-        </div>
+        </div> */}
       </div>
 
       <BottomBar
