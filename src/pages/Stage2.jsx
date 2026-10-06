@@ -531,8 +531,9 @@ function CategoryModal({
                 </div>
 
                 <div className="modal-sheet__suggest">
-                    <p className="paragraph">Добавьте категорию</p>
+                    <p className="paragraph">Добавить категорию</p>
                     <p className="paragraph">Заполните категорию в поле для ввода</p>
+                    <p style={{ fontWeight: 'bold' }} className="paragraph">Пример правильного заполнения:</p>
                     <img
                         className="modal-sheet__example"
                         src="/images/category-path-example.png"
@@ -946,7 +947,7 @@ function Stage2() {
                                 <div className="category-picker__fields">
                                     {displayedFields.map((value, index) => {
                                         const placeholder =
-                                            index === 0 ? 'Категория' : 'Подкатегория'
+                                            index === 0 ? 'Категория' : 'Категория'
                                         return (
                                             <div
                                                 className="category-picker__segment"
@@ -1119,7 +1120,7 @@ function Stage2() {
                                 placeholder="Логотип Тип продукта Бренд Линейка"
                             />
                         </div>
-                        <div className="stage2-agree-wrap">
+                        {/* <div className="stage2-agree-wrap">
                             <button
                                 type="button"
                                 className="excel-import-trigger__btn"
@@ -1128,7 +1129,7 @@ function Stage2() {
                             >
                                 {agreeBusy ? 'Сохранение…' : nameAgreed ? 'Согласовано' : 'Согласовать'}
                             </button>
-                        </div>
+                        </div> */}
                     </div>
                 </div>
             </div>
