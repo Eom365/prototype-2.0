@@ -303,13 +303,13 @@ function Stage24() {
               patchForm("description", { ...form.description, purpose: v })
             }
           />
-          <DescField
+          {/* <DescField
             label="Область применения продукта"
             value={form.description.usage}
             onChange={(v) =>
               patchForm("description", { ...form.description, usage: v })
             }
-          />
+          /> */}
           <DescField
             label="Принцип действия продукта"
             value={form.description.principle}
@@ -425,7 +425,7 @@ function Stage24() {
               })
             }
           />
-          <DescField
+          {/* <DescField
             label="Срок службы"
             value={form.storageConditions.shelfLife}
             onChange={(v) =>
@@ -434,7 +434,7 @@ function Stage24() {
                 shelfLife: v,
               })
             }
-          />
+          /> */}
         </div>
       );
     }

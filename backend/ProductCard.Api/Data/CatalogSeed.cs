@@ -129,7 +129,7 @@ public static class CatalogSeed
             ("headSize", "Размер головки", "Головка", 8, 1),
             ("bodyMaterial", "Материал корпуса", "Материал", 9, 1),
             ("bodyCoating", "Покрытие корпуса", "Материал", 9, 2),
-            ("warranty", "Гарантия производителя", "Гарантия", 10, 1),
+            // ("warranty", "Гарантия производителя", "Гарантия", 10, 1),
             ("agentType", "Тип средства", "Средство", 4, 1),
             ("connectionType", "Тип соединения", "Средство", 4, 2),
             ("volume", "Объём", "Средство", 4, 3)
@@ -309,7 +309,7 @@ public static class CatalogSeed
             ("brass", "Латунь"),
             ("titanium", "Титан")),
         Choice("bodyCoating", true, ("chrome", "Хром")),
-        Choice("warranty", true, ("6", "6 месяцев"), ("12", "12 месяцев"))
+        // Choice("warranty", true, ("6", "6 месяцев"), ("12", "12 месяцев"))
     ];
 
     private static FieldSpec[] ContraIncreasingFields() =>
@@ -378,7 +378,7 @@ public static class CatalogSeed
             ("brass", "Латунь"),
             ("titanium", "Титан")),
         Choice("bodyCoating", true, ("chrome", "Хром")),
-        Choice("warranty", true, ("6", "6 месяцев"), ("12", "12 месяцев"))
+        // Choice("warranty", true, ("6", "6 месяцев"), ("12", "12 месяцев"))
     ];
 
     private static void EnsureHandpieceSubtypes(AppDbContext db)

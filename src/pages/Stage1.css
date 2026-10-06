@@ -156,7 +156,7 @@
   font-size: 14px;
   line-height: 1.3;
   color: #222;
-  background: #f3f3f3;
+  background: #21B061;
   border: 1px solid #ccc;
   border-radius: 8px;
   cursor: pointer;
@@ -164,7 +164,7 @@
 }
 
 .match-card__seller-btn:hover {
-  background: #ebebeb;
+  background: #21B080;
 }
 
 .seller-modal {

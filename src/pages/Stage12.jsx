@@ -182,17 +182,17 @@ function Stage12() {
                 <p className="description">
                     Вариант параметра продукта — это характеристики, по которым покупатель может выбрать один из нескольких вариантов внутри одной карточки продукта.
                 </p>
-                <p className="standart">Для быстрого заполнения загрузите информацию о варианте параметра продукта через файл Excel</p>
+                <p className="standart">Для быстрого заполнения загрузите информацию о варианте параметра продукта через файл Excel:</p>
                 <div className="rry">
-                <button className="ones">Заполнить вручную</button>
+                {/* <button className="ones">Ручное заполнение</button> */}
                 <ExcelImportModal />
                 </div>
-                <p className="pBold">Пример вариантов параметра продукта:<br /></p>
+                {/* <p className="pBold">Пример вариантов параметра продукта:<br /></p>
                 <img
                     src="/images/example.png"
                     alt="Вариант параметра продукта - пример"
                     className="imgOne"
-                />
+                /> */}
 
                 {flow.mode === 'known' && fields.length > 0 && (
                     <div className="stage12-values-block">

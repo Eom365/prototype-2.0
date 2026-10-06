@@ -826,6 +826,7 @@ function Stage2() {
 
                 <div className="stage2-workarea">
                     <div className="field field--category">
+                        <h2 className="stage2-section-title">Категория продукта</h2>
                         <p className="paragraph">Категория продукта (строится из вашего выбора)</p>
 
                         <div className="category-picker">
@@ -967,7 +968,7 @@ function Stage2() {
                             />
                         </div>
 
-                        <div className="stage3-row">
+                        <div className="stage3-row oon">
                             <Tip
                                 text={BRAND_TIPS.line}
                                 image="/images/one.png"

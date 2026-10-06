@@ -37,10 +37,34 @@ const FIELD_LABELS = {
   article: "Артикул продукта от завода-изготовителя",
 };
 
+// ===== НОВЫЕ КОНСТАНТЫ ДЛЯ ГАРАНТИЙНЫХ ПОЛЕЙ =====
+const WARRANTY_FIELDS = [
+  {
+    code: "warrantyPeriod",
+    name: "Гарантийный срок эксплуатации",
+    defaultUnit: "months",
+    hint: "Срок, в течение которого производитель устраняет недостатки бесплатно",
+  },
+  {
+    code: "serviceLife",
+    name: "Срок службы продукта",
+    defaultUnit: "months",
+    hint: "Период, в течение которого товар пригоден и безопасен для использования",
+  },
+];
+
+const TIME_UNITS = [
+  { value: "days", label: "дней" },
+  { value: "months", label: "месяцев" },
+  { value: "years", label: "лет"}
+];
+// ===================================================
+
 const TABS = [
   { key: "main", label: "Основные" },
   { key: "dimensions", label: "Габаритные размеры и вес" },
   { key: "manufacturer", label: "Производитель" },
+  { key: "garant", label: "Гарантийные обязательства" },
   { key: "tech", label: "Технические характеристики" },
   { key: "custom", label: "Добавьте характеристики" },
   { key: "review", label: "Просмотр заполненных характеристик" },
@@ -125,10 +149,10 @@ function CharacteristicRow({ field, value, unitGroups, onChange }) {
   const optionValues = new Set((field.options || []).map((item) => item.value));
   const current =
     field.inputType === "choice" &&
-    field.allowCustom &&
-    raw.value &&
-    raw.value !== "other" &&
-    !optionValues.has(raw.value)
+      field.allowCustom &&
+      raw.value &&
+      raw.value !== "other" &&
+      !optionValues.has(raw.value)
       ? { ...raw, value: "other", customValue: raw.value }
       : raw;
   const units = field.unitGroup ? unitGroups?.[field.unitGroup] || [] : [];
@@ -253,10 +277,10 @@ function Stage23() {
       .then((product) => {
         const variation = variationId
           ? (product.variations || []).find(
-              (item) =>
-                String(item.id).toLowerCase() ===
-                String(variationId).toLowerCase(),
-            )
+            (item) =>
+              String(item.id).toLowerCase() ===
+              String(variationId).toLowerCase(),
+          )
           : null;
 
         setKindCode(product.kindCode || "");
@@ -281,9 +305,19 @@ function Stage23() {
         setTechCustomFields(techFields);
 
         if (variation) {
-          setSpecs(
-            variationSpecsFrom(product, variation, fields, defaultUnits),
-          );
+          // ===== ИЗМЕНЕНО: загружаем specs и добавляем гарантийные поля =====
+          const loadedSpecs = variationSpecsFrom(product, variation, fields, defaultUnits);
+          for (const wf of WARRANTY_FIELDS) {
+            const saved = (variation.values || []).find((item) => item.code === wf.code);
+            loadedSpecs[wf.code] = {
+              value: String(saved?.value || saved?.customValue || "").trim(),
+              customValue: "",
+              unit: String(saved?.unit || wf.defaultUnit).trim(),
+            };
+          }
+          setSpecs(loadedSpecs);
+          // ================================================================
+
           const techValues = {};
           const techUnits = {};
           for (const field of techFields) {
@@ -317,7 +351,7 @@ function Stage23() {
               (file) =>
                 file.role === "logo" &&
                 String(file.variationId || "").toLowerCase() ===
-                  String(variationId).toLowerCase(),
+                String(variationId).toLowerCase(),
             ) || null,
           );
         } else {
@@ -328,6 +362,11 @@ function Stage23() {
               : "";
             next[field.code] = { value: "", customValue: "", unit: defaultUnit };
           }
+          // ===== ДОБАВЛЕНО: гарантийные поля по умолчанию =====
+          for (const wf of WARRANTY_FIELDS) {
+            next[wf.code] = { value: "", customValue: "", unit: wf.defaultUnit };
+          }
+          // ===================================================
           setSpecs(next);
           setCustomRows(normalizeCustomRows([]));
           const techValues = {};
@@ -352,6 +391,7 @@ function Stage23() {
   const manufacturerGroup = groups.find(
     (group) => group.name === "Производитель",
   );
+  const garantGroup = groups.find((group) => group.name === "Гарантийные обязательства");
   const warrantyGroup = groups.find((group) => group.name === "Гарантия");
   const techGroups = groups.filter(
     (group) =>
@@ -538,22 +578,22 @@ function Stage23() {
           if (fromValues) {
             const text =
               fromValues.value === "other" ||
-              String(fromValues.code || "").startsWith("custom:")
+                String(fromValues.code || "").startsWith("custom:")
                 ? String(fromValues.customValue || "").trim() ||
-                  String(fromValues.value || "").trim()
+                String(fromValues.value || "").trim()
                 : String(fromValues.value || "").trim();
             if (text) nameParts.push(text);
           }
         }
         const base = [
           (progressProduct.fullName || "").trim() ||
-            [
-              (progressProduct.productName || "").trim(),
-              (progressProduct.brandName || "").trim(),
-              (productLine || progressProduct.productLine || "").trim(),
-            ]
-              .filter(Boolean)
-              .join(" "),
+          [
+            (progressProduct.productName || "").trim(),
+            (progressProduct.brandName || "").trim(),
+            (productLine || progressProduct.productLine || "").trim(),
+          ]
+            .filter(Boolean)
+            .join(" "),
           ...nameParts,
         ]
           .filter(Boolean)
@@ -563,7 +603,7 @@ function Stage23() {
             (file) =>
               file.role === "logo" &&
               String(file.variationId || "").toLowerCase() ===
-                String(variationId).toLowerCase(),
+              String(variationId).toLowerCase(),
           ) ||
           (progressProduct.files || []).find(
             (file) => file.role === "logo" && !file.variationId,
@@ -589,7 +629,6 @@ function Stage23() {
     try {
       await persist();
 
-      // Если на вкладке "Просмотр" — сразу на следующий этап
       if (activeTab === "review") {
         go(nextStage);
         return;
@@ -692,7 +731,7 @@ function Stage23() {
             {activeTab === "main" && (
               <div className="form">
                 <h2 className="stage24-section-title">Основные</h2>
-                <p className="stage23-subtitle-line">Заполните основные характеристики продукта:</p>
+                <p className="stage23-subtitle-line">Заполните линейку, модель и артикул продукта от завода-изготовителя:</p>
 
                 {mainFields
                   .filter((field) => field.code === "brand")
@@ -734,9 +773,8 @@ function Stage23() {
               <div className="form">
                 <h2 className="stage24-section-title">
                   Габаритные размеры и вес
-                
                 </h2>
-              
+
                 <p className="io">Габаритные размеры<ImageHint
                   src={DIMENSIONS_HINT_IMAGE}
                   alt="Длина, ширина и высота"
@@ -775,6 +813,53 @@ function Stage23() {
                     {renderFields(warrantyGroup.fields)}
                   </>
                 )}
+              </div>
+            )}
+
+            {/* ===== ГАРАНТИЙНЫЕ ОБЯЗАТЕЛЬСТВА ===== */}
+            {activeTab === "garant" && (
+              <div className="form">
+                <h2 className="stage24-section-title">Гарантийные обязательства</h2>
+                <p className="stage23-subtitle-line">
+                  Укажите гарантийный срок эксплуатации и срок службы продукта:
+                </p>
+
+                {WARRANTY_FIELDS.map((wf) => {
+                  const spec = specs[wf.code] || {
+                    value: "",
+                    customValue: "",
+                    unit: wf.defaultUnit,
+                  };
+                  return (
+                    <div className="field-row" key={wf.code}>
+                      <span className="info-icon" title={wf.hint}>ⓘ</span>
+                      <span className="required-mark-slot" aria-hidden="true" />
+                      <span className="field-name">{wf.name}</span>
+                      <input
+                        type="number"
+                        min="0"
+                        step="1"
+                        className="field-input"
+                        placeholder="Введите число"
+                        value={spec.value || ""}
+                        onChange={(event) =>
+                          updateSpec(wf.code, { value: event.target.value })
+                        }
+                      />
+                      <select
+                        className="field-select"
+                        value={spec.unit || wf.defaultUnit}
+                        onChange={(event) =>
+                          updateSpec(wf.code, { unit: event.target.value })
+                        }
+                      >
+                        {TIME_UNITS.map((u) => (
+                          <option key={u.value} value={u.value}>{u.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                  );
+                })}
               </div>
             )}
 
@@ -925,7 +1010,6 @@ function Stage23() {
                 {(() => {
                   const rows = [];
 
-                  // Бренд
                   const brandField = mainFields.find((f) => f.code === "brand");
                   if (brandField) {
                     const text = formatSpecValue(
@@ -941,7 +1025,6 @@ function Stage23() {
                     }
                   }
 
-                  // Логотип
                   if (logo) {
                     rows.push({
                       label: "Логотип",
@@ -951,7 +1034,6 @@ function Stage23() {
                     });
                   }
 
-                  // Линейка
                   if (productLine?.trim()) {
                     rows.push({
                       label: "Линейка продукции",
@@ -959,7 +1041,6 @@ function Stage23() {
                     });
                   }
 
-                  // Остальные поля Основные
                   for (const field of mainFields) {
                     if (field.code === "brand") continue;
                     const text = formatSpecValue(
@@ -975,7 +1056,6 @@ function Stage23() {
                     }
                   }
 
-                  // Вес и погрешность
                   for (const field of weightFields) {
                     const text = formatSpecValue(
                       field,
@@ -1023,7 +1103,6 @@ function Stage23() {
                 {(() => {
                   const rows = [];
 
-                  // Габариты (DimensionsGroup) — поля из dimensionsGroup.fields
                   for (const field of dimensionsGroup?.fields || []) {
                     const text = formatSpecValue(
                       field,
@@ -1038,7 +1117,6 @@ function Stage23() {
                     }
                   }
 
-                  // Вес и погрешность
                   for (const field of weightFields) {
                     const text = formatSpecValue(
                       field,
@@ -1128,6 +1206,39 @@ function Stage23() {
                             <span className="review-row__value">
                               {row.value}
                             </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* ===== ДОБАВЛЕНО: Гарантийные обязательства ===== */}
+                {(() => {
+                  const rows = [];
+                  for (const wf of WARRANTY_FIELDS) {
+                    const spec = specs[wf.code];
+                    if (!spec || !String(spec.value || "").trim()) continue;
+                    const unitLabel =
+                      TIME_UNITS.find(
+                        (u) => u.value === (spec.unit || wf.defaultUnit),
+                      )?.label || "";
+                    rows.push({
+                      label: wf.name,
+                      value: `${String(spec.value).trim()} ${unitLabel}`.trim(),
+                    });
+                  }
+                  if (rows.length === 0) return null;
+                  return (
+                    <div className="review-block">
+                      <h3 className="subtitle subtitle--spaced">
+                        Гарантийные обязательства
+                      </h3>
+                      <div className="review-list">
+                        {rows.map((row, i) => (
+                          <div className="review-row" key={i}>
+                            <span className="review-row__label">{row.label}</span>
+                            <span className="review-row__value">{row.value}</span>
                           </div>
                         ))}
                       </div>
@@ -1385,29 +1496,6 @@ function Stage23() {
           <p className="modal-sheet__subhint nm">
           </p>
         )}
-        {/* ===== Панель ✕/✓ — ВНУТРИ контейнера, под полями ===== */}
-        {/* {phase !== "review" && (
-          <div className="wizard-action-bar">
-            <button
-              type="button"
-              className="wizard-action-btn wizard-action-btn--no"
-              onClick={handleCancel}
-              title="Назад"
-              disabled={busy}
-            >
-              <span className="wizard-action-btn__circle">✕</span>
-            </button>
-            <button
-              type="button"
-              className="wizard-action-btn wizard-action-btn--yes"
-              onClick={handleConfirm}
-              title="Далее"
-              disabled={busy || !loaded}
-            >
-              <span className="wizard-action-btn__circle">✓</span>
-            </button>
-          </div>
-        )} */}
       </div>
 
       <BottomBar
