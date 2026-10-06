@@ -179,7 +179,7 @@ function Stage1() {
             </div>
           </div>
 
-          <div className="field">
+          {/* <div className="field">
             <label className="label">Страна производителя</label>
             <p className="pBold">Пример правильного заполнения: "Китай"</p>
             <div className="field-control">
@@ -194,7 +194,7 @@ function Stage1() {
                 placeholder="Введите значение..."
               />
             </div>
-          </div>
+          </div> */}
         </div>
 
         {matches.length > 0 && (

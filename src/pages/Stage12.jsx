@@ -149,9 +149,12 @@ function Stage12() {
                 <p className="description">
                     Вариант параметра продукта — это характеристики, по которым покупатель может выбрать один из нескольких вариантов внутри одной карточки продукта.
                 </p>
-
-                <p className="pBold">Пример вариантов параметра продукта:<br /></p>
+                <p className="standart">Для быстрого заполнения загрузите информацию о варианте параметра продукта через файл Excel</p>
+                <div className="rry">
+                <button className="ones">Заполнить вручную</button>
                 <ExcelImportModal />
+                </div>
+                <p className="pBold">Пример вариантов параметра продукта:<br /></p>
                 <img
                     src="/images/example.png"
                     alt="Вариант параметра продукта - пример"

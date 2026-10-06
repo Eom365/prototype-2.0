@@ -250,7 +250,7 @@ function Stage25() {
         </p>
 
         <p className="pBold">Пример вариантов параметра продукта:</p>
-        <ExcelImportModal />
+        {/* <ExcelImportModal /> */}
         <img
           src="/images/productParameterOption.png"
           alt="Вариант параметра продукта - пример"

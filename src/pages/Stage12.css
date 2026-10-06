@@ -173,3 +173,30 @@
 .action-btn--yes .action-btn__circle {
     color: #2ecc71;
 }
+
+
+.ones {
+    padding: 12px 18px;
+        font-size: 14px;
+        font-family: inherit;
+        background: #f0faeb;
+        color: #000;
+        border: 2px solid green;
+        border-radius: 8px;
+        cursor: pointer;
+        /* display: inline-flex;
+        align-items: center; */
+        /* gap: 8px; */
+        transition: background 0.2s;
+}
+
+.rry {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-block-end: 40px;
+}
+
+.excel-import-trigger {
+    margin: 0;
+}

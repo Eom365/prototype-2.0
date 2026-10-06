@@ -1380,10 +1380,6 @@ function Stage23() {
         )}
         {activeTab === "review" ? (
           <p className="modal-sheet__subhint nm">
-            Если все верно - нажмите{" "}
-            <span className="modal-sheet__subhint-check" aria-hidden>
-              ✓
-            </span>
           </p>
         ) : (
           <p className="modal-sheet__subhint nm">

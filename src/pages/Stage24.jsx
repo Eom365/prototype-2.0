@@ -374,7 +374,7 @@ function Stage24() {
             }
           /> */}
           <DescField
-            label="Способ применения"
+            label=""
             value={form.applicationArea.method}
             onChange={(v) =>
               patchForm("applicationArea", {

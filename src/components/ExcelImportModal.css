@@ -8,9 +8,9 @@
   padding: 12px 18px;
   font-size: 14px;
   font-family: inherit;
-  background: #eef1ff;
-  color: #2c3ecc;
-  border: 1.5px solid #2c3ecc;
+  background: white;
+  color: black;
+  border: 1.5px solid green;
   border-radius: 8px;
   cursor: pointer;
   display: inline-flex;
@@ -20,7 +20,7 @@
 }
 
 .excel-import-trigger__btn:hover {
-  background: #dde3ff;
+  background: #8aff8a;
 }
 
 .excel-modal-overlay {

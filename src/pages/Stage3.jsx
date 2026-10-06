@@ -27,7 +27,7 @@ function Stage3() {
   return (
     <>
       <div className="container">
-        <h1 className="title">Этап 3 - Презентация продукции</h1>
+        <h1 className="title">Этап 3 - Презентация линейки продукции</h1>
 
         <h2 className="subtitle hyt">Презентационное видео продукта</h2>
         <div className="video-row">
