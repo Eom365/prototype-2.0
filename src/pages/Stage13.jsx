@@ -4,6 +4,7 @@ import BottomBar from '../components/BottomBar'
 import { catalogApi, productsApi } from '../api'
 import { composeAddress, pointsFrom, sameId } from '../cardScope'
 import { variantAxisCodesForKind } from '../variantAxes'
+import { VARIANT_AXIS_SKIP_CODES } from '../variantFlow'
 import './Stage13.css'
 
 const lockedCodes = new Set(['article', 'brand', 'manufacturer', 'country'])
@@ -219,6 +220,7 @@ function Stage13() {
                 const saved = {}
                 for (const field of kind?.characteristics || []) {
                     if (lockedCodes.has(field.code)) continue
+                    if (VARIANT_AXIS_SKIP_CODES.has(field.code)) continue
                     if (allowedAxes && !allowedAxes.has(field.code)) continue
                     const value = (product.values || []).find((item) => item.code === field.code && !item.variationId)
                     const text = displayValue(field, value, catalog.unitGroups)

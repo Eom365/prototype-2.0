@@ -75,7 +75,7 @@ function Stage18() {
                     <h2 className="subtitle">Добавьте фотографии упаковки:</h2>
 
                     {productId && variationId && (
-                        <PhotoGallery productId={productId} role="package" variationId={variationId} />
+                        <PhotoGallery productId={productId} role="package" variationId={variationId} layout="stack" />
                     )}
                 </div>
 

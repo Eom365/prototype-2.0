@@ -12,7 +12,8 @@ public class CatalogController : ControllerBase
     {
         ["weight"] = [("gram", "Грамм"), ("kilogram", "Килограмм")],
         ["tolerance"] = [("gram", "Грамм"), ("percent", "%")],
-        ["dimension"] = [("millimeters", "Миллиметры"), ("centimeters", "Сантиметры")]
+        ["dimension"] = [("millimeters", "Миллиметры"), ("centimeters", "Сантиметры")],
+        ["duration"] = [("days", "дней"), ("months", "месяцев"), ("years", "лет")]
     };
 
     private readonly AppDbContext _db;

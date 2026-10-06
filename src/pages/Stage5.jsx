@@ -266,7 +266,9 @@ function Stage5() {
               style={{ display: "none" }}
             />
 
-            {groups.map((group) => (
+            {groups
+              .filter((group) => group.name !== "Гарантия")
+              .map((group) => (
               <div key={group.name}>
                 <h3 className="subtitle subtitle--spaced group-title">
                   {group.name}

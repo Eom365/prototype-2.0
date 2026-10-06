@@ -94,6 +94,7 @@ function Stage28() {
               productId={productId}
               role="package"
               variationId={variationId}
+              layout="stack"
             />
           )}
         </div>

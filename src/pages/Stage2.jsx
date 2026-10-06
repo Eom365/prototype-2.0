@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import BottomBar from '../components/BottomBar'
 import { catalogApi, productsApi } from '../api'
@@ -10,6 +10,7 @@ import {
 import { productWizardTotal } from '../stageProgress'
 import './Stage2.css'
 import './Stage2_3.css'
+import '../components/ExcelImportModal.css'
 
 function getPurposeRoot(purpose) {
     return purpose === 'Стоматология' ? 'Профессиональная стоматология' : 'Стоматология'
@@ -163,6 +164,74 @@ function splitCategoryPath(path) {
         .filter(Boolean)
 }
 
+function fieldsToCategoryPath(fields) {
+    const parts = []
+    for (const field of fields || []) {
+        const text = String(field || '').trim()
+        if (!text) break
+        parts.push(text)
+    }
+    return parts.join(' > ')
+}
+
+/** Path segments + one trailing empty field for extending the chain. */
+function pathToFields(path) {
+    const segments = splitCategoryPath(path)
+    return segments.length ? [...segments, ''] : ['']
+}
+
+/** Keep filled segments and one trailing empty field. */
+function normalizePathFields(fields) {
+    const next = []
+    for (const field of fields || []) {
+        const text = String(field ?? '')
+        if (!String(text).trim()) break
+        next.push(text)
+    }
+    if (next.length === 0) return ['']
+    next.push('')
+    return next
+}
+
+function CategoryPathField({
+    value,
+    placeholder,
+    onChange,
+    onFocus,
+    onDoubleClick,
+    title,
+}) {
+    const inputRef = useRef(null)
+    const measureRef = useRef(null)
+
+    useLayoutEffect(() => {
+        const input = inputRef.current
+        const measure = measureRef.current
+        if (!input || !measure) return
+        const nextWidth = Math.ceil(measure.offsetWidth) + 4
+        input.style.width = `${Math.max(nextWidth, 48)}px`
+    }, [value, placeholder])
+
+    return (
+        <span className="category-picker__field-wrap">
+            <span ref={measureRef} className="category-picker__measure" aria-hidden="true">
+                {value || placeholder || ' '}
+            </span>
+            <input
+                ref={inputRef}
+                type="text"
+                className="category-picker__field"
+                value={value}
+                placeholder={placeholder}
+                onChange={onChange}
+                onFocus={onFocus}
+                onDoubleClick={onDoubleClick}
+                title={title}
+            />
+        </span>
+    )
+}
+
 function buildDraftPath(prefix, tail, draft) {
     const trimmed = String(draft || '').trim()
     const parts = [...prefix, ...tail]
@@ -253,9 +322,7 @@ function CategoryModal({
     const rootLabel = getPurposeRoot(purpose || 'Стоматология')
     const initial = navigationFromPath(catalog, purpose, initialPath)
     const [stack, setStack] = useState(initial.stack)
-    const [customDraft, setCustomDraft] = useState('')
     const [customTail, setCustomTail] = useState(initial.customTail)
-    const [customFocused, setCustomFocused] = useState(false)
 
     useEffect(() => {
         const prefix = catalogPathSegments(initial.stack, rootLabel)
@@ -263,25 +330,21 @@ function CategoryModal({
         if (path) onDraftPathChange?.(path)
     }, [])
 
-    const publishDraft = (prefix, tail, draft) => {
+    const publishDraft = (prefix, tail, draft = '') => {
         onDraftPathChange?.(buildDraftPath(prefix, tail, draft))
     }
 
-    const pathPrefix = () => catalogPathSegments(stack, rootLabel)
-
-    const syncPath = (nextStack = stack, nextTail = customTail, nextDraft = customDraft) => {
-        publishDraft(catalogPathSegments(nextStack, rootLabel), nextTail, nextDraft)
+    const syncPath = (nextStack = stack, nextTail = customTail) => {
+        publishDraft(catalogPathSegments(nextStack, rootLabel), nextTail, '')
     }
 
     useEffect(() => {
         syncPath()
-    }, [stack, customTail, customDraft])
+    }, [stack, customTail])
 
     const resetCustomFlow = (nextStack = stack) => {
         setCustomTail([])
-        setCustomDraft('')
-        setCustomFocused(false)
-        syncPath(nextStack, [], '')
+        syncPath(nextStack, [])
     }
 
     const confirmKind = (kind, category, parent) => {
@@ -415,65 +478,21 @@ function CategoryModal({
 
     const goBack = () => {
         if (customTail.length > 0) {
-            const next = customTail.slice(0, -1)
-            setCustomTail(next)
-            setCustomDraft('')
+            setCustomTail(customTail.slice(0, -1))
             return
         }
         if (stack.length <= 1) {
             setStack([])
             setCustomTail([])
-            setCustomDraft('')
-            setCustomFocused(false)
             onDraftPathChange?.('')
             return
         }
-        const next = stack.slice(0, -1)
-        setStack(next)
+        setStack(stack.slice(0, -1))
         setCustomTail([])
-        setCustomDraft('')
     }
 
-    const finishCustomPath = (segments) => {
-        const path = segments.join(' > ')
-        onSelect({
-            path,
-            kindCode: OTHER_KIND_CODE,
-            categoryCode: '',
-            handpieceParent: '',
-            productName: '',
-        })
-    }
-
-    const handleCustomConfirm = () => {
-        const text = customDraft.trim()
-        const prefix = pathPrefix()
-
-        if (text) {
-            const nextTail = [...customTail, text]
-            setCustomTail(nextTail)
-            setCustomDraft('')
-            return
-        }
-
-        if (customTail.length === 0) return
-        finishCustomPath([...prefix, ...customTail])
-    }
-
-    const handleCustomCancel = () => {
-        setCustomDraft('')
-        setCustomFocused(false)
-    }
-
-    const handleCustomDraftChange = (value) => {
-        setCustomDraft(value)
-    }
-
-    const inCustomLevel = customTail.length > 0
     const showBack = stack.length > 0 || customTail.length > 0
-    const showCustomActions = inCustomLevel || customDraft.trim().length > 0
-    const showSuggestLabel = !customFocused && !customDraft.trim() && !inCustomLevel
-    const showSubHint = inCustomLevel && !customDraft.trim()
+    const inCustomLevel = customTail.length > 0
 
     return (
         <div className="stage2-modal" onClick={onClose}>
@@ -512,47 +531,13 @@ function CategoryModal({
                 </div>
 
                 <div className="modal-sheet__suggest">
-                    {showSuggestLabel && (
-                        <p className="paragraph">Добавьте свою категорию</p>
-                    )}
-                    <input
-                        type="text"
-                        className="input"
-                        placeholder="Введите наименование категории"
-                        value={customDraft}
-                        onChange={(e) => handleCustomDraftChange(e.target.value)}
-                        onFocus={() => setCustomFocused(true)}
-                        onBlur={() => setCustomFocused(false)}
-                        onKeyDown={(e) => e.key === 'Enter' && showCustomActions && handleCustomConfirm()}
+                    <p className="paragraph">Добавьте категорию</p>
+                    <img
+                        className="modal-sheet__example"
+                        src="/images/category-path-example.png"
+                        alt="Пример пути категории"
                     />
-                    {showSubHint && (
-                        <p className="modal-sheet__subhint">
-                            Если категорий больше нет — нажмите{' '}
-                            <span className="modal-sheet__subhint-check" aria-hidden>✓</span>
-                        </p>
-                    )}
                 </div>
-
-                {showCustomActions && (
-                    <div className="modal-sheet__actions">
-                        <button
-                            type="button"
-                            className="modal-sheet__action modal-sheet__action--cancel"
-                            onClick={handleCustomCancel}
-                            aria-label="Отменить"
-                        >
-                            <span className="modal-sheet__action-circle">✕</span>
-                        </button>
-                        <button
-                            type="button"
-                            className="modal-sheet__action modal-sheet__action--confirm"
-                            onClick={handleCustomConfirm}
-                            aria-label="Подтвердить"
-                        >
-                            <span className="modal-sheet__action-circle">✓</span>
-                        </button>
-                    </div>
-                )}
             </div>
         </div>
     )
@@ -576,10 +561,16 @@ function Stage2() {
     const [logoPreviewUrl, setLogoPreviewUrl] = useState('')
     const [error, setError] = useState('')
     const [loaded, setLoaded] = useState(false)
-    const [modalOpen, setModalOpen] = useState(true)
+    const [modalOpen, setModalOpen] = useState(false)
     const [pathPreview, setPathPreview] = useState('')
     const [modalKey, setModalKey] = useState(0)
     const [modalStartPath, setModalStartPath] = useState('')
+    const [pathFields, setPathFields] = useState([''])
+    const [pathFromModal, setPathFromModal] = useState(false)
+    const [fullName, setFullName] = useState('')
+    const [nameTouched, setNameTouched] = useState(false)
+    const [nameAgreed, setNameAgreed] = useState(false)
+    const [agreeBusy, setAgreeBusy] = useState(false)
 
     useEffect(() => {
         catalogApi.get().then(setCatalog).catch((loadError) => setError(loadError.message))
@@ -600,12 +591,14 @@ function Stage2() {
             setProductSnapshot(product)
             setKindCode(savedKind)
             setPurpose(savedKind === OTHER_KIND_CODE ? OTHER_PURPOSE : savedPurpose)
-            setProductName(
+            const nextProductName =
                 savedKind === OTHER_KIND_CODE && savedName === lastSegment
                     ? ''
-                    : savedName,
-            )
+                    : savedName
+            setProductName(nextProductName)
             setCategoryPath(savedPath)
+            setPathFields(pathToFields(savedPath))
+            setPathFromModal(Boolean(String(savedPath || '').trim()))
             setProductLine(product.productLine || '')
             setBrandName(product.brandName || '')
             const files = product.files || []
@@ -620,6 +613,23 @@ function Stage2() {
             setBrandLogo(
                 files.find((file) => file.role === 'logo' && !file.variationId) || null,
             )
+            const autoName = [
+                String(nextProductName || '').trim(),
+                String(product.brandName || '').trim(),
+                String(product.productLine || '').trim(),
+            ]
+                .filter(Boolean)
+                .join(' ')
+            const storedName = String(product.fullName || '').trim()
+            if (storedName) {
+                setFullName(storedName)
+                setNameTouched(storedName !== autoName)
+                setNameAgreed(true)
+            } else {
+                setFullName(autoName)
+                setNameTouched(false)
+                setNameAgreed(false)
+            }
             setLoaded(true)
         }).catch((loadError) => setError(loadError.message))
     }, [productId])
@@ -663,6 +673,8 @@ function Stage2() {
         setKindCode('')
         setProductName('')
         setCategoryPath('')
+        setPathFields([''])
+        setPathFromModal(false)
         setPathPreview('')
         setModalStartPath('')
         if (modalOpen) {
@@ -675,6 +687,8 @@ function Stage2() {
         setKindCode(selection.kindCode || '')
         setHandpieceParent(selection.handpieceParent || '')
         setCategoryPath(selection.path || '')
+        setPathFields(pathToFields(selection.path || ''))
+        setPathFromModal(Boolean(String(selection.path || '').trim()))
         if (selection.kindCode === OTHER_KIND_CODE) {
             setPurpose(OTHER_PURPOSE)
             setProductName('')
@@ -692,17 +706,67 @@ function Stage2() {
         setModalOpen(false)
     }
 
-    const handlePathSegmentClick = (index) => {
-        const source = modalOpen && pathPreview ? pathPreview : categoryPath
-        const segments = splitCategoryPath(source)
-        if (!segments.length) return
-        const nextPath = segments.slice(0, index + 1).join(' > ')
+    const commitPathFields = (fields, { manual = false } = {}) => {
+        const normalized = normalizePathFields(fields)
+        const path = fieldsToCategoryPath(normalized)
+        setPathFields(normalized)
+        setCategoryPath(path)
+        setPathFromModal(!manual && Boolean(path))
+        if (!path) {
+            setCategoryCode('')
+            setHandpieceParent('')
+            setKindCode('')
+            setProductName('')
+            setPathFromModal(false)
+            return
+        }
+        if (manual) {
+            setKindCode(OTHER_KIND_CODE)
+            setPurpose(OTHER_PURPOSE)
+            setCategoryCode('')
+            setHandpieceParent('')
+        }
+    }
+
+    const handlePathFieldChange = (index, value) => {
+        if (modalOpen) {
+            setModalOpen(false)
+            setPathPreview('')
+            setModalStartPath('')
+        }
+        const next = [...pathFields]
+        next[index] = value
+        if (!pathFromModal) {
+            commitPathFields(next.slice(0, index + 1), { manual: true })
+            return
+        }
+        // After modal path: typing in trailing empty or editing → extend manually
+        commitPathFields(next, { manual: true })
+    }
+
+    const handlePathFieldFocus = () => {
+        if (!modalOpen) return
+        setModalOpen(false)
+        setPathPreview('')
+        setModalStartPath('')
+    }
+
+    const handlePathSegmentOpen = (index) => {
+        const prefix = fieldsToCategoryPath(pathFields.slice(0, index + 1))
+        const source = prefix || fieldsToCategoryPath(pathFields.slice(0, index))
         setCategoryCode('')
         setHandpieceParent('')
         setKindCode('')
         setProductName('')
-        setCategoryPath(nextPath)
-        openModalAt(nextPath)
+        setCategoryPath(source)
+        setPathFields(pathToFields(source))
+        setPathFromModal(Boolean(source))
+        openModalAt(source)
+    }
+
+    const handleModalDraftPath = (path) => {
+        setPathPreview(path)
+        setPathFields(pathToFields(path))
     }
 
     const handleBrandDocChange = async (next) => {
@@ -729,8 +793,7 @@ function Stage2() {
         setBrandLogo(next)
     }
 
-    const displayedPath = modalOpen && pathPreview ? pathPreview : categoryPath
-    const pathSegments = splitCategoryPath(displayedPath)
+    const displayedFields = pathFields
     const composedFullName = [
         String(productName || '').trim(),
         String(brandName || '').trim(),
@@ -738,6 +801,50 @@ function Stage2() {
     ]
         .filter(Boolean)
         .join(' ')
+
+    useEffect(() => {
+        if (nameTouched) return
+        setFullName(composedFullName)
+    }, [composedFullName, nameTouched])
+
+    const buildNamePayload = (nameText, hasLogo) => ({
+        fullName: String(nameText || '').trim(),
+        nameIncludesLogo: Boolean(hasLogo),
+        nameIncludesType: false,
+        nameIncludesBrand: Boolean(String(brandName || '').trim()),
+        nameIncludesLine: Boolean(String(productLine || '').trim()),
+        nameIncludesModel: false,
+    })
+
+    const handleAgreeName = async () => {
+        if (!productId) {
+            setError('Сначала создайте карточку на главной странице')
+            return
+        }
+        if (!loaded) {
+            setError('Карточка ещё загружается, подождите секунду')
+            return
+        }
+        const nameText = String(fullName || '').trim()
+        if (!nameText) {
+            setError('Заполните наименование линейки продукта')
+            return
+        }
+        setAgreeBusy(true)
+        setError('')
+        try {
+            await productsApi.saveName(
+                productId,
+                buildNamePayload(nameText, Boolean(brandLogo)),
+            )
+            setNameTouched(true)
+            setNameAgreed(true)
+        } catch (agreeError) {
+            setError(agreeError.message || 'Не удалось согласовать наименование')
+        } finally {
+            setAgreeBusy(false)
+        }
+    }
 
     const save = async () => {
         if (!productId) throw new Error('Сначала создайте карточку на главной странице')
@@ -754,6 +861,7 @@ function Stage2() {
         const trimmedProductName = String(productName || '').trim()
         const trimmedBrand = String(brandName || '').trim()
         const trimmedLine = String(productLine || '').trim()
+        const nameText = String(fullName || '').trim() || composedFullName
 
         await productsApi.saveIdentity(productId, {
             authorLastName: productSnapshot.authorLastName || '',
@@ -794,17 +902,11 @@ function Stage2() {
             setBrandLogo(savedLogo)
         }
 
-        const fullName = [trimmedProductName, trimmedBrand, trimmedLine]
-            .filter(Boolean)
-            .join(' ')
-        await productsApi.saveName(productId, {
-            fullName,
-            nameIncludesLogo: Boolean(savedLogo),
-            nameIncludesType: false,
-            nameIncludesBrand: Boolean(trimmedBrand),
-            nameIncludesLine: Boolean(trimmedLine),
-            nameIncludesModel: false,
-        })
+        await productsApi.saveName(
+            productId,
+            buildNamePayload(nameText, Boolean(savedLogo)),
+        )
+        setNameAgreed(Boolean(nameText))
     }
 
     const isManualCategory = kindCode === OTHER_KIND_CODE && Boolean(String(categoryPath || '').trim())
@@ -834,46 +936,49 @@ function Stage2() {
                                 type="button"
                                 className="category-picker__burger"
                                 title="Меню"
-                                onClick={() => openModalAt('')}
+                                onClick={() => openModalAt(fieldsToCategoryPath(pathFields) || '')}
                             >
                                 ☰
                             </button>
 
-                            <div
-                                className={`category-picker__path${pathSegments.length ? '' : ' category-picker__path--empty'}`}
-                                onClick={() => {
-                                    if (!pathSegments.length) openModalAt('')
-                                }}
-                                role="button"
-                                tabIndex={0}
-                                onKeyDown={(event) => {
-                                    if (event.key === 'Enter' || event.key === ' ') {
-                                        event.preventDefault()
-                                        if (!pathSegments.length) openModalAt('')
-                                    }
-                                }}
-                            >
-                                {pathSegments.length === 0 ? (
-                                    <span className="category-picker__placeholder">Категория</span>
-                                ) : (
-                                    pathSegments.map((segment, index) => (
-                                        <span className="category-picker__segment-wrap" key={`${segment}-${index}`}>
-                                            {index > 0 && (
-                                                <span className="category-picker__sep"> › </span>
-                                            )}
-                                            <button
-                                                type="button"
+                            <div className="category-picker__path-box">
+                                <div className="category-picker__fields">
+                                    {displayedFields.map((value, index) => {
+                                        const placeholder =
+                                            index === 0 ? 'Категория' : 'Подкатегория'
+                                        return (
+                                            <div
                                                 className="category-picker__segment"
-                                                onClick={(event) => {
-                                                    event.stopPropagation()
-                                                    handlePathSegmentClick(index)
-                                                }}
+                                                key={`path-field-${index}`}
                                             >
-                                                {segment}
-                                            </button>
-                                        </span>
-                                    ))
-                                )}
+                                                {index > 0 && (
+                                                    <span
+                                                        className="category-picker__chevron"
+                                                        aria-hidden="true"
+                                                    >
+                                                        ›
+                                                    </span>
+                                                )}
+                                                <CategoryPathField
+                                                    value={value}
+                                                    placeholder={placeholder}
+                                                    onChange={(event) =>
+                                                        handlePathFieldChange(
+                                                            index,
+                                                            event.target.value,
+                                                        )
+                                                    }
+                                                    onFocus={handlePathFieldFocus}
+                                                    onDoubleClick={() => {
+                                                        if (modalOpen) return
+                                                        handlePathSegmentOpen(index)
+                                                    }}
+                                                    title="Двойной клик — выбрать из каталога"
+                                                />
+                                            </div>
+                                        )
+                                    })}
+                                </div>
                             </div>
 
                             <button
@@ -895,7 +1000,7 @@ function Stage2() {
                             initialPath={modalStartPath}
                             onSelect={handleCategorySelect}
                             onClose={handleModalClose}
-                            onDraftPathChange={setPathPreview}
+                            onDraftPathChange={handleModalDraftPath}
                         />
                     )}
 
@@ -991,7 +1096,7 @@ function Stage2() {
                         <h2 className="stage2-section-title">Наименование линейки продукта</h2>
                         <p className="stage4-lead">
                             Наименование линейки продукта сформировалось из Логотипа + Типа
-                            продукта + Бренда + Линейки.
+                            продукта + Бренда + Линейки. При необходимости отредактируйте его вручную.
                         </p>
                         <div className="stage4-name-box">
                             {logoPreviewUrl && (
@@ -1004,10 +1109,24 @@ function Stage2() {
                             <input
                                 type="text"
                                 className="stage4-name-box__text"
-                                value={composedFullName}
-                                readOnly
+                                value={fullName}
+                                onChange={(event) => {
+                                    setNameTouched(true)
+                                    setNameAgreed(false)
+                                    setFullName(event.target.value)
+                                }}
                                 placeholder="Логотип Тип продукта Бренд Линейка"
                             />
+                        </div>
+                        <div className="stage2-agree-wrap">
+                            <button
+                                type="button"
+                                className="excel-import-trigger__btn"
+                                onClick={handleAgreeName}
+                                disabled={agreeBusy || !String(fullName || '').trim()}
+                            >
+                                {agreeBusy ? 'Сохранение…' : nameAgreed ? 'Согласовано' : 'Согласовать'}
+                            </button>
                         </div>
                     </div>
                 </div>

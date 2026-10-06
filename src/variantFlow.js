@@ -7,6 +7,9 @@ export const VARIANT_AXIS_SKIP_CODES = new Set([
   'country',
   'article',
   'weightTolerance',
+  'warranty',
+  'warrantyPeriod',
+  'serviceLife',
 ])
 
 const DIMENSION_WEIGHT_CODES = new Set([...DIMENSION_CODES, 'weight'])

@@ -219,7 +219,10 @@ public class ProductsController : ControllerBase
                 .Select(link => link.Definition.Code)
                 .ToListAsync();
             var stale = await _db.CharacteristicValues
-                .Where(value => value.ProductId == id && !allowed.Contains(value.Code))
+                .Where(value =>
+                    value.ProductId == id &&
+                    !allowed.Contains(value.Code) &&
+                    !value.Code.StartsWith("custom:"))
                 .ToListAsync();
             _db.CharacteristicValues.RemoveRange(stale);
         }

@@ -2,12 +2,20 @@ import { useEffect, useRef, useState } from 'react'
 import { notifyProductUpdated, productsApi } from '../api'
 import { sameId } from '../cardScope'
 
-function PhotoGallery({ productId, role, variationId = null, buttonLabel = 'Добавить фотографию' }) {
+function PhotoGallery({
+    productId,
+    role,
+    variationId = null,
+    buttonLabel = 'Добавить фотографию',
+    layout = 'side',
+}) {
     const [photos, setPhotos] = useState([])
     const [error, setError] = useState('')
     const fileInputRef = useRef(null)
     const variationIdRef = useRef(variationId)
-    const maxPhotos = 5
+    const stackLayout = layout === 'stack'
+    const smallSlots = stackLayout ? 3 : 4
+    const maxPhotos = stackLayout ? 4 : 5
 
     variationIdRef.current = variationId
 
@@ -85,7 +93,7 @@ function PhotoGallery({ productId, role, variationId = null, buttonLabel = 'До
 
             {error && <p className="form-error">{error}</p>}
 
-            <div className="gallery">
+            <div className={`gallery${stackLayout ? ' gallery--stack' : ''}`}>
                 <div className="slot--big">
                     {photos[0] && (
                         <>
@@ -103,7 +111,7 @@ function PhotoGallery({ productId, role, variationId = null, buttonLabel = 'До
                 </div>
 
                 <div className="slots-small">
-                    {[1, 2, 3, 4].map((index) => (
+                    {Array.from({ length: smallSlots }, (_, offset) => offset + 1).map((index) => (
                         <div key={index} className="slot--small">
                             {photos[index] && (
                                 <>

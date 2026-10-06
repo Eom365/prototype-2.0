@@ -203,6 +203,99 @@
     cursor: pointer;
 }
 
+.category-picker__path-box {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 6px 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background: #fff;
+    box-sizing: border-box;
+}
+
+.category-picker__fields {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+}
+
+.category-picker__segment {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex: 0 0 auto;
+    max-width: 100%;
+}
+
+.category-picker__field-wrap {
+    position: relative;
+    display: inline-flex;
+    flex: 0 0 auto;
+    max-width: 100%;
+}
+
+.category-picker__measure {
+    position: absolute;
+    left: 0;
+    top: 0;
+    visibility: hidden;
+    white-space: pre;
+    pointer-events: none;
+    font-size: 15px;
+    font-weight: 600;
+    font-family: inherit;
+    letter-spacing: normal;
+    padding: 8px 12px;
+    border: 1px solid transparent;
+    box-sizing: border-box;
+}
+
+.category-picker__field {
+    flex: 0 0 auto;
+    width: auto;
+    min-width: 48px;
+    max-width: 100%;
+    min-height: 44px;
+    padding: 8px 12px;
+    font-size: 15px;
+    font-weight: 600;
+    font-family: inherit;
+    color: #222;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background: #fff;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.category-picker__field:focus {
+    border-color: #6c63ff;
+}
+
+.category-picker__field:disabled {
+    background: #fafafa;
+    color: #555;
+}
+
+.category-picker__field::placeholder {
+    color: #999;
+    font-weight: 500;
+}
+
+.category-picker__chevron {
+    flex-shrink: 0;
+    color: #888;
+    font-size: 18px;
+    font-weight: 500;
+    line-height: 1;
+    user-select: none;
+}
+
 .category-picker__input {
     flex: 1 1 auto;
     min-width: 0;
@@ -462,17 +555,15 @@
 
 .modal-sheet__suggest .paragraph {
     font-size: 15px;
-    margin: 0 0 6px;
+    margin: 0 0 10px;
     color: #222;
 }
 
-.modal-sheet__suggest .input {
-    width: 100%;
-    padding: 10px 12px;
-    border: 1.5px solid #222;
-    font-size: 14px;
-    box-sizing: border-box;
-    background: #fff;
+.modal-sheet__example {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    border-radius: 6px;
 }
 
 /* ===== Нижние кнопки (как на этапе 12) ===== */
@@ -599,6 +690,17 @@
 
 .stage2-brand-block .stage4-name-box {
     margin-bottom: 8px;
+}
+
+.stage2-agree-wrap {
+    display: flex;
+    justify-content: flex-start;
+    margin: 12px 0 8px;
+}
+
+.stage2-agree-wrap .excel-import-trigger__btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
 }
 
 .oon {

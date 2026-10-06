@@ -230,7 +230,13 @@
     max-width: 420px;
 }
 
+.gallery--stack {
+    grid-template-columns: 1fr;
+    max-width: 320px;
+}
+
 .slot--big {
+    position: relative;
     aspect-ratio: 1 / 1;
     border: 2px solid #2ecc71;
     border-radius: 10px;
@@ -244,7 +250,12 @@
     gap: 8px;
 }
 
+.gallery--stack .slots-small {
+    grid-template-columns: repeat(3, 1fr);
+}
+
 .slot--small {
+    position: relative;
     aspect-ratio: 1 / 1;
     border: 1px solid #ddd;
     border-radius: 10px;
@@ -257,4 +268,16 @@
     height: 100%;
     object-fit: cover;
     display: block;
+}
+
+.slot__remove {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.92);
+    cursor: pointer;
 }

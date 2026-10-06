@@ -15,6 +15,7 @@ public static class CatalogSeed
     public static void Seed(AppDbContext db)
     {
         DropIncreasing(db);
+        DropWarrantyCharacteristic(db);
         ImportWarehouses(db);
 
         if (db.ProductKinds.Any())
@@ -22,6 +23,7 @@ public static class CatalogSeed
             EnsureAerosolFields(db);
             EnsureHandpieceSubtypes(db);
             EnsureOtherKind(db);
+            EnsureWarrantyFields(db);
             return;
         }
 
@@ -93,6 +95,79 @@ public static class CatalogSeed
         db.SaveChanges();
     }
 
+    private static void DropWarrantyCharacteristic(AppDbContext db)
+    {
+        var definition = db.CharacteristicDefinitions.FirstOrDefault(item => item.Code == "warranty");
+        if (definition == null)
+            return;
+
+        var links = db.ProductKindCharacteristics
+            .Where(item => item.CharacteristicDefinitionId == definition.Id)
+            .ToList();
+        if (links.Count > 0)
+            db.ProductKindCharacteristics.RemoveRange(links);
+
+        var values = db.CharacteristicValues.Where(item => item.Code == "warranty").ToList();
+        if (values.Count > 0)
+            db.CharacteristicValues.RemoveRange(values);
+
+        db.CharacteristicDefinitions.Remove(definition);
+        db.SaveChanges();
+    }
+
+    private static void EnsureWarrantyFields(AppDbContext db)
+    {
+        (string Code, string Name, int Sort)[] rows =
+        [
+            ("warrantyPeriod", "Гарантийный срок эксплуатации", 1),
+            ("serviceLife", "Срок службы продукта", 2)
+        ];
+
+        foreach (var row in rows)
+        {
+            if (db.CharacteristicDefinitions.Any(item => item.Code == row.Code))
+                continue;
+            db.CharacteristicDefinitions.Add(new CharacteristicDefinition
+            {
+                Id = Guid.NewGuid(),
+                Code = row.Code,
+                Name = row.Name,
+                GroupName = "Гарантийные обязательства",
+                GroupOrder = 10,
+                SortOrder = row.Sort
+            });
+        }
+
+        db.SaveChanges();
+        var definitions = db.CharacteristicDefinitions
+            .Where(item => rows.Select(row => row.Code).Contains(item.Code))
+            .ToDictionary(item => item.Code);
+        if (definitions.Count < rows.Length)
+            return;
+
+        foreach (var kind in db.ProductKinds.ToList())
+        {
+            var linked = db.ProductKindCharacteristics
+                .Where(item => item.ProductKindId == kind.Id)
+                .Select(item => item.CharacteristicDefinitionId)
+                .ToHashSet();
+            var order = db.ProductKindCharacteristics.Count(item => item.ProductKindId == kind.Id);
+            foreach (var spec in WarrantyFields())
+            {
+                var definition = definitions[spec.Code];
+                if (linked.Contains(definition.Id))
+                    continue;
+                order++;
+                var links = Links(kind, definitions, [spec]).ToList();
+                foreach (var link in links)
+                    link.SortOrder = order;
+                db.ProductKindCharacteristics.AddRange(links);
+            }
+        }
+
+        db.SaveChanges();
+    }
+
     private static ProductKind Kind(ProductCategory category, string code, string name, int sort) => new()
     {
         Id = Guid.NewGuid(),
@@ -130,6 +205,8 @@ public static class CatalogSeed
             ("bodyMaterial", "Материал корпуса", "Материал", 9, 1),
             ("bodyCoating", "Покрытие корпуса", "Материал", 9, 2),
             // ("warranty", "Гарантия производителя", "Гарантия", 10, 1),
+            ("warrantyPeriod", "Гарантийный срок эксплуатации", "Гарантийные обязательства", 10, 1),
+            ("serviceLife", "Срок службы продукта", "Гарантийные обязательства", 10, 2),
             ("agentType", "Тип средства", "Средство", 4, 1),
             ("connectionType", "Тип соединения", "Средство", 4, 2),
             ("volume", "Объём", "Средство", 4, 3)
@@ -274,6 +351,12 @@ public static class CatalogSeed
         db.SaveChanges();
     }
 
+    private static FieldSpec[] WarrantyFields() =>
+    [
+        Measure("warrantyPeriod", "duration"),
+        Measure("serviceLife", "duration")
+    ];
+
     private static FieldSpec[] CommonFields() =>
     [
         Text("model"),
@@ -285,7 +368,8 @@ public static class CatalogSeed
         Measure("height", "dimension"),
         Text("brand"),
         Text("manufacturer"),
-        Text("country")
+        Text("country"),
+        ..WarrantyFields()
     ];
 
     private static FieldSpec[] ContraBodyFields() =>

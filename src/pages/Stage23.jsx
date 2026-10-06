@@ -14,7 +14,7 @@ import {
   normalizeCustomRows,
   serializeCustomRows,
 } from "../customCharacteristics";
-import { DIMENSION_CODES, dimensionUnitLabel } from "../productSpecs";
+import { DIMENSION_CODES, dimensionUnitLabel, prefillSpecFromProduct } from "../productSpecs";
 import {
   customTechFieldsFromProduct,
   loadNameFeatures,
@@ -74,6 +74,7 @@ const defaultUnits = {
   weight: "gram",
   tolerance: "gram",
   dimension: "millimeters",
+  duration: "months",
 };
 
 function findKind(catalog, kindCode) {
@@ -357,27 +358,64 @@ function Stage23() {
         } else {
           const next = {};
           for (const field of fields) {
+            const saved = (product.values || []).find(
+              (value) => value.code === field.code && !value.variationId,
+            );
             const defaultUnit = field.unitGroup
               ? defaultUnits[field.unitGroup]
               : "";
-            next[field.code] = { value: "", customValue: "", unit: defaultUnit };
+            next[field.code] = prefillSpecFromProduct(
+              field.code,
+              saved,
+              product,
+              defaultUnit,
+            );
           }
-          // ===== ДОБАВЛЕНО: гарантийные поля по умолчанию =====
           for (const wf of WARRANTY_FIELDS) {
-            next[wf.code] = { value: "", customValue: "", unit: wf.defaultUnit };
+            const saved = (product.values || []).find(
+              (item) => item.code === wf.code && !item.variationId,
+            );
+            next[wf.code] = {
+              value: String(saved?.value || saved?.customValue || "").trim(),
+              customValue: "",
+              unit: String(saved?.unit || wf.defaultUnit).trim(),
+            };
           }
-          // ===================================================
           setSpecs(next);
-          setCustomRows(normalizeCustomRows([]));
+
+          const knownTechCodes = new Set(techFields.map((item) => item.code));
+          setCustomRows(
+            normalizeCustomRows(
+              customRowsFromValues(
+                (product.values || []).filter(
+                  (item) =>
+                    !item.variationId &&
+                    item.code?.startsWith(CUSTOM_CODE_PREFIX) &&
+                    !knownTechCodes.has(item.code),
+                ),
+                {},
+                catalog.unitGroups,
+              ),
+            ),
+          );
           const techValues = {};
           const techUnits = {};
           for (const field of techFields) {
-            techValues[field.code] = "";
-            techUnits[field.code] = String(field.unit || "").trim();
+            const saved = (product.values || []).find(
+              (item) => item.code === field.code && !item.variationId,
+            );
+            techValues[field.code] = String(saved?.customValue || "").trim();
+            techUnits[field.code] = String(
+              saved?.unit || field.unit || "",
+            ).trim();
           }
           setTechCustomValues(techValues);
           setTechCustomUnits(techUnits);
-          setLogo(null);
+          setLogo(
+            (product.files || []).find(
+              (file) => file.role === "logo" && !file.variationId,
+            ) || null,
+          );
         }
         setLoaded(true);
       })
@@ -391,13 +429,15 @@ function Stage23() {
   const manufacturerGroup = groups.find(
     (group) => group.name === "Производитель",
   );
-  const garantGroup = groups.find((group) => group.name === "Гарантийные обязательства");
-  const warrantyGroup = groups.find((group) => group.name === "Гарантия");
   const techGroups = groups.filter(
     (group) =>
-      !["Основные", "Габариты", "Производитель", "Гарантия"].includes(
-        group.name,
-      ),
+      ![
+        "Основные",
+        "Габариты",
+        "Производитель",
+        "Гарантия",
+        "Гарантийные обязательства",
+      ].includes(group.name),
   );
   const weightFields = (mainGroup?.fields || []).filter((field) =>
     WEIGHT_CODES.includes(field.code),
@@ -804,14 +844,12 @@ function Stage23() {
 
                 {renderFields(
                   (manufacturerGroup?.fields || []).filter(
-                    (field) => field.code !== "brand",
+                    (field) =>
+                      field.code !== "brand" &&
+                      field.code !== "warranty" &&
+                      field.code !== "warrantyPeriod" &&
+                      field.code !== "serviceLife",
                   ),
-                )}
-                {warrantyGroup && (
-                  <>
-                    <h3 className="subtitle subtitle--spaced">Гарантия</h3>
-                    {renderFields(warrantyGroup.fields)}
-                  </>
                 )}
               </div>
             )}
@@ -1154,12 +1192,16 @@ function Stage23() {
                   );
                 })()}
 
-                {/* Производитель + Гарантия */}
+                {/* Производитель */}
                 {(() => {
                   const rows = [];
 
                   for (const field of (manufacturerGroup?.fields || []).filter(
-                    (f) => f.code !== "brand",
+                    (f) =>
+                      f.code !== "brand" &&
+                      f.code !== "warranty" &&
+                      f.code !== "warrantyPeriod" &&
+                      f.code !== "serviceLife",
                   )) {
                     const text = formatSpecValue(
                       field,
@@ -1171,22 +1213,6 @@ function Stage23() {
                         label: FIELD_LABELS[field.code] || field.name,
                         value: text,
                       });
-                    }
-                  }
-
-                  if (warrantyGroup) {
-                    for (const field of warrantyGroup.fields) {
-                      const text = formatSpecValue(
-                        field,
-                        specs[field.code],
-                        catalog?.unitGroups,
-                      );
-                      if (text) {
-                        rows.push({
-                          label: FIELD_LABELS[field.code] || field.name,
-                          value: text,
-                        });
-                      }
                     }
                   }
 

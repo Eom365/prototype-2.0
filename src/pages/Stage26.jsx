@@ -218,9 +218,8 @@ function Stage26() {
         {error && <p className="form-error">{error}</p>}
 
         <p className="stage4-lead">
-          Наименование продукта - формируется из заполненных характеристик
-          товара, которые могут изменяться при добавлении вариантов параметров
-          товара
+          Наименование варианта формируется из согласованного наименования
+          линейки продукта и выбранных характеристик варианта.
         </p>
 
         <p className="stage26-formula">{buildFormula(options, features)}</p>
@@ -238,7 +237,7 @@ function Stage26() {
             className="stage4-name-box__text"
             value={displayName}
             readOnly
-            placeholder="Наименование из выбранных характеристик"
+            placeholder="Согласованное наименование + характеристики"
           />
         </div>
 
