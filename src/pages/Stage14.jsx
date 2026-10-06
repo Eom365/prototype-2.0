@@ -35,6 +35,7 @@ function Stage14() {
             productId,
           )}
         </h1>
+        {variationId && <VariationPreview stage={14} />}
         <h2 className="subtitle">
           Загрузите изображения, которые соответствуют внешнему виду варианта
           параметра продукта.
@@ -60,8 +61,6 @@ function Stage14() {
             alt="Пример: одно изделие — стоматологический наконечник"
           />
         </div>
-
-        {variationId && <VariationPreview stage={14} />}
 
         {!productId && (
           <p className="form-error">

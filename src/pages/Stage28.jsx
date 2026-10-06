@@ -12,6 +12,7 @@ import PhotoGallery from "../components/PhotoGallery";
 import VariationPreview from "../components/VariationPreview";
 import { productsApi } from "../api";
 import { packagingFrom, sameId, useCardIds } from "../cardScope";
+import "./Stage18.css";
 import "./Stage28.css";
 
 function Stage28() {
@@ -83,6 +84,20 @@ function Stage28() {
           {variantFillStageHeading(28, "Добавьте упаковку продукта.", null, productId)}
         </h1>
         <VariationPreview stage={18} />
+
+        {/* Фотографии */}
+        <div className="section">
+          <h2 className="subtitle">Добавьте фотографии упаковки:</h2>
+
+          {productId && variationId && (
+            <PhotoGallery
+              productId={productId}
+              role="package"
+              variationId={variationId}
+            />
+          )}
+        </div>
+
         {!productId && (
           <p className="form-error">
             Откройте создание карточки с главной страницы.
@@ -274,37 +289,6 @@ function Stage28() {
           )}
         </div>
 
-        {/* Единицы измерения */}
-        <div className="section">
-          <h2 className="subtitle">
-            Выберите единицы измерения размеров упаковки:
-          </h2>
-
-          <div className="radio-group">
-            <label className="radio-label">
-              <input
-                type="radio"
-                name="sizeUnit"
-                value="sm"
-                checked={sizeUnit === "sm"}
-                onChange={(e) => setSizeUnit(e.target.value)}
-              />
-              <span>Сантиметры</span>
-            </label>
-
-            <label className="radio-label">
-              <input
-                type="radio"
-                name="sizeUnit"
-                value="mm"
-                checked={sizeUnit === "mm"}
-                onChange={(e) => setSizeUnit(e.target.value)}
-              />
-              <span>Миллиметры</span>
-            </label>
-          </div>
-        </div>
-
         {/* Размеры */}
         <div className="section">
           <h2 className="subtitle">
@@ -319,9 +303,14 @@ function Stage28() {
               value={sizes.length}
               onChange={(e) => handleSizeChange("length", e.target.value)}
             />
-            <span className="dimension-unit">
-              {sizeUnit === "sm" ? "сантиметров" : "миллиметров"}
-            </span>
+            <select
+              className="dimension-select"
+              value={sizeUnit}
+              onChange={(e) => setSizeUnit(e.target.value)}
+            >
+              <option value="sm">сантиметров</option>
+              <option value="mm">миллиметров</option>
+            </select>
           </div>
 
           <div className="dimension-row">
@@ -332,9 +321,14 @@ function Stage28() {
               value={sizes.width}
               onChange={(e) => handleSizeChange("width", e.target.value)}
             />
-            <span className="dimension-unit">
-              {sizeUnit === "sm" ? "сантиметров" : "миллиметров"}
-            </span>
+            <select
+              className="dimension-select"
+              value={sizeUnit}
+              onChange={(e) => setSizeUnit(e.target.value)}
+            >
+              <option value="sm">сантиметров</option>
+              <option value="mm">миллиметров</option>
+            </select>
           </div>
 
           <div className="dimension-row">
@@ -345,23 +339,15 @@ function Stage28() {
               value={sizes.height}
               onChange={(e) => handleSizeChange("height", e.target.value)}
             />
-            <span className="dimension-unit">
-              {sizeUnit === "sm" ? "сантиметров" : "миллиметров"}
-            </span>
+            <select
+              className="dimension-select"
+              value={sizeUnit}
+              onChange={(e) => setSizeUnit(e.target.value)}
+            >
+              <option value="sm">сантиметров</option>
+              <option value="mm">миллиметров</option>
+            </select>
           </div>
-        </div>
-
-        {/* Фотографии */}
-        <div className="section">
-          <h2 className="subtitle">Добавьте фотографии упаковки:</h2>
-
-          {productId && variationId && (
-            <PhotoGallery
-              productId={productId}
-              role="package"
-              variationId={variationId}
-            />
-          )}
         </div>
       </div>
 

@@ -131,27 +131,50 @@
 
 /* ===== Размеры ===== */
 .dimension-row {
-    display: grid;
-    grid-template-columns: 90px 200px 1fr;
+    display: flex;
     align-items: center;
     gap: 12px;
     margin-bottom: 12px;
 }
 
 .dimension-label {
+    width: 90px;
+    flex-shrink: 0;
     font-size: 14px;
     color: #333;
 }
 
 .dimension-input {
-    padding: 6px 10px;
+    flex: 1;
+    min-width: 0;
+    max-width: 200px;
+    padding: 8px 10px;
     font-size: 14px;
-    border: 1px solid #bbb;
-    border-radius: 4px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
     outline: none;
+    box-sizing: border-box;
 }
 
 .dimension-input:focus {
+    border-color: #2ecc71;
+}
+
+.dimension-select {
+    flex-shrink: 0;
+    width: 160px;
+    padding: 8px 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 15px;
+    background: #fff;
+    color: #333;
+    outline: none;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+
+.dimension-select:focus {
     border-color: #2ecc71;
 }
 
