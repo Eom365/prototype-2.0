@@ -23,26 +23,26 @@ import "./Stage24.css";
 const TABS = [
   { key: "description", label: "Описание" },
   { key: "complectation", label: "Комплектация" },
-  { key: "applicationArea", label: "Область эксплуатации продукта" },
+  { key: "applicationArea", label: "Порядок работы с продуктом" },
   {
     key: "storageConditions",
     label: "Условия транспортировки, хранения и эксплуатации",
   },
-  { key: "precautions", label: "Меры предосторожности" },
+  { key: "precautions", label: "Меры безопасности" },
   { key: "review", label: "Просмотр заполненного описания" },
 ];
 
 const TAB_HINTS = {
   description:
-    "Заполните информацию о продукте. При заполнении ориентируйтесь на следующие документы: 1. Руководство по эксплуатации",
+    "Заполните описание продукта. При заполнении ориентируйтесь на следующие документы: 1. Руководство по эксплуатации",
   complectation:
-    "Заполните информацию о продукте. При заполнении ориентируйтесь на следующие документы: 1. Руководство по эксплуатации",
+    "Укажите что находится в упаковке. При заполнении ориентируйтесь на следующие документы: 1. Руководство по эксплуатации",
   applicationArea:
-    "Заполните информацию о продукте. При заполнении ориентируйтесь на следующие документы: 1. Руководство по эксплуатации",
+    "Опишите подготовку к работе продукта и порядок работы с продуктом. При заполнении ориентируйтесь на следующие документы: 1. Руководство по эксплуатации",
   storageConditions:
-    "Заполните информацию о продукте. При заполнении ориентируйтесь на следующие документы: 1. Руководство по эксплуатации",
+    "Заполните условия транспортировки, хранения, эксплуатации и срок эксплуатации. При заполнении ориентируйтесь на следующие документы: 1. Руководство по эксплуатации",
   precautions:
-    "Заполните информацию о продукте. При заполнении ориентируйтесь на следующие документы: 1. Руководство по эксплуатации",
+    "Заполните меры безопасности при использовании продукта. При заполнении ориентируйтесь на следующие документы: 1. Руководство по эксплуатации",
   review: "Проверьте заполненные данные перед отправкой:",
 };
 
@@ -291,21 +291,21 @@ function Stage24() {
       return (
         <div className="desc-fields">
           <DescField
-            label="Назначение продукта - что это за продукт"
+            label="Назначение продукта"
             value={form.description.purpose}
             onChange={(v) =>
               patchForm("description", { ...form.description, purpose: v })
             }
           />
           <DescField
-            label="Для чего используется продукт"
+            label="Область применения продукта"
             value={form.description.usage}
             onChange={(v) =>
               patchForm("description", { ...form.description, usage: v })
             }
           />
           <DescField
-            label="Принцип работы продукта"
+            label="Принцип действия продукта"
             value={form.description.principle}
             onChange={(v) =>
               patchForm("description", { ...form.description, principle: v })
@@ -332,7 +332,7 @@ function Stage24() {
         <div className="desc-fields">
           {items.map((item, index) => (
             <div className="comp-row" key={index}>
-              <span className="comp-row__label">Что находится в упаковке</span>
+              <span className="comp-row__label">{index + 1}.</span>
               <input
                 type="text"
                 className="comp-row__input"
@@ -362,7 +362,7 @@ function Stage24() {
     if (activeTab === "applicationArea") {
       return (
         <div className="desc-fields">
-          <DescField
+          {/* <DescField
             label="Для какой сферы предназначен этот продукт"
             value={form.applicationArea.sphere}
             onChange={(v) =>
@@ -371,7 +371,7 @@ function Stage24() {
                 sphere: v,
               })
             }
-          />
+          /> */}
           <DescField
             label="Способ применения"
             value={form.applicationArea.method}
@@ -549,7 +549,7 @@ function Stage24() {
         </ReviewBlock>
 
         {/* Область эксплуатации */}
-        <ReviewBlock title="Область эксплуатации продукта">
+        <ReviewBlock title="Порядок работы с продуктом">
           <ReviewRow label="Сфера применения" value={a.sphere} />
           <ReviewRow label="Способ применения" value={a.method} />
         </ReviewBlock>
@@ -670,14 +670,14 @@ function Stage24() {
 
         {activeTab === "review" ? renderReview() : renderFields()}
 
-        <p className="modal-sheet__subhint nm">
+        {/* <p className="modal-sheet__subhint nm">
           {activeTab === "review"
             ? "Если всё верно — нажмите "
             : "Если вы заполнили все значения — нажмите "}
           <span className="modal-sheet__subhint-check" aria-hidden>
             ✓
           </span>
-        </p>
+        </p> */}
 
         {/* ===== Панель ✕/✓ ===== */}
         {/* <div className="wizard-action-bar">
