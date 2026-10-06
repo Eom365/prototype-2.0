@@ -219,6 +219,10 @@ function variantChips(features, variation, product, unitGroups) {
     void product
     return features.map((item) => {
         const value = variationAxisValue(variation, item.key)
+        if (!value) return ''
+        if (String(item.key || '').startsWith(CUSTOM_CODE_PREFIX)) {
+            return displayCustomCharacteristic(value, unitGroups)
+        }
         return displayValue(item.field, value, unitGroups)
     }).filter(Boolean)
 }
@@ -243,6 +247,10 @@ function appendCustomSpecRows(rows, values, unitGroups) {
 function baseVariantChips(features, product, unitGroups) {
     return features.map((item) => {
         const value = baseValue(product, item.key)
+        if (!valueHasContent(value)) return ''
+        if (String(item.key || '').startsWith(CUSTOM_CODE_PREFIX)) {
+            return displayCustomCharacteristic(value, unitGroups)
+        }
         return displayValue(item.field, value, unitGroups)
     }).filter(Boolean)
 }

@@ -111,6 +111,8 @@ function Stage26() {
   const [logo, setLogo] = useState(null);
   const [error, setError] = useState("");
   const [features, setFeatures] = useState([]);
+  const [fullName, setFullName] = useState("");
+  const [nameTouched, setNameTouched] = useState(false);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
@@ -153,6 +155,15 @@ function Stage26() {
           : [];
         const selected = matched.length ? matched : [];
         setFeatures(selected);
+
+        const autoName = composeDisplayName(product, nextOptions, selected);
+        if (savedName) {
+          setFullName(savedName);
+          setNameTouched(savedName !== autoName);
+        } else {
+          setFullName(autoName);
+          setNameTouched(false);
+        }
         setLoaded(true);
       })
       .catch((loadError) => setError(loadError.message));
@@ -175,7 +186,10 @@ function Stage26() {
     });
   };
 
-  const displayName = composeDisplayName(productSnapshot, options, features);
+  useEffect(() => {
+    if (!loaded || nameTouched || !productSnapshot) return;
+    setFullName(composeDisplayName(productSnapshot, options, features));
+  }, [features, options, productSnapshot, nameTouched, loaded]);
 
   const save = async () => {
     if (!productId) throw new Error("Сначала создайте карточку на главной странице");
@@ -184,7 +198,10 @@ function Stage26() {
     if (!features.length) {
       throw new Error("Выберите от 1 до 3 характеристик для наименования");
     }
-    const name = displayName;
+    const name =
+      String(fullName || "").trim() ||
+      composeDisplayName(productSnapshot, options, features);
+    if (!name) throw new Error("Заполните наименование варианта");
     saveNameFeatures(productId, orderedSelectedKeys(features));
     await productsApi.saveVariationName(productId, variationId, {
       fullName: name,
@@ -218,8 +235,8 @@ function Stage26() {
         {error && <p className="form-error">{error}</p>}
 
         <p className="stage4-lead">
-          Наименование варианта формируется из согласованного наименования
-          линейки продукта и выбранных характеристик варианта.
+          Наименование варианта формируется из наименования линейки продукта и
+          выбранных характеристик. При необходимости отредактируйте его вручную.
         </p>
 
         <p className="stage26-formula">{buildFormula(options, features)}</p>
@@ -235,9 +252,12 @@ function Stage26() {
           <input
             type="text"
             className="stage4-name-box__text"
-            value={displayName}
-            readOnly
-            placeholder="Согласованное наименование + характеристики"
+            value={fullName}
+            onChange={(event) => {
+              setNameTouched(true);
+              setFullName(event.target.value);
+            }}
+            placeholder="Наименование варианта параметра продукта"
           />
         </div>
 
