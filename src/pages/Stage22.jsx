@@ -300,7 +300,7 @@ function Stage22() {
 
         <div className="divider" />
 
-        <h2 className="section-title">Варианты параметров продукта</h2>
+        <h2 className="section-title">Варианты параметра (модели) линейки продукта</h2>
 
         <div className="variants-board">
           <div className="variants-group">
@@ -324,7 +324,7 @@ function Stage22() {
                   <span className="variants-create__icon">+</span>
                 </span>
                 <span className="variants-create__text">
-                  Создать вариант параметра продукта
+                Добавить вариант параметра продукта
                 </span>
               </button>
             </div>

@@ -13,6 +13,7 @@ import { productWizardTotal } from '../stageProgress'
 import './Stage2.css'
 import './Stage2_3.css'
 import '../components/ExcelImportModal.css'
+import InformationAboutProductLine from "../components/InformationAboutProductLine";
 
 function getPurposeRoot(purpose) {
     return purpose === 'Стоматология' ? 'Профессиональная стоматология' : 'Стоматология'
@@ -1264,6 +1265,7 @@ function Stage2() {
     return (
         <>
             <div className="container stage2-page">
+                <InformationAboutProductLine productId={productId} />
                 <h1 className="title stage2-title">Этап 2 - Категория, бренд и наименование линейки продукта</h1>
                 {!productId && <p className="form-error">Откройте создание карточки с главной страницы.</p>}
                 {error && <p className="form-error">{error}</p>}

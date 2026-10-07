@@ -11,6 +11,7 @@ import {
 } from "../stageProgress";
 import { skipsVariantParamStage } from "../variantFlow";
 import "./Stage3.css";
+import InformationAboutProductLine from "../components/InformationAboutProductLine";
 
 function Stage3() {
   const navigate = useNavigate();
@@ -46,6 +47,7 @@ function Stage3() {
   return (
     <>
       <div className="container">
+        <InformationAboutProductLine productId={productId} />
         <h1 className="title">Этап 3 - Презентация линейки продукции</h1>
 
         <h2 className="subtitle hyt">Презентационное видео продукта</h2>
