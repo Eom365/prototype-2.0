@@ -275,16 +275,16 @@ const Stage25 = forwardRef(function Stage25(
           values: orderedFilled.map((item) =>
             item.key.startsWith(CUSTOM_CODE_PREFIX)
               ? {
-                  code: item.key,
-                  value: item.label,
-                  customValue: item.value,
-                  unit: item.unit || null,
-                }
+                code: item.key,
+                value: item.label,
+                customValue: item.value,
+                unit: item.unit || null,
+              }
               : {
-                  code: item.key,
-                  value: item.value,
-                  unit: item.unit || null,
-                },
+                code: item.key,
+                value: item.value,
+                unit: item.unit || null,
+              },
           ),
         });
         if (!created?.id) throw new Error("Не удалось создать вариант");
