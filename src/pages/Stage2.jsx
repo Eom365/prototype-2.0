@@ -863,7 +863,7 @@ function Stage2() {
         const trimmedProductName = String(productName || '').trim()
         const trimmedBrand = String(brandName || '').trim()
         const trimmedLine = String(productLine || '').trim()
-        const nameText = String(fullName || '').trim() || composedFullName
+        const nameText = composedFullName
 
         await productsApi.saveIdentity(productId, {
             authorLastName: productSnapshot.authorLastName || '',
@@ -1097,8 +1097,8 @@ function Stage2() {
 
                         <h2 className="stage2-section-title">Наименование линейки продукта</h2>
                         <p className="stage4-lead">
-                            Наименование линейки продукта сформировалось из Логотипа + Типа
-                            продукта + Бренда + Линейки. При необходимости отредактируйте его вручную.
+                            Наименование линейки продукта формируется из Логотипа + Типа
+                            продукта + Бренда + Линейки.
                         </p>
                         <div className="stage4-name-box">
                             {logoPreviewUrl && (
@@ -1111,12 +1111,8 @@ function Stage2() {
                             <input
                                 type="text"
                                 className="stage4-name-box__text"
-                                value={fullName}
-                                onChange={(event) => {
-                                    setNameTouched(true)
-                                    setNameAgreed(false)
-                                    setFullName(event.target.value)
-                                }}
+                                value={composedFullName}
+                                readOnly
                                 placeholder="Логотип Тип продукта Бренд Линейка"
                             />
                         </div>

@@ -25,11 +25,17 @@ function axisValueFromVariation(variation, axis) {
     return (row.value || '').trim()
 }
 
+function isSubmittedVariation(variation) {
+    const status = (variation?.reviewStatus || 'filling').toLowerCase()
+    return status === 'pending' || status === 'approved'
+}
+
 function valuesFromProduct(product, axis) {
     if (!product || !axis) return []
     const seen = new Set()
     const list = []
     for (const variation of product.variations || []) {
+        if (!isSubmittedVariation(variation)) continue
         const text = axisValueFromVariation(variation, axis)
         if (!text || seen.has(text)) continue
         seen.add(text)
@@ -119,7 +125,9 @@ function Stage12() {
                     .join('|')
             const nextSignature = filled.map((field) => field.value.toLowerCase()).join('|')
             const duplicate = (product?.variations || []).some(
-                (variation) => signature(variation) === nextSignature,
+                (variation) =>
+                    isSubmittedVariation(variation) &&
+                    signature(variation) === nextSignature,
             )
             if (duplicate) {
                 throw new Error('Вариант с такими значениями уже есть')

@@ -672,7 +672,11 @@ function VariationPreview({ stage }) {
     if (!productId || !product || !catalog) return null
 
     const variations = product.variations || []
-    const previewVariations = variations.filter((variation) => !sameId(variation.id, activeVariationId))
+    const previewVariations = variations.filter((variation) => {
+        if (sameId(variation.id, activeVariationId)) return false
+        const status = (variation.reviewStatus || 'filling').toLowerCase()
+        return status === 'pending' || status === 'approved'
+    })
     if (!previewVariations.length) return null
 
     const features = axisFeatures(product, catalog)

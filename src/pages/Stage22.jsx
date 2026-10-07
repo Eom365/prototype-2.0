@@ -152,9 +152,10 @@ function Stage22() {
   const variations = product?.variations || [];
   const variantLabel = (variation) =>
     formatVariantParameterLabel(product, variation, catalog);
-  const created = variations.filter(
-    (item) => (item.reviewStatus || "filling") !== "pending",
-  );
+  const created = variations.filter((item) => {
+    const status = (item.reviewStatus || "filling").toLowerCase();
+    return status === "pending" || status === "approved";
+  });
 
   const openCreate = async () => {
     if (!productId || busy) return;
@@ -302,39 +303,30 @@ function Stage22() {
         <div className="variants-board">
           <div className="variants-group">
             <h3 className="variants-group__title">Созданные</h3>
-            {created.length === 0 ? (
-              <p className="variants-group__empty">
-                Пока нет созданных вариантов
-              </p>
-            ) : (
-              <div className="variants-group__list">
-                {created.map((variation) => (
-                  <VariantCard
-                    key={variation.id}
-                    label={variantLabel(variation)}
-                    photoUrl={variantPhoto(files, variation.id)}
-                    onEdit={() => openEdit(variation)}
-                    onDelete={() => removeVariant(variation)}
-                  />
-                ))}
-              </div>
-            )}
+            <div className="variants-group__list">
+              {created.map((variation) => (
+                <VariantCard
+                  key={variation.id}
+                  label={variantLabel(variation)}
+                  photoUrl={variantPhoto(files, variation.id)}
+                  onEdit={() => openEdit(variation)}
+                  onDelete={() => removeVariant(variation)}
+                />
+              ))}
+              <button
+                type="button"
+                className="variants-create"
+                onClick={openCreate}
+              >
+                <span className="variants-create__image" aria-hidden="true">
+                  <span className="variants-create__icon">+</span>
+                </span>
+                <span className="variants-create__text">
+                  Создать вариант параметра продукта
+                </span>
+              </button>
+            </div>
           </div>
-
-          <button
-            type="button"
-            className="variants-create"
-            onClick={openCreate}
-          >
-            <span className="variants-create__inner">
-              <span className="variants-create__icon" aria-hidden="true">
-                +
-              </span>
-              <span className="variants-create__text">
-                Создать вариант параметра продукта
-              </span>
-            </span>
-          </button>
         </div>
       </div>
 

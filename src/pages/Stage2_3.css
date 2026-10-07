@@ -119,6 +119,10 @@
   color: #222;
 }
 
+.stage4-name-box__text:read-only {
+  cursor: default;
+}
+
 .stage3-input--line {
   max-width: 320px;
 }

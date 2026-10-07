@@ -37,6 +37,13 @@ const FIELD_LABELS = {
   article: "Артикул продукта от завода-изготовителя",
 };
 
+function mainFieldsOrder(fields) {
+  const rank = { article: 0, model: 1 };
+  return [...fields].sort(
+    (a, b) => (rank[a.code] ?? 10) - (rank[b.code] ?? 10),
+  );
+}
+
 // ===== НОВЫЕ КОНСТАНТЫ ДЛЯ ГАРАНТИЙНЫХ ПОЛЕЙ =====
 const WARRANTY_FIELDS = [
   {
@@ -803,7 +810,9 @@ function Stage23() {
                 </div>
 
                 {renderFields(
-                  mainFields.filter((field) => field.code !== "brand"),
+                  mainFieldsOrder(
+                    mainFields.filter((field) => field.code !== "brand"),
+                  ),
                 )}
               </div>
             )}
@@ -1079,7 +1088,7 @@ function Stage23() {
                     });
                   }
 
-                  for (const field of mainFields) {
+                  for (const field of mainFieldsOrder(mainFields)) {
                     if (field.code === "brand") continue;
                     const text = formatSpecValue(
                       field,
@@ -1492,7 +1501,9 @@ function Stage23() {
                         </div>
                       </div>
                       {renderFields(
-                        mainFields.filter((field) => field.code !== "brand"),
+                        mainFieldsOrder(
+                          mainFields.filter((field) => field.code !== "brand"),
+                        ),
                       )}
                       {renderFields(weightFields)}
                     </>
