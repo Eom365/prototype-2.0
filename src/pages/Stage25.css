@@ -274,3 +274,150 @@
 .feature-input:focus {
   border-color: #3a3adf;
 }
+
+.tooltip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  cursor: help;
+}
+
+.tooltip__popup {
+  position: absolute;
+  top: 130%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-4px);
+  z-index: 50;
+
+  padding: 6px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s;
+  pointer-events: none;
+}
+
+.tooltip__popup img {
+  display: block;
+  max-width: 360px;
+  max-height: 260px;
+  width: auto;
+  height: auto;
+  border-radius: 6px;
+}
+
+.tooltip:hover .tooltip__popup,
+.tooltip:focus-within .tooltip__popup {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+
+
+/* ===== Компонент Tip ===== */
+.tip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+
+.tip__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 1.5px solid #999;
+  border-radius: 50%;
+  background: #fff;
+  color: #999;
+  font-size: 13px;
+  font-style: italic;
+  cursor: help;
+  user-select: none;
+}
+
+.tip__icon:hover {
+  border-color: #666;
+  color: #666;
+}
+
+.tip__bubble {
+  position: absolute;
+  top: 130%;
+  left: 0;
+  z-index: 50;
+
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  padding: 12px 14px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+
+  font-size: 13px;
+  line-height: 1.45;
+  color: #1f2937;
+}
+
+.tip__bubble--default {
+  width: 280px;
+  max-width: 80vw;
+}
+
+.tip__bubble--large {
+  width: 420px;
+  max-width: 90vw;
+}
+
+.tip__image {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 6px;
+  object-fit: contain;
+}
+
+.tip__image--default {
+  max-height: 160px;
+}
+
+.tip__image--large {
+  max-height: 260px;
+}
+
+/* Обёртка описания + иконки */
+.description-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 30px;
+}
+
+.tip__bubble--large {
+  width: 640px;
+  /* 600px картинка + ~20px паддинги */
+  max-width: 95vw;
+  /* чтобы не вылезало за экран на ноутбуке */
+}
+
+.tip__image--large {
+  width: 600px;
+  max-width: 100%;
+  /* на узких экранах сожмётся */
+  height: auto;
+  max-height: none;
+  /* убираем ограничение по высоте */
+  object-fit: contain;
+  border-radius: 6px;
+}

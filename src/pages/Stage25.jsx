@@ -23,6 +23,51 @@ import "./Stage25.css";
 
 const MAX_FEATURES = 5;
 
+// ===== Компонент подсказки с картинкой =====
+function Tip({
+  text,
+  image,
+  images,
+  imageAlt = "",
+  imageSize = "default",
+  bubbleSize = "default",
+}) {
+  const [open, setOpen] = useState(false);
+
+  const allImages = [
+    ...(image ? [{ src: image, alt: imageAlt || "Пояснение" }] : []),
+    ...(images || []),
+  ];
+
+  return (
+    <span className="tip">
+      <button
+        type="button"
+        className="tip__icon"
+        aria-label="Подсказка"
+        onClick={() => setOpen((v) => !v)}
+        onMouseEnter={() => setOpen(true)}
+        onMouseLeave={() => setOpen(false)}
+      >
+        ?
+      </button>
+      {open && (
+        <span className={`tip__bubble tip__bubble--${bubbleSize}`}>
+          {text && <span className="tip__text">{text}</span>}
+          {allImages.map((img, idx) => (
+            <img
+              key={idx}
+              className={`tip__image tip__image--${imageSize}`}
+              src={img.src}
+              alt={img.alt || "Пояснение"}
+            />
+          ))}
+        </span>
+      )}
+    </span>
+  );
+}
+
 function findKind(catalog, kindCode) {
   if (!catalog || !kindCode) return null;
   for (const category of catalog.categories || []) {
@@ -203,16 +248,16 @@ function Stage25() {
           values: orderedFilled.map((item) =>
             item.key.startsWith(CUSTOM_CODE_PREFIX)
               ? {
-                  code: item.key,
-                  value: item.label,
-                  customValue: item.value,
-                  unit: item.unit || null,
-                }
+                code: item.key,
+                value: item.label,
+                customValue: item.value,
+                unit: item.unit || null,
+              }
               : {
-                  code: item.key,
-                  value: item.value,
-                  unit: item.unit || null,
-                },
+                code: item.key,
+                value: item.value,
+                unit: item.unit || null,
+              },
           ),
         });
         if (!created?.id) throw new Error("Не удалось создать вариант");
@@ -249,19 +294,20 @@ function Stage25() {
           )}
         </h1>
 
-        <p className="description">
-          Вариант параметра продукта позволяет объединить продукты одной
-          линейки, у которых меняются определенные характеристики (модель, объём
-          памяти, цвет).
-        </p>
-
-        <p className="pBold">Пример вариантов параметра продукта:</p>
-        {/* <ExcelImportModal /> */}
-        <img
-          src="/images/productParameterOption.png"
-          alt="Вариант параметра продукта - пример"
-          className="imgOne"
-        />
+        <div className="description-row">
+          <Tip
+            text="Пример правильного заполнения:"
+            image="/images/productParameterOption.png"
+            imageAlt="Пример варианта параметра продукта"
+            imageSize="large"
+            bubbleSize="large"
+          />
+          <p className="description">
+            Вариант параметра продукта позволяет объединить продукты одной
+            линейки, у которых меняются определенные характеристики (модель,
+            объём памяти, цвет).
+          </p>
+        </div>
 
         <h2 className="jh">
           Выберите варианты параметра продукта: можно выбрать от 1 до 5
@@ -348,7 +394,7 @@ function Stage25() {
         total={fillProgressTotal(product, productId) || CUSTOM_VARIANT_FILL_STAGE_COUNT + offset}
         prevPath="/stage23"
         onSave={save}
-        onNext={() => {}}
+        onNext={() => { }}
       />
     </>
   );
