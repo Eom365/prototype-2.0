@@ -52,7 +52,7 @@ export default function VariantFlowHeader({ product, productId }) {
         Создание варианта параметра (модели) линейки продукта
       </h1>
       <p className="divOne__name-label">
-        Наименование варианта параметра продукта:
+        Наименование варианта параметра линейки продукта:
       </p>
       <div className="divOne__name-box stage4-name-box">
         {logoUrl ? (
