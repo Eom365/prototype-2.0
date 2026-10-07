@@ -29,7 +29,7 @@ function Stage3() {
       .catch(() => {});
   }, [productId]);
 
-  const total = fillProgressTotal(product, productId) || 10;
+  const total = fillProgressTotal(product, productId) || 11;
   const skipParamStage = Boolean(product) && skipsVariantParamStage(product);
 
   const goDocuments = async () => {

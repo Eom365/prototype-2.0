@@ -1563,16 +1563,7 @@ function Stage2() {
     }
 
     const typeFilled = Boolean(String(productName || '').trim())
-    const wizardTotal = productWizardTotal(
-        kindCode
-            ? {
-                kindCode,
-                categoryCode,
-                categoryPath,
-                variantAxes: productSnapshot?.variantAxes || [],
-            }
-            : null,
-    )
+    const wizardTotal = productWizardTotal()
 
     return (
         <>

@@ -281,12 +281,14 @@ function Stage23() {
   const [visitedTabs, setVisitedTabs] = useState(["main"]);
   const [panelFocus, setPanelFocus] = useState("characteristics");
   const [axisPreview, setAxisPreview] = useState([]);
+  const [nameOptions, setNameOptions] = useState([]);
   const [charsRefreshKey, setCharsRefreshKey] = useState(0);
   const [openDescriptionTick, setOpenDescriptionTick] = useState(0);
   const axisRef = useRef(null);
   const nameRef = useRef(null);
   const descriptionRef = useRef(null);
   const axisPreviewSigRef = useRef("");
+  const nameOptionsSigRef = useRef("");
   const handleAxisSelectionChange = useCallback((items) => {
     const next = items || [];
     const signature = next
@@ -295,6 +297,15 @@ function Stage23() {
     if (signature === axisPreviewSigRef.current) return;
     axisPreviewSigRef.current = signature;
     setAxisPreview(next);
+  }, []);
+  const handleNameOptionsChange = useCallback((items) => {
+    const next = items || [];
+    const signature = next
+      .map((item) => `${item.key}:${item.value}:${item.label || ""}:${item.unit || ""}`)
+      .join("|");
+    if (signature === nameOptionsSigRef.current) return;
+    nameOptionsSigRef.current = signature;
+    setNameOptions(next);
   }, []);
   const [phase, setPhase] = useState("edit");
   const logoInputRef = useRef(null);
@@ -529,14 +540,18 @@ function Stage23() {
     setPanelFocus("characteristics");
   };
 
+  const closeCharacteristicsForDescription = () => {
+    setActiveTab(null);
+    setPanelFocus("description");
+  };
+
   const handleDescriptionOpenChange = (open) => {
     if (open) {
       if (activeTab === "review") {
         setPanelFocus("both");
         return;
       }
-      setPanelFocus("description");
-      setActiveTab(null);
+      closeCharacteristicsForDescription();
       return;
     }
     if (panelFocus === "both" && activeTab === "review") {
@@ -1674,12 +1689,13 @@ function Stage23() {
               embedded
               refreshKey={charsRefreshKey}
               onSelectionChange={handleAxisSelectionChange}
+              onNameOptionsChange={handleNameOptionsChange}
             />
             <div className="matches-divider stage23-bundle-divider" />
             <Stage26
               ref={nameRef}
               embedded
-              previewOptions={axisPreview}
+              previewOptions={nameOptions}
             />
           </>
         )}
@@ -1693,6 +1709,7 @@ function Stage23() {
           }
           openDescriptionTick={openDescriptionTick}
           onContentOpenChange={handleDescriptionOpenChange}
+          onDescriptionInteract={closeCharacteristicsForDescription}
         />
       </div>
 

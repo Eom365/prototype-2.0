@@ -100,9 +100,8 @@ function fillStepsFor(product, productId) {
 }
 
 export function variantFillTotal(product, productId) {
-  if (!product) return CUSTOM_VARIANT_FILL_STAGE_COUNT
-  if (variantFillMode(product) === 'custom') return CUSTOM_VARIANT_FILL_STAGE_COUNT
   if (isVariantEdit(productId || product?.id)) return EDIT_KNOWN_VARIANT_FILL_STAGE_COUNT
+  if (variantFillMode(product) === 'custom') return CUSTOM_VARIANT_FILL_STAGE_COUNT
   return KNOWN_VARIANT_FILL_STAGE_COUNT
 }
 
@@ -127,9 +126,9 @@ export function productWizardOffset(productId) {
   return isProductWizard(productId) ? LINE_STAGE_COUNT : 0
 }
 
-/** Total stages for the first product: line (1–3) + variant fill. */
-export function productWizardTotal(product, productId) {
-  return LINE_STAGE_COUNT + variantFillTotal(product, productId)
+/** Total stages for the first product — always 11, category does not change the count. */
+export function productWizardTotal() {
+  return BASE_STAGE_COUNT
 }
 
 export function productWizardStep(routeStage, product, productId) {
@@ -150,8 +149,14 @@ export function fillProgressStep(routeStage, product, productId) {
 /** Bottom-bar total: continuous during first-product wizard, else variant-only. */
 export function fillProgressTotal(product, productId) {
   const id = productId || product?.id
-  if (isProductWizard(id)) return productWizardTotal(product, id)
+  if (isProductWizard(id)) return BASE_STAGE_COUNT
   return variantFillTotal(product, id)
+}
+
+/** Total for pages that only know custom fill count + optional wizard offset. */
+export function customFillBarTotal(productId) {
+  if (isProductWizard(productId)) return BASE_STAGE_COUNT
+  return CUSTOM_VARIANT_FILL_STAGE_COUNT
 }
 
 export function variantFillStepLabel(routeStage, product, productId) {

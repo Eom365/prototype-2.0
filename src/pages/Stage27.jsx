@@ -15,7 +15,7 @@ import {
   serializeDescriptionForm,
 } from "../descriptionForm";
 import {
-  CUSTOM_VARIANT_FILL_STAGE_COUNT,
+  customFillBarTotal,
   productWizardOffset,
   variantFillStageHeading,
   variantFillStep,
@@ -707,7 +707,7 @@ function Stage27() {
 
       <BottomBar
         current={variantFillStep(27) + productWizardOffset(productId)}
-        total={CUSTOM_VARIANT_FILL_STAGE_COUNT + productWizardOffset(productId)}
+        total={customFillBarTotal(productId)}
         prevPath="/stage26"
         nextPath="/stage28"
         onSave={persist}

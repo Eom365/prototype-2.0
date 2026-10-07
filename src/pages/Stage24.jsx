@@ -194,6 +194,7 @@ const Stage24 = forwardRef(function Stage24(
     contentOpen = true,
     openDescriptionTick = 0,
     onContentOpenChange,
+    onDescriptionInteract,
   },
   ref,
 ) {
@@ -220,12 +221,17 @@ const Stage24 = forwardRef(function Stage24(
   const prevStagePath = "/stage23";
   const nextStagePath = isCustomFlow ? "/stage28" : "/stage18";
 
+  const touchDescription = () => {
+    onDescriptionInteract?.();
+  };
+
   const selectTab = (key) => {
     if (activeTab === key && panelVisible) {
       setActiveTab(null);
       onContentOpenChange?.(false);
       return;
     }
+    touchDescription();
     setActiveTab(key);
     setVisitedTabs((prev) => markVisited(prev, key));
     onContentOpenChange?.(true);
@@ -284,6 +290,7 @@ const Stage24 = forwardRef(function Stage24(
   }, [productId, variationId]);
 
   const patchForm = (section, value) => {
+    touchDescription();
     setForm((prev) => ({ ...prev, [section]: value }));
   };
 

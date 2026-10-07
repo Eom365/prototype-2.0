@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import BottomBar from "../components/BottomBar";
 import {
-  CUSTOM_VARIANT_FILL_STAGE_COUNT,
+  customFillBarTotal,
   productWizardOffset,
   variantFillStageHeading,
   variantFillStep,
@@ -211,7 +211,7 @@ function Stage29() {
 
       <BottomBar
         current={variantFillStep(29) + productWizardOffset(productId)}
-        total={CUSTOM_VARIANT_FILL_STAGE_COUNT + productWizardOffset(productId)}
+        total={customFillBarTotal(productId)}
         prevPath="/stage28"
         nextPath="/stage30"
         onSave={save}

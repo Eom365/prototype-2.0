@@ -4,7 +4,7 @@ import BottomBar from "../components/BottomBar";
 import VariantFlowHeader from "../components/VariantFlowHeader";
 import { productsApi } from "../api";
 import {
-  CUSTOM_VARIANT_FILL_STAGE_COUNT,
+  customFillBarTotal,
   productWizardOffset,
   variantFillStageHeading,
   variantFillStep,
@@ -37,7 +37,7 @@ function Stage31() {
 
       <BottomBar
         current={variantFillStep(31) + offset}
-        total={CUSTOM_VARIANT_FILL_STAGE_COUNT + offset}
+        total={customFillBarTotal(productId)}
         prevPath="/stage30"
         onNext={handleNext}
       />

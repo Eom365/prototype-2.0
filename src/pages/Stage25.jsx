@@ -7,7 +7,7 @@ import { catalogApi, productsApi } from "../api";
 import { sameId } from "../cardScope";
 import { CUSTOM_CODE_PREFIX } from "../customCharacteristics";
 import {
-  CUSTOM_VARIANT_FILL_STAGE_COUNT,
+  customFillBarTotal,
   fillProgressStep,
   fillProgressTotal,
   productWizardOffset,
@@ -79,7 +79,7 @@ function filledCharacteristics(product, catalog, variationId) {
 }
 
 const Stage25 = forwardRef(function Stage25(
-  { embedded = false, refreshKey = 0, onSelectionChange },
+  { embedded = false, refreshKey = 0, onSelectionChange, onNameOptionsChange },
   ref,
 ) {
   const navigate = useNavigate();
@@ -135,25 +135,42 @@ const Stage25 = forwardRef(function Stage25(
   const selectionSigRef = useRef("");
 
   useEffect(() => {
-    if (!onSelectionChange) return;
+    const available = options.map((opt) => ({
+      key: opt.key,
+      label: opt.label,
+      value: (drafts[opt.key] || opt.filled || "").trim(),
+      unit: opt.unit || null,
+    }));
     const selected = features
-      .map((key) => {
-        const opt = options.find((item) => item.key === key);
-        if (!opt) return null;
-        const value = (drafts[key] || opt.filled || "").trim();
-        if (!value) return null;
-        return { key, label: opt.label, value, unit: opt.unit || null };
-      })
-      .filter(Boolean);
-    const signature = selected
+      .map((key) => available.find((item) => item.key === key))
+      .filter((item) => item && item.value);
+
+    const availableSig = available
+      .map((item) => `${item.key}:${item.value}:${item.unit || ""}:${item.label}`)
+      .join("|");
+    const selectedSig = selected
       .map((item) => `${item.key}:${item.value}:${item.unit || ""}`)
       .join("|");
+    const signature = `${availableSig}#${selectedSig}`;
     if (signature === selectionSigRef.current) return;
     selectionSigRef.current = signature;
-    onSelectionChange(selected);
-    // options is derived each render; features/drafts are the real triggers
+
+    // Name block gets the same characteristic list as this block.
+    onNameOptionsChange?.(available);
+    // Axis save still uses only checked rows with values.
+    onSelectionChange?.(selected);
+    // options is derived each render; signature guard avoids update loops
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [features, drafts, product, catalog, variationId, onSelectionChange]);
+  }, [
+    drafts,
+    features,
+    product,
+    catalog,
+    variationId,
+    onSelectionChange,
+    onNameOptionsChange,
+    options,
+  ]);
 
   const persistDraft = (nextFeatures, nextDrafts) => {
     if (!productId) return;
@@ -443,7 +460,7 @@ const Stage25 = forwardRef(function Stage25(
       {!embedded && (
         <BottomBar
           current={fillProgressStep(25, product, productId) || variantFillStep(25) + offset}
-          total={fillProgressTotal(product, productId) || CUSTOM_VARIANT_FILL_STAGE_COUNT + offset}
+          total={fillProgressTotal(product, productId) || customFillBarTotal(productId)}
           prevPath="/stage23"
           onSave={save}
           onNext={() => {}}

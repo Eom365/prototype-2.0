@@ -6,7 +6,7 @@ import { catalogApi, productsApi } from "../api";
 import { sameId } from "../cardScope";
 import { CUSTOM_CODE_PREFIX } from "../customCharacteristics";
 import {
-  CUSTOM_VARIANT_FILL_STAGE_COUNT,
+  customFillBarTotal,
   productWizardOffset,
   variantFillStageHeading,
   variantFillStep,
@@ -183,7 +183,7 @@ const Stage26 = forwardRef(function Stage26(
 
   const previewSigRef = useRef("");
   useEffect(() => {
-    if (!Array.isArray(previewOptions) || !previewOptions.length) return;
+    if (!Array.isArray(previewOptions)) return;
     const signature = previewOptions
       .map((item) => `${item.key}:${item.value}:${item.label || ""}`)
       .join("|");
@@ -196,16 +196,19 @@ const Stage26 = forwardRef(function Stage26(
     }));
     setOptions(nextOptions);
     setFeatures((prev) => {
-      const next = prev.filter((key) => nextOptions.some((item) => item.key === key));
+      const next = prev
+        .filter((key) => nextOptions.some((item) => item.key === key))
+        .slice(0, MAX_NAME_FEATURES);
       if (
         next.length === prev.length &&
         next.every((key, index) => key === prev[index])
       ) {
         return prev;
       }
+      if (productId) saveNameFeatures(productId, orderedSelectedKeys(next));
       return next;
     });
-  }, [previewOptions]);
+  }, [previewOptions, productId]);
 
   const toggleFeature = (key) => {
     setFeatures((prev) => {
@@ -318,8 +321,8 @@ const Stage26 = forwardRef(function Stage26(
         <div className="feature-list">
           {options.length === 0 && (
             <p className="paragraph">
-              На этапе 4 пока не выбраны характеристики варианта параметра
-              продукта.
+              Сначала заполните характеристики в блоке «Вариант параметра
+              продукта» — тогда они появятся здесь для наименования.
             </p>
           )}
           {options.map((opt, index) => {
@@ -374,7 +377,7 @@ const Stage26 = forwardRef(function Stage26(
       {!embedded && (
         <BottomBar
           current={variantFillStep(26) + productWizardOffset(productId)}
-          total={CUSTOM_VARIANT_FILL_STAGE_COUNT + productWizardOffset(productId)}
+          total={customFillBarTotal(productId)}
           prevPath="/stage23"
           nextPath="/stage23"
           onSave={save}
