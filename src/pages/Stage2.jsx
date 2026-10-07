@@ -617,6 +617,7 @@ function CategoryModal({
     catalog,
     purpose,
     initialPath = '',
+    manual = false,
     selectedKindCode: selectedKindCodeProp = '',
     selectedParentCode: selectedParentCodeProp = '',
     selectedCategoryCode: selectedCategoryCodeProp = '',
@@ -628,6 +629,9 @@ function CategoryModal({
     const initial = navigationFromPath(catalog, purpose, initialPath)
     const [stack, setStack] = useState(initial.stack)
     const [customTail, setCustomTail] = useState(initial.customTail)
+    const [manualSegments, setManualSegments] = useState(() =>
+        manual ? splitCategoryPath(initialPath) : [],
+    )
     const [showSelection, setShowSelection] = useState(true)
     const selectedKindCode = selectedKindCodeProp || initial.selectedKindCode || ''
     const selectedParentCode =
@@ -647,10 +651,19 @@ function CategoryModal({
             : ''
 
     useEffect(() => {
+        if (manual) {
+            onDraftPathChange?.(manualSegments.join(' > '))
+            return
+        }
         const prefix = catalogPathSegments(initial.stack, rootLabel)
         const path = buildDraftPath(prefix, initial.customTail, '')
         if (path) onDraftPathChange?.(path)
     }, [])
+
+    useEffect(() => {
+        if (!manual) return
+        onDraftPathChange?.(manualSegments.join(' > '))
+    }, [manual, manualSegments])
 
     const publishDraft = (prefix, tail, draft = '') => {
         onDraftPathChange?.(buildDraftPath(prefix, tail, draft))
@@ -661,6 +674,7 @@ function CategoryModal({
     }
 
     useEffect(() => {
+        if (manual) return
         syncPath()
     }, [stack, customTail])
 
@@ -684,6 +698,12 @@ function CategoryModal({
     }
 
     const getCurrent = () => {
+        if (manual) {
+            return {
+                title: manualSegments[manualSegments.length - 1] || 'Укажите категорию продукта',
+                items: [],
+            }
+        }
         if (!catalog) return { title: 'Укажите категорию продукта', items: [] }
 
         if (customTail.length > 0) {
@@ -807,6 +827,10 @@ function CategoryModal({
     const { title, items } = getCurrent()
 
     const goBack = () => {
+        if (manual) {
+            setManualSegments((prev) => prev.slice(0, -1))
+            return
+        }
         setShowSelection(false)
         if (customTail.length > 0) {
             const prefix = catalogPathSegments(stack, rootLabel)
@@ -827,8 +851,10 @@ function CategoryModal({
         setCustomTail([])
     }
 
-    const showBack = stack.length > 0 || customTail.length > 0
-    const inCustomLevel = customTail.length > 0
+    const showBack = manual
+        ? manualSegments.length > 0
+        : stack.length > 0 || customTail.length > 0
+    const inCustomLevel = manual || customTail.length > 0
 
     return (
         <div className="stage2-modal" onClick={onClose}>
@@ -1359,6 +1385,16 @@ function Stage2() {
     }
 
     const handleModalDraftPath = (path) => {
+        const type = String(productName || '').trim()
+        if (!pathDetermined && type) {
+            const segments = splitCategoryPath(path)
+            const fields = normalizeUndeterminedPathFields([...segments, type], type)
+            const full = fieldsToPathKeepAll(fields)
+            setPathFields(fields)
+            setCategoryPath(full)
+            setPathPreview(full)
+            return
+        }
         setPathPreview(path)
         setPathFields(pathToFields(path))
     }
@@ -1766,6 +1802,7 @@ function Stage2() {
                             catalog={catalog}
                             purpose={purpose || 'Стоматология'}
                             initialPath={modalStartPath}
+                            manual={!pathDetermined}
                             selectedKindCode={kindCode}
                             selectedParentCode={handpieceParent}
                             selectedCategoryCode={categoryCode}
