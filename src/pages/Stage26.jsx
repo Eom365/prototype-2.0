@@ -264,7 +264,7 @@ const Stage26 = forwardRef(function Stage26(
         )}
         {embedded ? (
           <h2 className="stage2-section-title">
-            Наименование варианта параметра продукта
+            Наименование варианта параметра (модели) линейки продукта
           </h2>
         ) : (
           <h1 className="title stage3-title">
@@ -312,7 +312,7 @@ const Stage26 = forwardRef(function Stage26(
 
         <p className="standart">
           Выберите от 1 до 3 характеристик, которые будут отображаться в
-          наименовании варианта параметра продукта:
+          наименовании варианта параметра (модели) линейки продукта:
         </p>
 
         <div className="feature-list">

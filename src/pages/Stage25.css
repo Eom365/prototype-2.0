@@ -8,7 +8,8 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 16px;
+  margin-block-start: 90px;
+  margin-block-end: 20px;
 }
 
 .stage25-heading .stage2-section-title,
