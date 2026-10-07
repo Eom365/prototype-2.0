@@ -238,3 +238,13 @@
 .stage7-page .file-card__download:hover {
     text-decoration: underline;
 }
+
+.hOne {
+    font-size: 20px;
+    letter-spacing: 1.6px;
+    margin: 0;
+}
+
+.divOne {
+    margin-bottom: 30px;
+}

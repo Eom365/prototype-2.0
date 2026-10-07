@@ -211,6 +211,12 @@ function Stage22() {
   return (
     <>
       <div className="container">
+        <div className="divOne">
+          <h1 className="hOne">
+            Создание варианта параметра (модели) линейки продукта
+          </h1>
+          <p>***Наименование***</p>
+        </div>
         <h1 className="title">Варианты параметра продукта</h1>
         {!productId && (
           <p className="form-error">

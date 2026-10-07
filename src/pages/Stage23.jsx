@@ -729,6 +729,12 @@ function Stage23() {
       <div
         className={`container stage24-page stage23-page${phase === "review" ? " stage23-page--review" : ""}`}
       >
+        <div className="divOne">
+          <h1 className="hOne">
+            Создание варианта параметра (модели) линейки продукта
+          </h1>
+          <p>***Наименование***</p>
+        </div>
         <h1 className="title stage24-title">
           {variantFillStageHeading(
             23,

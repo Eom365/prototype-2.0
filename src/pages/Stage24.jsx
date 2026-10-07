@@ -521,6 +521,7 @@ function Stage24() {
 
     return (
       <div className="desc-fields">
+
         {!hasAny && (
           <p className="paragraph">
             Пока ничего не заполнено. Вернитесь на предыдущие вкладки и
@@ -641,6 +642,12 @@ function Stage24() {
   return (
     <>
       <div className="container stage24-page">
+        <div className="divOne">
+          <h1 className="hOne">
+            Создание варианта параметра (модели) линейки продукта
+          </h1>
+          <p>***Наименование***</p>
+        </div>
         <h1 className="title stage24-title">
           {variantFillStageHeading(24, "Описание продукта", product, productId)}
         </h1>

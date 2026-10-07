@@ -234,6 +234,12 @@ function Stage25() {
   return (
     <>
       <div className="container">
+        <div className="divOne">
+          <h1 className="hOne">
+            Создание варианта параметра (модели) линейки продукта
+          </h1>
+          <p>***Наименование***</p>
+        </div>
         <h1 className="title">
           {variantFillStageHeading(
             25,

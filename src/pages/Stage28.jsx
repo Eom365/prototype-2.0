@@ -80,6 +80,12 @@ function Stage28() {
   return (
     <>
       <div className="container">
+        <div className="divOne">
+          <h1 className="hOne">
+            Создание варианта параметра (модели) линейки продукта
+          </h1>
+          <p>***Наименование***</p>
+        </div>
         <h1 className="title">
           {variantFillStageHeading(28, "Добавьте упаковку продукта.", null, productId)}
         </h1>

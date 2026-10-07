@@ -706,3 +706,34 @@
 .oon {
     margin-block-start: 90px;
 }
+
+.tip__image {
+    display: block;
+    margin-top: 6px;
+    width: 600px;
+    /* ширина */
+    height: auto;
+    /* сохраняет пропорции */
+    max-width: none;
+    /* снимает возможное ограничение */
+    border-radius: 6px;
+}
+
+.tip__image--large {
+    width: 700px;
+    /* если нужно другое для "large" */
+    height: auto;
+}
+
+.field--product-type .tip {
+    flex-shrink: 0;
+    position: relative;
+    z-index: 2;
+    /* чтобы бабл был поверх инпута */
+}
+
+.field--product-type,
+.field--category,
+.stage2-workarea {
+    overflow: visible;
+}

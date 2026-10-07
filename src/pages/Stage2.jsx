@@ -20,123 +20,134 @@ export const OTHER_KIND_CODE = 'other'
 const OTHER_PURPOSE = 'Иное'
 
 const BRAND_TIPS = {
-  brand:
-    "Бренд — это название товарного знака, под которым продается товар. Кто может заполнять: только правообладатель товарного знака. Для подтверждения потребуется загрузить «Свидетельство на товарный знак». Если вы продаете оригинальный товар, но не являетесь правообладателем — не заполняйте это поле.",
-  brandLogo:
-    "Логотип — графическое изображение товарного знака. Кто может заполнять: только правообладатель товарного знака. Если вы продаете оригинальный товар, но не являетесь правообладателем не загружайте логотип. Размеры для загрузки фотографии: 200px на 200 px",
-  line: "Линейка — наименование группы моделей. Объединяет разные модели в одну группу. Важно: многие товары не имеют линейки.Оставьте поле пустым, если продукт только в одном исполнении(без других моделей).",
+    brand:
+        "Бренд — это название товарного знака, под которым продается товар. Кто может заполнять: только правообладатель товарного знака. Для подтверждения потребуется загрузить «Свидетельство на товарный знак». Если вы продаете оригинальный товар, но не являетесь правообладателем — не заполняйте это поле.",
+    brandLogo:
+        "Логотип — графическое изображение товарного знака. Кто может заполнять: только правообладатель товарного знака. Если вы продаете оригинальный товар, но не являетесь правообладателем не загружайте логотип. Размеры для загрузки фотографии: 200px на 200 px",
+    line: "Линейка — наименование группы моделей. Объединяет разные модели в одну группу. Важно: многие товары не имеют линейки.Оставьте поле пустым, если продукт только в одном исполнении(без других моделей).",
 }
 
+const PRODUCT_TYPE_TIP =
+    "Тип продукта — это название продукта, по которому определяется категория продукта. Не пишите бренд, модель и характеристики. Пример правильного заполнения: «Наконечник турбинный», «Стерилизатор», «Ноутбук»."
+
 function Tip({
-  text,
-  image,
-  imageAlt = "",
-  imageSize = "default",
-  bubbleSize = "default",
+    text,
+    image,
+    images,
+    imageAlt = "",
+    imageSize = "default",
+    bubbleSize = "default",
 }) {
-  const [open, setOpen] = useState(false)
-  return (
-    <span className="tip">
-      <button
-        type="button"
-        className="tip__icon"
-        aria-label="Подсказка"
-        onClick={() => setOpen((v) => !v)}
-        onMouseEnter={() => setOpen(true)}
-        onMouseLeave={() => setOpen(false)}
-      >
-        ?
-      </button>
-      {open && (
-        <span className={`tip__bubble tip__bubble--${bubbleSize}`}>
-          <span className="tip__text">{text}</span>
-          {image && (
-            <img
-              className={`tip__image tip__image--${imageSize}`}
-              src={image}
-              alt={imageAlt || "Пояснение"}
-            />
-          )}
+    const [open, setOpen] = useState(false)
+
+    const allImages = [
+        ...(image ? [{ src: image, alt: imageAlt || "Пояснение" }] : []),
+        ...(images || []),
+    ]
+
+    return (
+        <span className="tip">
+            <button
+                type="button"
+                className="tip__icon"
+                aria-label="Подсказка"
+                onClick={() => setOpen((v) => !v)}
+                onMouseEnter={() => setOpen(true)}
+                onMouseLeave={() => setOpen(false)}
+            >
+                ?
+            </button>
+            {open && (
+                <span className={`tip__bubble tip__bubble--${bubbleSize}`}>
+                    <span className="tip__text">{text}</span>
+                    {allImages.map((img, idx) => (
+                        <img
+                            key={idx}
+                            className={`tip__image tip__image--${imageSize}`}
+                            src={img.src}
+                            alt={img.alt || "Пояснение"}
+                        />
+                    ))}
+                </span>
+            )}
         </span>
-      )}
-    </span>
-  )
+    )
 }
 
 function FileInput({ value, onChange, placeholder, accept }) {
-  const inputRef = useRef(null)
-  const handlePick = () => inputRef.current?.click()
-  const handleChange = (event) => {
-    const file = event.target.files?.[0]
-    event.target.value = ""
-    if (!file) return
-    onChange(file)
-  }
-  const handleClear = (event) => {
-    event.stopPropagation()
-    onChange(null)
-  }
-  return (
-    <div className="file-input">
-      <input
-        type="text"
-        className="file-input__text"
-        value={value ? value.name : ""}
-        placeholder={placeholder}
-        readOnly
-        onClick={handlePick}
-      />
-      {value && (
-        <button
-          type="button"
-          className="file-input__clear"
-          onClick={handleClear}
-          title="Удалить файл"
-        >
-          ✕
-        </button>
-      )}
-      <button
-        type="button"
-        className="file-input__clip"
-        onClick={handlePick}
-        title="Прикрепить файл"
-      >
-        📎
-      </button>
-      <input
-        ref={inputRef}
-        type="file"
-        accept={accept}
-        hidden
-        onChange={handleChange}
-      />
-    </div>
-  )
+    const inputRef = useRef(null)
+    const handlePick = () => inputRef.current?.click()
+    const handleChange = (event) => {
+        const file = event.target.files?.[0]
+        event.target.value = ""
+        if (!file) return
+        onChange(file)
+    }
+    const handleClear = (event) => {
+        event.stopPropagation()
+        onChange(null)
+    }
+    return (
+        <div className="file-input">
+            <input
+                type="text"
+                className="file-input__text"
+                value={value ? value.name : ""}
+                placeholder={placeholder}
+                readOnly
+                onClick={handlePick}
+            />
+            {value && (
+                <button
+                    type="button"
+                    className="file-input__clear"
+                    onClick={handleClear}
+                    title="Удалить файл"
+                >
+                    ✕
+                </button>
+            )}
+            <button
+                type="button"
+                className="file-input__clip"
+                onClick={handlePick}
+                title="Прикрепить файл"
+            >
+                📎
+            </button>
+            <input
+                ref={inputRef}
+                type="file"
+                accept={accept}
+                hidden
+                onChange={handleChange}
+            />
+        </div>
+    )
 }
 
 function FileField({ label, value, onChange, accept }) {
-  const inputRef = useRef(null)
-  const handlePick = () => inputRef.current?.click()
-  const handleChange = (event) => {
-    const file = event.target.files?.[0]
-    if (!file) return
-    onChange(file)
-  }
-  return (
-    <div className="file-field">
-      <button type="button" className="file-field__button" onClick={handlePick}>
-        {value ? value.name : label}
-      </button>
-      <input
-        ref={inputRef}
-        type="file"
-        accept={accept}
-        hidden
-        onChange={handleChange}
-      />
-    </div>
-  )
+    const inputRef = useRef(null)
+    const handlePick = () => inputRef.current?.click()
+    const handleChange = (event) => {
+        const file = event.target.files?.[0]
+        if (!file) return
+        onChange(file)
+    }
+    return (
+        <div className="file-field">
+            <button type="button" className="file-field__button" onClick={handlePick}>
+                {value ? value.name : label}
+            </button>
+            <input
+                ref={inputRef}
+                type="file"
+                accept={accept}
+                hidden
+                onChange={handleChange}
+            />
+        </div>
+    )
 }
 
 function getProductName(kind, categoryCode) {
@@ -1010,6 +1021,7 @@ function Stage2() {
                         <div
                             className={`field--product-type${modalOpen ? ' field--product-type--after-modal' : ''}`}
                         >
+                            <Tip text={PRODUCT_TYPE_TIP} />
                             <label className="field--product-type__label" htmlFor="product-type">
                                 Тип продукта
                             </label>
@@ -1035,7 +1047,15 @@ function Stage2() {
                         <h3 className="stage3-subtitle">Бренд</h3>
 
                         <div className="stage3-row">
-                            <Tip text={BRAND_TIPS.brand} />
+                            <Tip
+                                text={BRAND_TIPS.brand}
+                                images={[
+                                    { src: "/images/brand1.png" },
+                                    { src: "/images/fillingBrand.png" },
+                                ]}
+                                imageSize="large"
+                                bubbleSize="large"
+                            />
                             <label className="stage3-label">Название бренда</label>
                             <input
                                 type="text"
@@ -1078,8 +1098,10 @@ function Stage2() {
                         <div className="stage3-row oon">
                             <Tip
                                 text={BRAND_TIPS.line}
-                                image="/images/one.png"
-                                imageAlt="Пример линейки"
+                                images={[
+                                    { src: "/images/ruler.png" },
+                                    { src: "/images/fillingRuler.png" },
+                                ]}
                                 imageSize="large"
                                 bubbleSize="large"
                             />

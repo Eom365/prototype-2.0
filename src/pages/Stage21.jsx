@@ -78,6 +78,12 @@ function Stage21() {
     return (
         <>
             <div className="container">
+                <div className="divOne">
+                    <h1 className="hOne">
+                        Создание варианта параметра (модели) линейки продукта
+                    </h1>
+                    <p>***Наименование***</p>
+                </div>
                 <h1 className="title">{variantFillStageHeading(21, 'Предварительный просмотр', null, productId)}</h1>
                 <h2 className="subtitle">*Открывается заполненная карточка товара для просмотра*</h2>
             </div>

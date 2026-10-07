@@ -234,6 +234,12 @@ function Stage7() {
   return (
     <>
       <div className="container stage7-page">
+        <div className="divOne">
+          <h1 className="hOne">
+            Создание варианта параметра (модели) линейки продукта
+          </h1>
+          <p>***Наименование***</p>
+        </div>
         <h1 className="title">
           {variantFillStageHeading(7, "Документы на продукт", product, productId)}
         </h1>

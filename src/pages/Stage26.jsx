@@ -198,6 +198,12 @@ function Stage26() {
   return (
     <>
       <div className="container stage3-page stage4-page">
+        <div className="divOne">
+          <h1 className="hOne">
+            Создание варианта параметра (модели) линейки продукта
+          </h1>
+          <p>***Наименование***</p>
+        </div>
         <h1 className="title stage3-title">
           {variantFillStageHeading(
             26,
