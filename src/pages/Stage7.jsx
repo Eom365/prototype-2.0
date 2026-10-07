@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import BottomBar from "../components/BottomBar";
+import VariantFlowHeader from "../components/VariantFlowHeader";
 import { productsApi } from "../api";
 import {
   VARIANT_FILL_STAGE_COUNT,
@@ -16,7 +17,6 @@ import "./Stage7.css";
 
 const documentFields = [
   ["warranty", "Гарантийный талон"],
-  ["brand", "Бренд", "Свидетельство на товарный знак"],
   ["certificate", "Сертификат соответствия"],
   ["declaration", "Декларация о соответствии"],
   ["stateRegistration", "Свидетельство о государственной регистрации"],
@@ -24,12 +24,6 @@ const documentFields = [
   ["manual", "Руководство по эксплуатации"],
   ["other", "Иной документ"],
 ];
-
-function valueText(values, code) {
-  const field = (values || []).find((item) => item.code === code);
-  if (!field?.value) return "";
-  return field.value === "other" ? field.customValue || "" : field.value;
-}
 
 function resolveDocumentGroup(product) {
   const kindCode = (product?.kindCode || "").toLowerCase();
@@ -52,7 +46,7 @@ function resolveDocumentGroup(product) {
   return "other";
 }
 
-function getRequiredFields(product, hasBrand) {
+function getRequiredFields(product) {
   const group = resolveDocumentGroup(product);
   const required = new Set(["warranty", "manual"]);
   if (group === "handpieces") required.add("registration");
@@ -60,14 +54,12 @@ function getRequiredFields(product, hasBrand) {
     required.add("certificate");
     required.add("declaration");
   }
-  if (hasBrand) required.add("brand");
   return required;
 }
 
-function getVisibleDocumentFields(product, requiredFields, brandAlreadyAttached) {
+function getVisibleDocumentFields(product, requiredFields) {
   const group = resolveDocumentGroup(product);
   return documentFields.filter(([name]) => {
-    if (name === "brand" && brandAlreadyAttached) return false;
     if (group === "other") return true;
     return requiredFields.has(name);
   });
@@ -93,74 +85,20 @@ function Stage7() {
   const load = async () => {
     const product = await productsApi.get(productId);
     setProduct(product);
-    const variations = [...(product.variations || [])].sort(
-      (a, b) => (a.sortOrder || 0) - (b.sortOrder || 0),
-    );
-    const variation = variationId
-      ? variations.find(
-          (item) => String(item.id).toLowerCase() === String(variationId).toLowerCase(),
-        )
-      : null;
-    const firstVariation = variations[0] || null;
-    const isLaterVariation = Boolean(
-      variationId &&
-        firstVariation &&
-        String(firstVariation.id).toLowerCase() !== String(variationId).toLowerCase(),
-    );
 
     const next = {};
     for (const file of product.files || []) {
-      if (file.role === "document" && file.documentType && sameVariation(file.variationId)) {
+      if (
+        file.role === "document" &&
+        file.documentType &&
+        file.documentType !== "brand" &&
+        sameVariation(file.variationId)
+      ) {
         next[file.documentType] = file;
       }
     }
 
-    if (variationId && !next.brand) {
-      const brandFromStage3 = (product.files || []).find(
-        (file) =>
-          file.role === "document" &&
-          file.documentType === "brand" &&
-          !file.variationId,
-      );
-      const brandFromFirst =
-        !brandFromStage3 && isLaterVariation
-          ? (product.files || []).find(
-              (file) =>
-                file.role === "document" &&
-                file.documentType === "brand" &&
-                String(file.variationId || "").toLowerCase() ===
-                  String(firstVariation.id).toLowerCase(),
-            )
-          : null;
-      if (brandFromStage3 || brandFromFirst) {
-        next.brand = brandFromStage3 || brandFromFirst;
-      }
-    }
-
-    if (!variationId && !next.brand) {
-      const brandFromStage3 = (product.files || []).find(
-        (file) =>
-          file.role === "document" &&
-          file.documentType === "brand" &&
-          !file.variationId,
-      );
-      if (brandFromStage3) next.brand = brandFromStage3;
-    }
-
-    const brandAlreadyOnProduct = (product.files || []).some(
-      (file) =>
-        file.role === "document" &&
-        file.documentType === "brand" &&
-        !file.variationId,
-    );
-    const hasBrand = Boolean(
-      valueText(variation?.values, "brand") ||
-        valueText(product.values, "brand") ||
-        product.brandName?.trim(),
-    );
-    setRequiredFields(
-      getRequiredFields(product, hasBrand && !brandAlreadyOnProduct),
-    );
+    setRequiredFields(getRequiredFields(product));
     setFiles(next);
   };
 
@@ -190,22 +128,6 @@ function Stage7() {
   const handleFileRemove = async (name) => {
     const file = files[name];
     if (!file) return;
-    const borrowedBrand =
-      name === "brand" &&
-      (
-        !file.variationId ||
-        (variationId &&
-          String(file.variationId || "").toLowerCase() !==
-            String(variationId).toLowerCase())
-      );
-    if (borrowedBrand) {
-      setFiles((prev) => {
-        const next = { ...prev };
-        delete next.brand;
-        return next;
-      });
-      return;
-    }
     setError("");
     try {
       await productsApi.deleteFile(file.id);
@@ -215,17 +137,7 @@ function Stage7() {
     }
   };
 
-  const brandAlreadyAttached = (product?.files || []).some(
-    (file) =>
-      file.role === "document" &&
-      file.documentType === "brand" &&
-      !file.variationId,
-  );
-  const visibleFields = getVisibleDocumentFields(
-    product,
-    requiredFields,
-    brandAlreadyAttached,
-  );
+  const visibleFields = getVisibleDocumentFields(product, requiredFields);
 
   const uploadedFiles = visibleFields
     .map(([name, label]) => ({ name, label, file: files[name] }))
@@ -234,12 +146,7 @@ function Stage7() {
   return (
     <>
       <div className="container stage7-page">
-        <div className="divOne">
-          <h1 className="hOne">
-            Создание варианта параметра (модели) линейки продукта
-          </h1>
-          <p>***Наименование***</p>
-        </div>
+        <VariantFlowHeader product={product} productId={productId} />
         <h1 className="title">
           {variantFillStageHeading(7, "Документы на продукт", product, productId)}
         </h1>

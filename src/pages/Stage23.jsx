@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import BottomBar from "../components/BottomBar";
 import CustomCharacteristicsBlock from "../components/CustomCharacteristicsBlock";
 import DimensionsGroup from "../components/DimensionsGroup";
 import ImageHint from "../components/ImageHint";
+import VariantFlowHeader from "../components/VariantFlowHeader";
 import { catalogApi, productsApi } from "../api";
 import { axisValueFromVariation, sameId, useCardIds, variationSpecsFrom } from "../cardScope";
 import {
@@ -18,6 +19,7 @@ import { DIMENSION_CODES, dimensionUnitLabel, prefillSpecFromProduct } from "../
 import {
   customTechFieldsFromProduct,
   loadNameFeatures,
+  needsCustomVariantSetup,
   nextPathAfterCharacteristics,
   resolveVariantFlow,
 } from "../variantFlow";
@@ -27,6 +29,15 @@ import {
   fillProgressTotal,
   variantFillStageHeading,
 } from "../stageProgress";
+import {
+  isCharacteristicsTabFilled,
+  markVisited,
+  tabClassName,
+} from "../wizardTabStatus";
+import Stage24 from "./Stage24";
+import Stage25 from "./Stage25";
+import Stage26 from "./Stage26";
+import "./Stage2.css";
 import "./Stage5.css";
 import "./Stage24.css";
 import "./Stage23.css";
@@ -265,7 +276,23 @@ function Stage23() {
   const [loaded, setLoaded] = useState(false);
   const [busy, setBusy] = useState(false);
   const [activeTab, setActiveTab] = useState("main");
-  const [completedTabs, setCompletedTabs] = useState([]);
+  const [visitedTabs, setVisitedTabs] = useState(["main"]);
+  const [panelFocus, setPanelFocus] = useState("characteristics");
+  const [axisPreview, setAxisPreview] = useState([]);
+  const [charsRefreshKey, setCharsRefreshKey] = useState(0);
+  const axisRef = useRef(null);
+  const nameRef = useRef(null);
+  const descriptionRef = useRef(null);
+  const axisPreviewSigRef = useRef("");
+  const handleAxisSelectionChange = useCallback((items) => {
+    const next = items || [];
+    const signature = next
+      .map((item) => `${item.key}:${item.value}:${item.unit || ""}`)
+      .join("|");
+    if (signature === axisPreviewSigRef.current) return;
+    axisPreviewSigRef.current = signature;
+    setAxisPreview(next);
+  }, []);
   const [phase, setPhase] = useState("edit");
   const logoInputRef = useRef(null);
 
@@ -452,9 +479,70 @@ function Stage23() {
   const mainFields = (mainGroup?.fields || []).filter(
     (field) => !WEIGHT_CODES.includes(field.code),
   );
+  const manufacturerFields = (manufacturerGroup?.fields || []).filter(
+    (field) =>
+      field.code !== "brand" &&
+      field.code !== "warranty" &&
+      field.code !== "warrantyPeriod" &&
+      field.code !== "serviceLife",
+  );
+  const isCustomFlow = resolveVariantFlow(progressProduct).mode === "custom";
+  const showCustomVariantSetup = needsCustomVariantSetup(progressProduct);
 
   const tabs = TABS;
   const currentIndex = tabs.findIndex((tab) => tab.key === activeTab);
+  const charTabContext = {
+    specs,
+    mainFields,
+    weightFields,
+    manufacturerFields,
+    techGroups,
+    customRows,
+    productLine,
+    logo,
+  };
+
+  const selectTab = (key) => {
+    if (activeTab === key && panelFocus === "characteristics") {
+      setActiveTab(null);
+      setPanelFocus(null);
+      return;
+    }
+    setActiveTab(key);
+    setVisitedTabs((prev) => markVisited(prev, key));
+    setPanelFocus("characteristics");
+  };
+
+  const handleDescriptionOpenChange = (open) => {
+    if (open) {
+      setPanelFocus("description");
+      setActiveTab(null);
+      return;
+    }
+    if (panelFocus === "description") {
+      setPanelFocus(null);
+    }
+  };
+
+  useEffect(() => {
+    if (!showCustomVariantSetup || !loaded || !productId) return undefined;
+    const timer = window.setTimeout(() => {
+      persist()
+        .then(() => setCharsRefreshKey((prev) => prev + 1))
+        .catch(() => {});
+    }, 900);
+    return () => window.clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    showCustomVariantSetup,
+    loaded,
+    productId,
+    specs,
+    customRows,
+    productLine,
+    techCustomValues,
+    techCustomUnits,
+  ]);
 
   const updateSpec = (code, patch) => {
     setSpecs((prev) => {
@@ -555,7 +643,11 @@ function Stage23() {
       await productsApi.saveVariationCharacteristics(productId, variationId, {
         values,
       });
-      if (stabilized && progressProduct) {
+      const shouldAutoNameVariant =
+        stabilized ||
+        (!showCustomVariantSetup &&
+          Boolean((progressProduct?.variantAxes || []).filter(Boolean).length));
+      if (shouldAutoNameVariant && progressProduct) {
         let featureCodes = loadNameFeatures(productId);
         if (!featureCodes.length) {
           const approved = (progressProduct.variations || []).find(
@@ -681,12 +773,10 @@ function Stage23() {
         return;
       }
 
-      setCompletedTabs((prev) =>
-        prev.includes(activeTab) ? prev : [...prev, activeTab],
-      );
+      setVisitedTabs((prev) => markVisited(prev, activeTab));
       const nextIndex = currentIndex + 1;
       if (nextIndex < tabs.length) {
-        setActiveTab(tabs[nextIndex].key);
+        selectTab(tabs[nextIndex].key);
       }
     } catch (saveError) {
       setError(saveError.message || "Не удалось сохранить");
@@ -729,20 +819,20 @@ function Stage23() {
       <div
         className={`container stage24-page stage23-page${phase === "review" ? " stage23-page--review" : ""}`}
       >
-        <div className="divOne">
-          <h1 className="hOne">
-            Создание варианта параметра (модели) линейки продукта
-          </h1>
-          <p>***Наименование***</p>
-        </div>
+        <VariantFlowHeader product={progressProduct} productId={productId} />
         <h1 className="title stage24-title">
           {variantFillStageHeading(
             23,
-            "Характеристики варианта параметра продукта",
+            showCustomVariantSetup
+              ? "Характеристики, вариант и описание продукта"
+              : "Характеристики и описание продукта",
             progressProduct,
             productId,
           )}
         </h1>
+        <h2 className="stage2-section-title">
+          Характеристики варианта параметра продукта
+        </h2>
 
         {!productId && (
           <p className="form-error">
@@ -755,16 +845,18 @@ function Stage23() {
           <>
             <div className="stage24-tabs" role="tablist">
               {tabs.map((tab) => {
-                const done = completedTabs.includes(tab.key);
-                const active = activeTab === tab.key;
+                const active =
+                  panelFocus === "characteristics" && activeTab === tab.key;
+                const visited = visitedTabs.includes(tab.key);
+                const filled = isCharacteristicsTabFilled(tab.key, charTabContext);
                 return (
                   <button
                     key={tab.key}
                     type="button"
                     role="tab"
                     aria-selected={active}
-                    className={`stage24-tab${active ? " stage24-tab--active" : ""}${done ? " stage24-tab--done" : ""}`}
-                    onClick={() => setActiveTab(tab.key)}
+                    className={tabClassName({ active, visited, filled })}
+                    onClick={() => selectTab(tab.key)}
                   >
                     {tab.label}
                   </button>
@@ -781,7 +873,7 @@ function Stage23() {
             />
 
             {/* ===== ОСНОВНЫЕ ===== */}
-            {activeTab === "main" && (
+            {panelFocus === "characteristics" && activeTab === "main" && (
               <div className="form">
                 <h2 className="stage24-section-title">Основные</h2>
                 <p className="stage23-subtitle-line">Заполните линейку, модель и артикул продукта от завода-изготовителя:</p>
@@ -824,7 +916,7 @@ function Stage23() {
             )}
 
             {/* ===== ГАБАРИТЫ И ВЕС ===== */}
-            {activeTab === "dimensions" && (
+            {panelFocus === "characteristics" && activeTab === "dimensions" && (
               <div className="form">
                 <h2 className="stage24-section-title">
                   Габаритные размеры и вес
@@ -852,7 +944,7 @@ function Stage23() {
             )}
 
             {/* ===== ПРОИЗВОДИТЕЛЬ ===== */}
-            {activeTab === "manufacturer" && (
+            {panelFocus === "characteristics" && activeTab === "manufacturer" && (
               <div className="form">
                 <h2 className="stage24-section-title">Производитель</h2>
                 <p className="stage23-subtitle-line">Заполните сведения о производителе продукта. <br />При заполнении ориентируйтесь на следующие документы:<br /> 1.Руководство по эксплуатации<br /></p>
@@ -870,7 +962,7 @@ function Stage23() {
             )}
 
             {/* ===== ГАРАНТИЙНЫЕ ОБЯЗАТЕЛЬСТВА ===== */}
-            {activeTab === "garant" && (
+            {panelFocus === "characteristics" && activeTab === "garant" && (
               <div className="form">
                 <h2 className="stage24-section-title">Гарантийные обязательства</h2>
                 <p className="stage23-subtitle-line">
@@ -917,7 +1009,7 @@ function Stage23() {
             )}
 
             {/* ===== ТЕХНИЧЕСКИЕ ХАРАКТЕРИСТИКИ ===== */}
-            {activeTab === "tech" && (
+            {panelFocus === "characteristics" && activeTab === "tech" && (
               <div className="form">
                 <h2 className="stage24-section-title">
                   Технические характеристики
@@ -1034,7 +1126,7 @@ function Stage23() {
             )}
 
             {/* ===== ДОБАВЬТЕ ХАРАКТЕРИСТИКИ ===== */}
-            {activeTab === "custom" && (
+            {panelFocus === "characteristics" && activeTab === "custom" && (
               <div className="form">
                 <h2 className="stage24-section-title">
                   Добавьте характеристики
@@ -1050,7 +1142,7 @@ function Stage23() {
             )}
 
             {/* ===== ПРОСМОТР ЗАПОЛНЕННЫХ ХАРАКТЕРИСТИК ===== */}
-            {activeTab === "review" && (
+            {panelFocus === "characteristics" && activeTab === "review" && (
               <div className="form">
                 <h2 className="stage24-section-title">
                   Просмотр заполненных характеристик
@@ -1539,14 +1631,59 @@ function Stage23() {
           <p className="modal-sheet__subhint nm">
           </p>
         )}
+
+        {showCustomVariantSetup && (
+          <>
+            <div className="matches-divider stage23-bundle-divider" />
+            <Stage25
+              ref={axisRef}
+              embedded
+              refreshKey={charsRefreshKey}
+              onSelectionChange={handleAxisSelectionChange}
+            />
+            <div className="matches-divider stage23-bundle-divider" />
+            <Stage26
+              ref={nameRef}
+              embedded
+              previewOptions={axisPreview}
+            />
+          </>
+        )}
+
+        <div className="matches-divider stage23-bundle-divider" />
+        <Stage24
+          ref={descriptionRef}
+          embedded
+          contentOpen={panelFocus === "description"}
+          onContentOpenChange={handleDescriptionOpenChange}
+        />
       </div>
 
       <BottomBar
         current={fillProgressStep(23, progressProduct, productId)}
         total={fillProgressTotal(progressProduct, productId) || VARIANT_FILL_STAGE_COUNT}
         prevPath="/stage14"
-        nextPath={nextStage}
-        onSave={persist}
+        nextPath={nextStage || (isCustomFlow ? "/stage28" : "/stage18")}
+        onSave={async () => {
+          await persist();
+          setCharsRefreshKey((prev) => prev + 1);
+          let savedVariationId = variationId;
+          if (showCustomVariantSetup && axisPreview.length > 0) {
+            savedVariationId =
+              (await axisRef.current?.save?.()) || savedVariationId;
+            if (savedVariationId && productId) {
+              const next = new URLSearchParams(location.search);
+              next.set("id", productId);
+              next.set("variationId", savedVariationId);
+              navigate(
+                { pathname: location.pathname, search: `?${next.toString()}` },
+                { replace: true },
+              );
+            }
+            await nameRef.current?.save?.(savedVariationId);
+          }
+          await descriptionRef.current?.save?.();
+        }}
       />
     </>
   );

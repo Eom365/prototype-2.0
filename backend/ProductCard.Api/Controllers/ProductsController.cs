@@ -87,12 +87,32 @@ public class ProductsController : ControllerBase
             return NotFound(new { message = "Карточка не найдена" });
 
         var decision = (dto.Decision ?? "").Trim().ToLowerInvariant();
-        if (decision == "approve")
-            product.ReviewStatus = "approved";
-        else if (decision == "submit")
-            product.ReviewStatus = "pending";
-        else
+        if (decision != "approve" && decision != "submit")
             return BadRequest(new { message = "Неизвестное решение" });
+
+        product.ReviewStatus = decision == "approve" ? "approved" : "pending";
+
+        if (decision == "approve")
+        {
+            var variations = await _db.ProductVariations
+                .Where(item => item.ProductId == id)
+                .ToListAsync();
+            foreach (var variation in variations)
+            {
+                var status = (variation.ReviewStatus ?? "filling").Trim().ToLowerInvariant();
+                if (status != "pending")
+                    continue;
+
+                var values = await _db.CharacteristicValues
+                    .Where(item => item.VariationId == variation.Id)
+                    .ToListAsync();
+                var files = await _db.ProductFiles
+                    .Where(item => item.VariationId == variation.Id)
+                    .ToListAsync();
+                variation.ReviewStatus = "approved";
+                variation.ApprovedSignature = BuildSignature(variation, values, files);
+            }
+        }
 
         Touch(product, product.CurrentStage);
         await _db.SaveChangesAsync();
@@ -1076,6 +1096,9 @@ public class ProductsController : ControllerBase
         List<CharacteristicValue> staged)
     {
         var candidate = AxisKey(axes, staged);
+        if (string.IsNullOrWhiteSpace(candidate.Replace("|", string.Empty)))
+            return false;
+
         var existing = await _db.CharacteristicValues.AsNoTracking()
             .Where(item => item.ProductId == productId && item.VariationId != variationId)
             .ToListAsync();

@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import BottomBar from "../components/BottomBar";
 import HazardClassField from "../components/HazardClassField";
+import VariantFlowHeader from "../components/VariantFlowHeader";
 import { productsApi } from "../api";
 import {
   formatHazardClass,
@@ -19,6 +20,11 @@ import {
   variantFillMode,
   variantFillStageHeading,
 } from "../stageProgress";
+import {
+  isDescriptionTabFilled,
+  markVisited,
+  tabClassName,
+} from "../wizardTabStatus";
 import "./Stage24.css";
 
 const TABS = [
@@ -180,7 +186,14 @@ function ReviewBlock({ title, children }) {
   );
 }
 
-function Stage24() {
+const Stage24 = forwardRef(function Stage24(
+  {
+    embedded = false,
+    contentOpen = true,
+    onContentOpenChange,
+  },
+  ref,
+) {
   const navigate = useNavigate();
   const location = useLocation();
   const [params] = useSearchParams();
@@ -188,7 +201,7 @@ function Stage24() {
   const variationId = params.get("variationId");
 
   const [activeTab, setActiveTab] = useState("description");
-  const [completedTabs, setCompletedTabs] = useState([]);
+  const [visitedTabs, setVisitedTabs] = useState(["description"]);
   const [form, setForm] = useState(emptyDescriptionForm);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -197,11 +210,23 @@ function Stage24() {
   const [product, setProduct] = useState(null);
 
   const go = (path) => navigate({ pathname: path, search: location.search });
+  const panelVisible = !embedded || contentOpen;
   const currentIndex = TABS.findIndex((tab) => tab.key === activeTab);
-  const currentTab = TABS[currentIndex];
+  const currentTab = panelVisible ? TABS[currentIndex] : null;
   const isCustomFlow = variantFillMode(product) === "custom";
-  const prevStagePath = isCustomFlow ? "/stage26" : "/stage23";
+  const prevStagePath = "/stage23";
   const nextStagePath = isCustomFlow ? "/stage28" : "/stage18";
+
+  const selectTab = (key) => {
+    if (activeTab === key && panelVisible) {
+      setActiveTab(null);
+      onContentOpenChange?.(false);
+      return;
+    }
+    setActiveTab(key);
+    setVisitedTabs((prev) => markVisited(prev, key));
+    onContentOpenChange?.(true);
+  };
 
   useEffect(() => {
     if (!productId) return;
@@ -256,6 +281,13 @@ function Stage24() {
     }
   };
 
+  useImperativeHandle(ref, () => ({ save: persist }), [
+    productId,
+    variationId,
+    loaded,
+    form,
+  ]);
+
   const handleConfirm = async () => {
     if (busy) return;
     setBusy(true);
@@ -269,12 +301,10 @@ function Stage24() {
         return;
       }
 
-      setCompletedTabs((prev) =>
-        prev.includes(activeTab) ? prev : [...prev, activeTab],
-      );
+      setVisitedTabs((prev) => markVisited(prev, activeTab));
       const nextIndex = currentIndex + 1;
       if (nextIndex < TABS.length) {
-        setActiveTab(TABS[nextIndex].key);
+        selectTab(TABS[nextIndex].key);
       }
     } catch (saveError) {
       setError(saveError.message || "Не удалось сохранить");
@@ -641,16 +671,17 @@ function Stage24() {
 
   return (
     <>
-      <div className="container stage24-page">
-        <div className="divOne">
-          <h1 className="hOne">
-            Создание варианта параметра (модели) линейки продукта
+      <div className={embedded ? "stage24-embed stage24-page" : "container stage24-page"}>
+        {!embedded && (
+          <VariantFlowHeader product={product} productId={productId} />
+        )}
+        {embedded ? (
+          <h2 className="stage2-section-title stage24-embed-title">Описание продукта</h2>
+        ) : (
+          <h1 className="title stage24-title">
+            {variantFillStageHeading(24, "Описание продукта", product, productId)}
           </h1>
-          <p>***Наименование***</p>
-        </div>
-        <h1 className="title stage24-title">
-          {variantFillStageHeading(24, "Описание продукта", product, productId)}
-        </h1>
+        )}
 
         {!productId && (
           <p className="form-error">
@@ -659,18 +690,19 @@ function Stage24() {
         )}
         {error && <p className="form-error">{error}</p>}
 
-        <div className="stage24-tabs" role="tablist">
+        <div className="stage24-tabs stage24-tabs--description" role="tablist">
           {TABS.map((tab) => {
-            const done = completedTabs.includes(tab.key);
-            const active = activeTab === tab.key;
+            const active = panelVisible && activeTab === tab.key;
+            const visited = visitedTabs.includes(tab.key);
+            const filled = isDescriptionTabFilled(tab.key, form);
             return (
               <button
                 key={tab.key}
                 type="button"
                 role="tab"
                 aria-selected={active}
-                className={`stage24-tab${active ? " stage24-tab--active" : ""}${done ? " stage24-tab--done" : ""}`}
-                onClick={() => setActiveTab(tab.key)}
+                className={tabClassName({ active, visited, filled })}
+                onClick={() => selectTab(tab.key)}
               >
                 {tab.label}
               </button>
@@ -678,10 +710,13 @@ function Stage24() {
           })}
         </div>
 
-        <h2 className="stage24-section-title">{currentTab?.label}</h2>
-        <p className="stage24-hint">{TAB_HINTS[activeTab]}</p>
-
-        {activeTab === "review" ? renderReview() : renderFields()}
+        {panelVisible && activeTab && (
+          <>
+            <h2 className="stage24-section-title">{currentTab?.label}</h2>
+            <p className="stage24-hint">{TAB_HINTS[activeTab]}</p>
+            {activeTab === "review" ? renderReview() : renderFields()}
+          </>
+        )}
 
         {/* <p className="modal-sheet__subhint nm">
           {activeTab === "review"
@@ -715,15 +750,17 @@ function Stage24() {
         </div> */}
       </div>
 
-      <BottomBar
-        current={fillProgressStep(24, product, productId)}
-        total={fillProgressTotal(product, productId)}
-        prevPath={prevStagePath}
-        nextPath={nextStagePath}
-        onSave={persist}
-      />
+      {!embedded && (
+        <BottomBar
+          current={fillProgressStep(24, product, productId)}
+          total={fillProgressTotal(product, productId)}
+          prevPath={prevStagePath}
+          nextPath={nextStagePath}
+          onSave={persist}
+        />
+      )}
     </>
   );
-}
+});
 
 export default Stage24;

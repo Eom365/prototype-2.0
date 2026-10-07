@@ -3,6 +3,7 @@ import BottomBar from '../components/BottomBar'
 import { productWizardOffset, variantFillStageHeading, variantFillStep, variantFillTotal } from '../stageProgress'
 import PackTypeHint from '../components/PackTypeHint'
 import PhotoGallery from '../components/PhotoGallery'
+import VariantFlowHeader from '../components/VariantFlowHeader'
 import VariationPreview from '../components/VariationPreview'
 import { productsApi } from '../api'
 import { packagingFrom, sameId, useCardIds } from '../cardScope'
@@ -67,12 +68,7 @@ function Stage18() {
     return (
         <>
             <div className="container">
-                <div className="divOne">
-                    <h1 className="hOne">
-                        Создание варианта параметра (модели) линейки продукта
-                    </h1>
-                    <p>***Наименование***</p>
-                </div>
+                <VariantFlowHeader productId={productId} />
                 <h1 className="title">{variantFillStageHeading(18, 'Добавьте упаковку', null, productId)}</h1>
                 <VariationPreview stage={18} />
 
@@ -334,7 +330,7 @@ function Stage18() {
                 </div>
             </div>
 
-            <BottomBar current={variantFillStep(18, null, productId) + productWizardOffset(productId)} total={variantFillTotal(null, productId) + productWizardOffset(productId)} prevPath="/stage24" nextPath="/stage19" onSave={save} />
+            <BottomBar current={variantFillStep(18, null, productId) + productWizardOffset(productId)} total={variantFillTotal(null, productId) + productWizardOffset(productId)} prevPath="/stage23" nextPath="/stage19" onSave={save} />
         </>
     )
 }

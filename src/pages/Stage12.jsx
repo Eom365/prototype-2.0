@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import BottomBar from '../components/BottomBar'
 import ExcelImportModal from '../components/ExcelImportModal'
+import VariantFlowHeader from '../components/VariantFlowHeader'
 import { productsApi } from '../api'
 import { resolveVariantFlow, variantAxisFields, customAxisUnitFromProduct, skipsVariantParamStage } from '../variantFlow'
 import {
@@ -185,12 +186,7 @@ function Stage12() {
     return (
         <>
             <div className="container">
-                <div className="divOne">
-                    <h1 className="hOne">
-                        Создание варианта параметра (модели) линейки продукта
-                    </h1>
-                    <p>***Наименование***</p>
-                </div>
+                <VariantFlowHeader product={product} productId={productId} />
                 <h1 className="title">{title}</h1>
 
                 <p className="description">

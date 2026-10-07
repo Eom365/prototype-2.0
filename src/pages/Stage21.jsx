@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { productsApi } from '../api'
 import BottomBar from '../components/BottomBar'
+import VariantFlowHeader from '../components/VariantFlowHeader'
 import { productWizardOffset, variantFillStageHeading, variantFillStep, variantFillTotal } from '../stageProgress'
 import './Stage21.css'
 
@@ -78,12 +79,7 @@ function Stage21() {
     return (
         <>
             <div className="container">
-                <div className="divOne">
-                    <h1 className="hOne">
-                        Создание варианта параметра (модели) линейки продукта
-                    </h1>
-                    <p>***Наименование***</p>
-                </div>
+                <VariantFlowHeader productId={productId} />
                 <h1 className="title">{variantFillStageHeading(21, 'Предварительный просмотр', null, productId)}</h1>
                 <h2 className="subtitle">*Открывается заполненная карточка товара для просмотра*</h2>
             </div>

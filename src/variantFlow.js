@@ -114,12 +114,36 @@ export function variantAxisFields(product) {
 }
 
 export function nextPathAfterCharacteristics(product) {
-  return resolveVariantFlow(product).mode === 'custom' ? '/stage25' : '/stage24'
+  return resolveVariantFlow(product).mode === 'custom' ? '/stage28' : '/stage18'
 }
 
 /** Manual category / custom flow has no axis values on Stage12 yet. */
 export function skipsVariantParamStage(product) {
   return resolveVariantFlow(product).mode === 'custom'
+}
+
+function hasSubmittedVariant(product) {
+  return (product?.variations || []).some((item) => {
+    const status = (item.reviewStatus || 'filling').toLowerCase()
+    return status === 'pending' || status === 'approved'
+  })
+}
+
+export function needsCustomVariantSetup(product) {
+  if (!product) return false
+
+  const flow = resolveVariantFlow(product)
+  if (flow.mode !== 'custom') return false
+  if (flow.stabilized) return false
+
+  const axes = (product?.variantAxes || []).filter(Boolean)
+  if (axes.length > 0) return false
+
+  if (hasSubmittedVariant(product)) return false
+
+  if ((product?.variations || []).length > 1) return false
+
+  return true
 }
 
 export function nameFeaturesKey(productId) {
@@ -143,6 +167,41 @@ export function loadNameFeatures(productId) {
     return Array.isArray(parsed) ? parsed : []
   } catch {
     return []
+  }
+}
+
+export function variantAxisDraftKey(productId) {
+  return `variantAxisDraft:${productId}`
+}
+
+export function saveVariantAxisDraft(productId, draft) {
+  if (!productId) return
+  try {
+    sessionStorage.setItem(
+      variantAxisDraftKey(productId),
+      JSON.stringify({
+        features: draft?.features || [],
+        drafts: draft?.drafts || {},
+      }),
+    )
+  } catch {
+    /* ignore */
+  }
+}
+
+export function loadVariantAxisDraft(productId) {
+  if (!productId) return { features: [], drafts: {} }
+  try {
+    const raw = sessionStorage.getItem(variantAxisDraftKey(productId))
+    const parsed = raw ? JSON.parse(raw) : null
+    if (!parsed || typeof parsed !== 'object') return { features: [], drafts: {} }
+    return {
+      features: Array.isArray(parsed.features) ? parsed.features : [],
+      drafts:
+        parsed.drafts && typeof parsed.drafts === 'object' ? parsed.drafts : {},
+    }
+  } catch {
+    return { features: [], drafts: {} }
   }
 }
 

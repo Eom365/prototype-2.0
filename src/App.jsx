@@ -30,9 +30,6 @@ import Stage20 from "./pages/Stage20";
 import Stage21 from "./pages/Stage21";
 import Stage22 from "./pages/Stage22";
 import Stage23 from "./pages/Stage23";
-import Stage24 from "./pages/Stage24";
-import Stage25 from "./pages/Stage25";
-import Stage26 from "./pages/Stage26";
 import Stage28 from "./pages/Stage28";
 import Stage29 from "./pages/Stage29";
 import Stage30 from "./pages/Stage30";
@@ -52,10 +49,10 @@ function Stage2Redirect() {
   );
 }
 
-function Stage27Redirect() {
+function Stage23BundleRedirect() {
   const location = useLocation();
   return (
-    <Navigate to={{ pathname: "/stage24", search: location.search }} replace />
+    <Navigate to={{ pathname: "/stage23", search: location.search }} replace />
   );
 }
 
@@ -91,10 +88,10 @@ function App() {
         <Route path="/stage21" element={<Stage21 />} />
         <Route path="/stage22" element={<Stage22 />} />
         <Route path="/stage23" element={<Stage23 />} />
-        <Route path="/stage24" element={<Stage24 />} />
-        <Route path="/stage25" element={<Stage25 />} />
-        <Route path="/stage26" element={<Stage26 />} />
-        <Route path="/stage27" element={<Stage27Redirect />} />
+        <Route path="/stage24" element={<Stage23BundleRedirect />} />
+        <Route path="/stage25" element={<Stage23BundleRedirect />} />
+        <Route path="/stage26" element={<Stage23BundleRedirect />} />
+        <Route path="/stage27" element={<Stage23BundleRedirect />} />
         <Route path="/stage28" element={<Stage28 />} />
         <Route path="/stage29" element={<Stage29 />} />
         <Route path="/stage30" element={<Stage30 />} />

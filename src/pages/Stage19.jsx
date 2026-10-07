@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import BottomBar from "../components/BottomBar";
 import { productWizardOffset, variantFillStageHeading, variantFillStep, variantFillTotal } from "../stageProgress";
+import VariantFlowHeader from "../components/VariantFlowHeader";
 import VariationPreview from "../components/VariationPreview";
 import { productsApi } from "../api";
 import { discountsFrom, emptyDiscounts, useCardIds } from "../cardScope";
@@ -72,12 +73,7 @@ function Stage19() {
   return (
     <>
       <div className="container stage19-page">
-        <div className="divOne">
-          <h1 className="hOne">
-            Создание варианта параметра (модели) линейки продукта
-          </h1>
-          <p>***Наименование***</p>
-        </div>
+        <VariantFlowHeader productId={productId} />
         <h1 className="title">
           {variantFillStageHeading(19, 'Добавьте стоимость товара и систему лояльности', null, productId)}
         </h1>

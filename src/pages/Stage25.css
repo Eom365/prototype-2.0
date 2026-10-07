@@ -4,6 +4,19 @@
   padding: 40px 20px 120px;
 }
 
+.stage25-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.stage25-heading .stage2-section-title,
+.stage25-heading .title {
+  margin: 0;
+  flex: 1;
+}
+
 .title {
   font-size: 22px;
   font-weight: bold;

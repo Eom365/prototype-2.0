@@ -1,7 +1,8 @@
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import BottomBar from "../components/BottomBar";
-import ExcelImportModal from "../components/ExcelImportModal";
+import Tip from "../components/Tip";
+import VariantFlowHeader from "../components/VariantFlowHeader";
 import { catalogApi, productsApi } from "../api";
 import { sameId } from "../cardScope";
 import { CUSTOM_CODE_PREFIX } from "../customCharacteristics";
@@ -14,6 +15,8 @@ import {
   variantFillStep,
 } from "../stageProgress";
 import {
+  loadVariantAxisDraft,
+  saveVariantAxisDraft,
   sortByVariantAxisHierarchy,
   sortVariantAxisCodes,
   variantAxisRank,
@@ -75,7 +78,10 @@ function filledCharacteristics(product, catalog, variationId) {
   return sortByVariantAxisHierarchy(options);
 }
 
-function Stage25() {
+const Stage25 = forwardRef(function Stage25(
+  { embedded = false, refreshKey = 0, onSelectionChange },
+  ref,
+) {
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const productId = params.get("id");
@@ -94,39 +100,105 @@ function Stage25() {
       .then(([loaded, loadedCatalog]) => {
         setProduct(loaded);
         setCatalog(loadedCatalog);
+        const opts = filledCharacteristics(loaded, loadedCatalog, variationId);
         const nextDrafts = {};
-        for (const opt of filledCharacteristics(loaded, loadedCatalog, variationId)) {
+        for (const opt of opts) {
           nextDrafts[opt.key] = opt.filled;
         }
+
+        const stored = loadVariantAxisDraft(productId);
+        const savedAxes = sortVariantAxisCodes(loaded.variantAxes || []).filter(
+          (code) => opts.some((opt) => opt.key === code),
+        );
+        const draftAxes = (stored.features || []).filter((code) =>
+          opts.some((opt) => opt.key === code),
+        );
+        const restoredFeatures = savedAxes.length ? savedAxes : draftAxes;
+
+        for (const key of restoredFeatures) {
+          const fromStore = String(stored.drafts?.[key] || "").trim();
+          if (fromStore) nextDrafts[key] = fromStore;
+        }
+
         setDrafts(nextDrafts);
+        setFeatures(restoredFeatures);
+        saveVariantAxisDraft(productId, {
+          features: restoredFeatures,
+          drafts: nextDrafts,
+        });
       })
       .catch((err) => setError(err.message));
-  }, [productId, variationId]);
+  }, [productId, variationId, refreshKey]);
 
   const options = filledCharacteristics(product, catalog, variationId);
   const offset = productWizardOffset(productId);
+  const selectionSigRef = useRef("");
+
+  useEffect(() => {
+    if (!onSelectionChange) return;
+    const selected = features
+      .map((key) => {
+        const opt = options.find((item) => item.key === key);
+        if (!opt) return null;
+        const value = (drafts[key] || opt.filled || "").trim();
+        if (!value) return null;
+        return { key, label: opt.label, value, unit: opt.unit || null };
+      })
+      .filter(Boolean);
+    const signature = selected
+      .map((item) => `${item.key}:${item.value}:${item.unit || ""}`)
+      .join("|");
+    if (signature === selectionSigRef.current) return;
+    selectionSigRef.current = signature;
+    onSelectionChange(selected);
+    // options is derived each render; features/drafts are the real triggers
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [features, drafts, product, catalog, variationId, onSelectionChange]);
+
+  const persistDraft = (nextFeatures, nextDrafts) => {
+    if (!productId) return;
+    saveVariantAxisDraft(productId, {
+      features: nextFeatures,
+      drafts: nextDrafts,
+    });
+  };
 
   const toggleFeature = (key) => {
     setFeatures((prev) => {
-      if (prev.includes(key)) return prev.filter((item) => item !== key);
-      if (prev.length >= MAX_FEATURES) {
-        setError(`Можно выбрать не больше ${MAX_FEATURES} характеристик`);
-        return prev;
+      let nextFeatures;
+      if (prev.includes(key)) {
+        nextFeatures = prev.filter((item) => item !== key);
+      } else {
+        if (prev.length >= MAX_FEATURES) {
+          setError(`Можно выбрать не больше ${MAX_FEATURES} характеристик`);
+          return prev;
+        }
+        setError("");
+        nextFeatures = [...prev, key];
       }
-      setError("");
+
       const opt = options.find((item) => item.key === key);
-      if (opt?.filled) {
-        setDrafts((draftsPrev) => ({
-          ...draftsPrev,
-          [key]: draftsPrev[key] || opt.filled,
-        }));
-      }
-      return [...prev, key];
+      setDrafts((draftsPrev) => {
+        const nextDrafts =
+          opt?.filled && !prev.includes(key)
+            ? {
+                ...draftsPrev,
+                [key]: draftsPrev[key] || opt.filled,
+              }
+            : draftsPrev;
+        persistDraft(nextFeatures, nextDrafts);
+        return nextDrafts;
+      });
+      return nextFeatures;
     });
   };
 
   const setDraft = (key, value) => {
-    setDrafts((prev) => ({ ...prev, [key]: value }));
+    setDrafts((prev) => {
+      const nextDrafts = { ...prev, [key]: value };
+      persistDraft(features, nextDrafts);
+      return nextDrafts;
+    });
   };
 
   const save = async () => {
@@ -219,10 +291,20 @@ function Stage25() {
         targetVariationId = created.id;
       }
 
-      const next = new URLSearchParams();
-      next.set("id", productId);
-      next.set("variationId", targetVariationId);
-      navigate({ pathname: "/stage26", search: `?${next.toString()}` });
+      saveVariantAxisDraft(productId, {
+        features: codes,
+        drafts: Object.fromEntries(
+          orderedFilled.map((item) => [item.key, item.value]),
+        ),
+      });
+
+      if (!embedded) {
+        const next = new URLSearchParams();
+        next.set("id", productId);
+        next.set("variationId", targetVariationId);
+        navigate({ pathname: "/stage23", search: `?${next.toString()}` });
+      }
+      return targetVariationId;
     } catch (err) {
       setError(err.message || "Не удалось сохранить");
       throw err;
@@ -231,37 +313,50 @@ function Stage25() {
     }
   };
 
+  useImperativeHandle(ref, () => ({ save }), [
+    productId,
+    variationId,
+    busy,
+    features,
+    drafts,
+    options,
+    embedded,
+  ]);
+
   return (
     <>
-      <div className="container">
-        <div className="divOne">
-          <h1 className="hOne">
-            Создание варианта параметра (модели) линейки продукта
-          </h1>
-          <p>***Наименование***</p>
-        </div>
-        <h1 className="title">
-          {variantFillStageHeading(
-            25,
-            "Вариант параметра продукта",
-            product,
-            productId,
+      <div className={embedded ? "stage25-embed" : "container"}>
+        {!embedded && (
+          <VariantFlowHeader product={product} productId={productId} />
+        )}
+        <div className="stage25-heading">
+          <Tip
+            inline
+            text="Пример вариантов параметра продукта:"
+            image="/images/productParameterOption.png"
+            imageAlt="Вариант параметра продукта — пример"
+            imageSize="large"
+            bubbleSize="large"
+          />
+          {embedded ? (
+            <h2 className="stage2-section-title">Вариант параметра продукта</h2>
+          ) : (
+            <h1 className="title">
+              {variantFillStageHeading(
+                25,
+                "Вариант параметра продукта",
+                product,
+                productId,
+              )}
+            </h1>
           )}
-        </h1>
+        </div>
 
         <p className="description">
           Вариант параметра продукта позволяет объединить продукты одной
           линейки, у которых меняются определенные характеристики (модель, объём
           памяти, цвет).
         </p>
-
-        <p className="pBold">Пример вариантов параметра продукта:</p>
-        {/* <ExcelImportModal /> */}
-        <img
-          src="/images/productParameterOption.png"
-          alt="Вариант параметра продукта - пример"
-          className="imgOne"
-        />
 
         <h2 className="jh">
           Выберите варианты параметра продукта: можно выбрать от 1 до 5
@@ -273,7 +368,9 @@ function Stage25() {
         <div className="feature-list">
           {options.length === 0 && (
             <p className="paragraph">
-              На этапе характеристик пока нет заполненных значений.
+              {embedded
+                ? "Сначала заполните характеристики выше — тогда здесь появятся варианты для выбора."
+                : "На этапе характеристик пока нет заполненных значений."}
             </p>
           )}
           {options.map((opt, index) => {
@@ -343,15 +440,17 @@ function Stage25() {
         </div>
       </div>
 
-      <BottomBar
-        current={fillProgressStep(25, product, productId) || variantFillStep(25) + offset}
-        total={fillProgressTotal(product, productId) || CUSTOM_VARIANT_FILL_STAGE_COUNT + offset}
-        prevPath="/stage23"
-        onSave={save}
-        onNext={() => {}}
-      />
+      {!embedded && (
+        <BottomBar
+          current={fillProgressStep(25, product, productId) || variantFillStep(25) + offset}
+          total={fillProgressTotal(product, productId) || CUSTOM_VARIANT_FILL_STAGE_COUNT + offset}
+          prevPath="/stage23"
+          onSave={save}
+          onNext={() => {}}
+        />
+      )}
     </>
   );
-}
+});
 
 export default Stage25;

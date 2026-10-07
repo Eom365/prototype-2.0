@@ -141,6 +141,7 @@
 }
 
 .field--product-type {
+    position: relative;
     width: var(--category-width);
     margin: 8px 0 0;
     box-sizing: border-box;
@@ -149,6 +150,25 @@
     flex-wrap: nowrap;
     align-items: center;
     gap: 10px;
+    align-self: center;
+}
+
+.stage2-path-hint {
+    width: var(--category-width);
+    max-width: 100%;
+    margin: 10px 0 0;
+    align-self: center;
+    font-size: 14px;
+    line-height: 1.4;
+    color: #8a1f1f;
+    text-align: left;
+}
+
+.stage2-workarea > .field--category {
+    width: var(--category-width);
+    max-width: 100%;
+    align-self: center;
+    margin-top: 12px;
 }
 
 .field--product-type--after-modal {
@@ -680,8 +700,20 @@
     text-align: left;
 }
 
+.stage2-category-title {
+    width: var(--category-width);
+    max-width: 100%;
+    margin: 0 0 12px;
+    align-self: center;
+}
+
 .stage2-brand-block .stage3-subtitle {
     margin-top: 8px;
+}
+
+.stage2-brand-doc-required {
+    color: #000;
+    font-weight: 700;
 }
 
 .stage2-brand-block .stage4-lead {
@@ -728,8 +760,10 @@
 .field--product-type .tip {
     flex-shrink: 0;
     position: relative;
+    left: auto;
+    top: auto;
+    transform: none;
     z-index: 2;
-    /* чтобы бабл был поверх инпута */
 }
 
 .field--product-type,

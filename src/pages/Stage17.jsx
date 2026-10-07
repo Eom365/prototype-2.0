@@ -8,7 +8,6 @@ import './Stage17.css'
 
 const documentFields = [
     ['warranty', 'Гарантийный талон'],
-    ['brand', 'Бренд'],
     ['certificate', 'Сертификат соответствия'],
     ['declaration', 'Декларация о соответствии'],
     ['stateRegistration', 'Свидетельство о государственной регистрации'],
@@ -17,20 +16,13 @@ const documentFields = [
     ['other', 'Иной документ'],
 ]
 
-function valueText(values, code) {
-    const field = (values || []).find((item) => item.code === code)
-    if (!field?.value) return ''
-    return field.value === 'other' ? (field.customValue || '') : field.value
-}
-
-function getRequiredFields(categoryCode, hasBrand) {
+function getRequiredFields(categoryCode) {
     const required = new Set(['warranty', 'manual'])
     if (categoryCode === 'handpieces') required.add('registration')
     if (categoryCode === 'aerosols') {
         required.add('certificate')
         required.add('declaration')
     }
-    if (hasBrand) required.add('brand')
     return required
 }
 
@@ -43,19 +35,18 @@ function Stage17() {
 
     const load = async () => {
         const product = await productsApi.get(productId)
-        const variation = (product.variations || []).find((item) => item.id === variationId)
         const next = {}
         for (const file of product.files || []) {
-            if (file.role === 'document' && file.documentType && file.variationId === variationId) {
+            if (
+                file.role === 'document' &&
+                file.documentType &&
+                file.documentType !== 'brand' &&
+                file.variationId === variationId
+            ) {
                 next[file.documentType] = file
             }
         }
-        const hasBrand = Boolean(
-            valueText(variation?.values, 'brand') ||
-            valueText(product.values, 'brand') ||
-            product.brandName?.trim(),
-        )
-        setRequiredFields(getRequiredFields(product.categoryCode || '', hasBrand))
+        setRequiredFields(getRequiredFields(product.categoryCode || ''))
         setFiles(next)
     }
 

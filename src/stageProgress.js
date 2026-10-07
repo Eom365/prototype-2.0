@@ -4,9 +4,9 @@ export const BASE_STAGE_COUNT = 11
 
 export const LINE_STAGE_COUNT = 3
 
-export const KNOWN_VARIANT_FILL_STAGE_COUNT = 9
-export const CUSTOM_VARIANT_FILL_STAGE_COUNT = 10
-export const EDIT_KNOWN_VARIANT_FILL_STAGE_COUNT = 8
+export const KNOWN_VARIANT_FILL_STAGE_COUNT = 8
+export const CUSTOM_VARIANT_FILL_STAGE_COUNT = 7
+export const EDIT_KNOWN_VARIANT_FILL_STAGE_COUNT = 7
 export const VARIANT_FILL_STAGE_COUNT = KNOWN_VARIANT_FILL_STAGE_COUNT
 
 const KNOWN_VARIANT_FILL_STEPS = {
@@ -14,18 +14,6 @@ const KNOWN_VARIANT_FILL_STEPS = {
   7: 2,
   14: 3,
   23: 4,
-  24: 5,
-  18: 6,
-  19: 7,
-  20: 8,
-  21: 9,
-}
-
-/** Edit existing known variant: starts at documents (no Stage12). */
-const EDIT_KNOWN_VARIANT_FILL_STEPS = {
-  7: 1,
-  14: 2,
-  23: 3,
   24: 4,
   18: 5,
   19: 6,
@@ -33,18 +21,29 @@ const EDIT_KNOWN_VARIANT_FILL_STEPS = {
   21: 8,
 }
 
-/** Manual/custom path: no Stage12; description uses Stage24 (not 27). */
+/** Edit existing known variant: starts at documents (no Stage12). */
+const EDIT_KNOWN_VARIANT_FILL_STEPS = {
+  7: 1,
+  14: 2,
+  23: 3,
+  24: 3,
+  18: 4,
+  19: 5,
+  20: 6,
+  21: 7,
+}
+
 const CUSTOM_VARIANT_FILL_STEPS = {
   7: 1,
   14: 2,
   23: 3,
-  25: 4,
-  26: 5,
-  24: 6,
-  28: 7,
-  29: 8,
-  30: 9,
-  31: 10,
+  25: 3,
+  26: 3,
+  24: 3,
+  28: 4,
+  29: 5,
+  30: 6,
+  31: 7,
 }
 
 const LINE_ROUTE_STEPS = {

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import BottomBar from '../components/BottomBar'
 import { productWizardOffset, variantFillStageHeading, variantFillStep, variantFillTotal } from '../stageProgress'
+import VariantFlowHeader from '../components/VariantFlowHeader'
 import VariationPreview from '../components/VariationPreview'
 import { productsApi } from '../api'
 import { blankWarehouse, composeAddress, pointsFrom, pointsPayload, useCardIds, warehouseFormFrom } from '../cardScope'
@@ -113,12 +114,7 @@ function Stage20() {
     return (
         <>
             <div className="container stage20-page">
-                <div className="divOne">
-                    <h1 className="hOne">
-                        Создание варианта параметра (модели) линейки продукта
-                    </h1>
-                    <p>***Наименование***</p>
-                </div>
+                <VariantFlowHeader productId={productId} />
                 <h1 className="title">{variantFillStageHeading(20, 'Доставка', null, productId)}</h1>
                 <VariationPreview stage={20} />
                 {!productId && <p className="form-error">Откройте создание карточки с главной страницы.</p>}

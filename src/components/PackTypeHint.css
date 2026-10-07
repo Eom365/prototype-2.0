@@ -29,6 +29,15 @@
     pointer-events: none;
 }
 
+.pack-hint-popup__caption {
+    margin: 0 0 8px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #333;
+    line-height: 1.35;
+    text-align: left;
+}
+
 .pack-hint-popup img {
     display: block;
     width: 220px;

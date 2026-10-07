@@ -1,6 +1,7 @@
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import BottomBar from "../components/BottomBar";
+import VariantFlowHeader from "../components/VariantFlowHeader";
 import { catalogApi, productsApi } from "../api";
 import { sameId } from "../cardScope";
 import { CUSTOM_CODE_PREFIX } from "../customCharacteristics";
@@ -11,7 +12,13 @@ import {
   variantFillStep,
 } from "../stageProgress";
 import { formatVariantAxisValue } from "../variantAxisDisplay";
-import { saveNameFeatures, sortByVariantAxisHierarchy, sortVariantAxisCodes, variantAxisRank } from "../variantFlow";
+import {
+  loadNameFeatures,
+  saveNameFeatures,
+  sortByVariantAxisHierarchy,
+  sortVariantAxisCodes,
+  variantAxisRank,
+} from "../variantFlow";
 import "./Stage2_3.css";
 import "./Stage25.css";
 import "./Stage26.css";
@@ -102,7 +109,10 @@ function composeDisplayName(product, options, selectedKeys) {
   return parts.join(" ");
 }
 
-function Stage26() {
+const Stage26 = forwardRef(function Stage26(
+  { embedded = false, previewOptions = null },
+  ref,
+) {
   const [params] = useSearchParams();
   const productId = params.get("id");
   const variationId = params.get("variationId");
@@ -118,7 +128,14 @@ function Stage26() {
     Promise.all([productsApi.get(productId), catalogApi.get()])
       .then(([product, catalog]) => {
         setProductSnapshot(product);
-        const nextOptions = axisOptions(product, catalog, variationId);
+        const nextOptions =
+          Array.isArray(previewOptions) && previewOptions.length
+            ? previewOptions.map((item) => ({
+                key: item.key,
+                label: item.label,
+                value: item.value,
+              }))
+            : axisOptions(product, catalog, variationId);
         setOptions(nextOptions);
 
         const logoFile =
@@ -151,12 +168,44 @@ function Stage26() {
               .map((item) => item.key)
               .slice(0, MAX_NAME_FEATURES)
           : [];
-        const selected = matched.length ? matched : [];
+        const stored = loadNameFeatures(productId).filter((key) =>
+          nextOptions.some((item) => item.key === key),
+        );
+        const selected = (matched.length ? matched : stored).slice(
+          0,
+          MAX_NAME_FEATURES,
+        );
         setFeatures(selected);
         setLoaded(true);
       })
       .catch((loadError) => setError(loadError.message));
   }, [productId, variationId]);
+
+  const previewSigRef = useRef("");
+  useEffect(() => {
+    if (!Array.isArray(previewOptions) || !previewOptions.length) return;
+    const signature = previewOptions
+      .map((item) => `${item.key}:${item.value}:${item.label || ""}`)
+      .join("|");
+    if (signature === previewSigRef.current) return;
+    previewSigRef.current = signature;
+    const nextOptions = previewOptions.map((item) => ({
+      key: item.key,
+      label: item.label,
+      value: item.value,
+    }));
+    setOptions(nextOptions);
+    setFeatures((prev) => {
+      const next = prev.filter((key) => nextOptions.some((item) => item.key === key));
+      if (
+        next.length === prev.length &&
+        next.every((key, index) => key === prev[index])
+      ) {
+        return prev;
+      }
+      return next;
+    });
+  }, [previewOptions]);
 
   const toggleFeature = (key) => {
     setFeatures((prev) => {
@@ -171,13 +220,15 @@ function Stage26() {
         setError("");
         next = [...prev, key];
       }
+      if (productId) saveNameFeatures(productId, orderedSelectedKeys(next));
       return next;
     });
   };
 
-  const save = async () => {
+  const save = async (overrideVariationId) => {
     if (!productId) throw new Error("Сначала создайте карточку на главной странице");
-    if (!variationId) throw new Error("Сначала создайте вариант");
+    const targetVariationId = overrideVariationId || variationId;
+    if (!targetVariationId) throw new Error("Сначала создайте вариант");
     if (!loaded) throw new Error("Карточка ещё загружается, подождите секунду");
     if (!features.length) {
       throw new Error("Выберите от 1 до 3 характеристик для наименования");
@@ -185,7 +236,7 @@ function Stage26() {
     const name = composeDisplayName(productSnapshot, options, features);
     if (!name) throw new Error("Заполните наименование варианта");
     saveNameFeatures(productId, orderedSelectedKeys(features));
-    await productsApi.saveVariationName(productId, variationId, {
+    await productsApi.saveVariationName(productId, targetVariationId, {
       fullName: name,
       nameIncludesLogo: Boolean(logo),
       nameIncludesType: false,
@@ -195,23 +246,36 @@ function Stage26() {
     });
   };
 
+  useImperativeHandle(ref, () => ({ save }), [
+    productId,
+    variationId,
+    loaded,
+    features,
+    options,
+    productSnapshot,
+    logo,
+  ]);
+
   return (
     <>
-      <div className="container stage3-page stage4-page">
-        <div className="divOne">
-          <h1 className="hOne">
-            Создание варианта параметра (модели) линейки продукта
+      <div className={embedded ? "stage26-embed stage3-page stage4-page" : "container stage3-page stage4-page"}>
+        {!embedded && (
+          <VariantFlowHeader product={productSnapshot} productId={productId} />
+        )}
+        {embedded ? (
+          <h2 className="stage2-section-title">
+            Наименование варианта параметра продукта
+          </h2>
+        ) : (
+          <h1 className="title stage3-title">
+            {variantFillStageHeading(
+              26,
+              "Наименование варианта параметра продукта",
+              null,
+              productId,
+            )}
           </h1>
-          <p>***Наименование***</p>
-        </div>
-        <h1 className="title stage3-title">
-          {variantFillStageHeading(
-            26,
-            "Наименование варианта параметра продукта",
-            null,
-            productId,
-          )}
-        </h1>
+        )}
         {!productId && (
           <p className="form-error">
             Откройте создание карточки с главной страницы.
@@ -307,15 +371,17 @@ function Stage26() {
         </div>
       </div>
 
-      <BottomBar
-        current={variantFillStep(26) + productWizardOffset(productId)}
-        total={CUSTOM_VARIANT_FILL_STAGE_COUNT + productWizardOffset(productId)}
-        prevPath="/stage25"
-        nextPath="/stage24"
-        onSave={save}
-      />
+      {!embedded && (
+        <BottomBar
+          current={variantFillStep(26) + productWizardOffset(productId)}
+          total={CUSTOM_VARIANT_FILL_STAGE_COUNT + productWizardOffset(productId)}
+          prevPath="/stage23"
+          nextPath="/stage23"
+          onSave={save}
+        />
+      )}
     </>
   );
-}
+});
 
 export default Stage26;

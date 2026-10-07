@@ -9,6 +9,7 @@ import {
 } from "../stageProgress";
 import PackTypeHint from "../components/PackTypeHint";
 import PhotoGallery from "../components/PhotoGallery";
+import VariantFlowHeader from "../components/VariantFlowHeader";
 import VariationPreview from "../components/VariationPreview";
 import { productsApi } from "../api";
 import { packagingFrom, sameId, useCardIds } from "../cardScope";
@@ -80,12 +81,7 @@ function Stage28() {
   return (
     <>
       <div className="container">
-        <div className="divOne">
-          <h1 className="hOne">
-            Создание варианта параметра (модели) линейки продукта
-          </h1>
-          <p>***Наименование***</p>
-        </div>
+        <VariantFlowHeader productId={productId} />
         <h1 className="title">
           {variantFillStageHeading(28, "Добавьте упаковку продукта.", null, productId)}
         </h1>
@@ -361,7 +357,7 @@ function Stage28() {
       <BottomBar
         current={variantFillStep(28) + productWizardOffset(productId)}
         total={CUSTOM_VARIANT_FILL_STAGE_COUNT + productWizardOffset(productId)}
-        prevPath="/stage24"
+        prevPath="/stage23"
         nextPath="/stage29"
         onSave={save}
       />

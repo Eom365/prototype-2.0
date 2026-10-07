@@ -1,5 +1,9 @@
 /* Stage 23 — scoped fixes over Stage5.css field layout */
 
+.stage23-page.container {
+  max-width: 1010px;
+}
+
 .stage23-page {
   padding-bottom: 180px;
 }

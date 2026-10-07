@@ -1,10 +1,12 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import BottomBar from '../components/BottomBar'
+import Tip from '../components/Tip'
 import { catalogApi, productsApi } from '../api'
 import {
     HANDPIECE_PARENTS,
     handpieceParentCodeForKind,
+    handpieceParentForKind,
     handpieceProductName,
 } from '../handpieceKinds'
 import { productWizardTotal } from '../stageProgress'
@@ -29,50 +31,6 @@ const BRAND_TIPS = {
 
 const PRODUCT_TYPE_TIP =
     "Тип продукта — это название продукта, по которому определяется категория продукта. Не пишите бренд, модель и характеристики. Пример правильного заполнения: «Наконечник турбинный», «Стерилизатор», «Ноутбук»."
-
-function Tip({
-    text,
-    image,
-    images,
-    imageAlt = "",
-    imageSize = "default",
-    bubbleSize = "default",
-}) {
-    const [open, setOpen] = useState(false)
-
-    const allImages = [
-        ...(image ? [{ src: image, alt: imageAlt || "Пояснение" }] : []),
-        ...(images || []),
-    ]
-
-    return (
-        <span className="tip">
-            <button
-                type="button"
-                className="tip__icon"
-                aria-label="Подсказка"
-                onClick={() => setOpen((v) => !v)}
-                onMouseEnter={() => setOpen(true)}
-                onMouseLeave={() => setOpen(false)}
-            >
-                ?
-            </button>
-            {open && (
-                <span className={`tip__bubble tip__bubble--${bubbleSize}`}>
-                    <span className="tip__text">{text}</span>
-                    {allImages.map((img, idx) => (
-                        <img
-                            key={idx}
-                            className={`tip__image tip__image--${imageSize}`}
-                            src={img.src}
-                            alt={img.alt || "Пояснение"}
-                        />
-                    ))}
-                </span>
-            )}
-        </span>
-    )
-}
 
 function FileInput({ value, onChange, placeholder, accept }) {
     const inputRef = useRef(null)
@@ -204,13 +162,143 @@ function normalizePathFields(fields) {
     return next
 }
 
+function fieldsToPathKeepAll(fields) {
+    return (fields || [])
+        .map((field) => String(field || '').trim())
+        .filter(Boolean)
+        .join(' > ')
+}
+
+/** Empty prefix slots + product type locked as the last segment. */
+function normalizeUndeterminedPathFields(fields, typeName) {
+    const type = String(typeName || '').trim()
+    if (!type) return ['']
+    const body = Array.isArray(fields) && fields.length
+        ? fields.slice(0, -1)
+        : []
+    const filled = []
+    for (const field of body) {
+        const text = String(field ?? '')
+        if (!String(text).trim()) break
+        if (String(text).trim().toLowerCase() === type.toLowerCase()) break
+        filled.push(text)
+    }
+    return [...filled, '', type]
+}
+
+function buildKindCatalogPath(purpose, category, parent, kind) {
+    const rootLabel = getPurposeRoot(purpose || 'Стоматология')
+    const parentSegment =
+        parent && kind && parent.name !== kind.name ? ` > ${parent.name}` : ''
+    const leaf = kind?.name || parent?.name || ''
+    if (!category || !leaf) return ''
+    return `${rootLabel} > ${category.name}${parentSegment} > ${leaf}`
+}
+
+function buildParentCatalogPath(purpose, category, parent) {
+    const rootLabel = getPurposeRoot(purpose || 'Стоматология')
+    if (!category || !parent) return ''
+    return `${rootLabel} > ${category.name} > ${parent.name}`
+}
+
+/** Word bag key so "прямой стоматологический наконечник" == "Стоматологический прямой наконечник". */
+function typeTokenKey(text) {
+    return String(text || '')
+        .toLowerCase()
+        .replace(/[ё]/g, 'е')
+        .split(/[^a-zа-я0-9:]+/i)
+        .map((part) => part.trim())
+        .filter(Boolean)
+        .sort()
+        .join(' ')
+}
+
+function typeTextMatches(query, label) {
+    const q = String(query || '').trim()
+    const l = String(label || '').trim()
+    if (!q || !l) return false
+    if (q.toLowerCase() === l.toLowerCase()) return true
+    const qKey = typeTokenKey(q)
+    const lKey = typeTokenKey(l)
+    return Boolean(qKey) && qKey === lKey
+}
+
+/**
+ * Catalog matches for the typed product type (order of words does not matter).
+ * Parent groups with several kinds are returned as hasSubtypes.
+ */
+function findTypeMatches(catalog, typeText) {
+    const query = String(typeText || '').trim()
+    if (!query || !catalog) return []
+
+    const matches = []
+    const seen = new Set()
+    const handpieces = (catalog.categories || []).find((item) => item.code === 'handpieces')
+
+    if (handpieces) {
+        for (const [parentCode, parent] of Object.entries(HANDPIECE_PARENTS)) {
+            const labels = [parent.name, parent.productName].filter(Boolean)
+            if (!labels.some((label) => typeTextMatches(query, label))) continue
+            const isLeaf = parent.kinds.length === 1
+            const kind = isLeaf
+                ? handpieces.kinds.find((item) => item.code === parent.kinds[0])
+                : null
+            const key = `parent:${parentCode}`
+            if (seen.has(key)) continue
+            seen.add(key)
+            matches.push({
+                matchKind: isLeaf ? 'kind' : 'parent',
+                category: handpieces,
+                parentCode,
+                parent,
+                kind: kind || null,
+                hasSubtypes: !isLeaf,
+            })
+            if (kind) seen.add(`kind:${kind.code}`)
+        }
+    }
+
+    for (const category of catalog.categories || []) {
+        for (const kind of category.kinds || []) {
+            const key = `kind:${kind.code}`
+            if (seen.has(key)) continue
+            const displayName = getProductName(kind, category.code)
+            const parentForAlias = handpieceParentForKind(kind.code)
+            const names = [kind.name, displayName].filter(Boolean)
+            if (parentForAlias) {
+                names.push(`${kind.name} ${parentForAlias.name}`)
+                names.push(`${parentForAlias.name} ${kind.name}`)
+                if (parentForAlias.productName) {
+                    names.push(`${kind.name} ${parentForAlias.productName}`)
+                    names.push(`${parentForAlias.productName} ${kind.name}`)
+                }
+            }
+            if (!names.some((name) => typeTextMatches(query, name))) continue
+            seen.add(key)
+            const parent = handpieceParentForKind(kind.code)
+            matches.push({
+                matchKind: 'kind',
+                category,
+                parentCode: parent ? handpieceParentCodeForKind(kind.code) : '',
+                parent,
+                kind,
+                hasSubtypes: false,
+            })
+        }
+    }
+
+    return matches
+}
+
 function CategoryPathField({
     value,
     placeholder,
     onChange,
     onFocus,
+    onClick,
     onDoubleClick,
     title,
+    readOnly = false,
 }) {
     const inputRef = useRef(null)
     const measureRef = useRef(null)
@@ -236,8 +324,10 @@ function CategoryPathField({
                 placeholder={placeholder}
                 onChange={onChange}
                 onFocus={onFocus}
+                onClick={onClick}
                 onDoubleClick={onDoubleClick}
                 title={title}
+                readOnly={readOnly}
             />
         </span>
     )
@@ -580,10 +670,13 @@ function Stage2() {
     const [modalStartPath, setModalStartPath] = useState('')
     const [pathFields, setPathFields] = useState([''])
     const [pathFromModal, setPathFromModal] = useState(false)
+    const [pathDetermined, setPathDetermined] = useState(false)
     const [fullName, setFullName] = useState('')
     const [nameTouched, setNameTouched] = useState(false)
     const [nameAgreed, setNameAgreed] = useState(false)
     const [agreeBusy, setAgreeBusy] = useState(false)
+    const autoSubtypeKeyRef = useRef('')
+    const typeResolveTimerRef = useRef(null)
 
     useEffect(() => {
         catalogApi.get().then(setCatalog).catch((loadError) => setError(loadError.message))
@@ -605,13 +698,37 @@ function Stage2() {
             setKindCode(savedKind)
             setPurpose(savedKind === OTHER_KIND_CODE ? OTHER_PURPOSE : savedPurpose)
             const nextProductName =
-                savedKind === OTHER_KIND_CODE && savedName === lastSegment
-                    ? ''
+                savedKind === OTHER_KIND_CODE
+                    ? savedName || lastSegment
                     : savedName
             setProductName(nextProductName)
             setCategoryPath(savedPath)
-            setPathFields(pathToFields(savedPath))
-            setPathFromModal(Boolean(String(savedPath || '').trim()))
+            if (
+                savedKind === OTHER_KIND_CODE &&
+                String(nextProductName || '').trim()
+            ) {
+                const prefix = splitCategoryPath(savedPath).filter(
+                    (part) =>
+                        part.toLowerCase() !==
+                        String(nextProductName).trim().toLowerCase(),
+                )
+                setPathFields(
+                    normalizeUndeterminedPathFields(
+                        [...prefix, nextProductName],
+                        nextProductName,
+                    ),
+                )
+                setPathFromModal(false)
+                setPathDetermined(false)
+            } else {
+                setPathFields(pathToFields(savedPath))
+                setPathFromModal(Boolean(String(savedPath || '').trim()))
+                setPathDetermined(
+                    Boolean(savedKind) &&
+                        savedKind !== OTHER_KIND_CODE &&
+                        Boolean(String(savedPath || '').trim()),
+                )
+            }
             setProductLine(product.productLine || '')
             setBrandName(product.brandName || '')
             const files = product.files || []
@@ -680,18 +797,165 @@ function Stage2() {
         setModalOpen(true)
     }
 
+    const applyUndeterminedPath = (typeName) => {
+        const type = String(typeName || '').trim()
+        const fields = normalizeUndeterminedPathFields(['', type], type)
+        setPathFields(fields)
+        setCategoryPath(fieldsToPathKeepAll(fields))
+        setPathFromModal(false)
+        setPathDetermined(false)
+        setKindCode(OTHER_KIND_CODE)
+        setPurpose(OTHER_PURPOSE)
+        setCategoryCode('')
+        setHandpieceParent('')
+    }
+
+    const resolveProductType = (rawType, { openSubtypes = true } = {}) => {
+        const type = String(rawType || '').trim()
+        if (!type) {
+            setCategoryCode('')
+            setHandpieceParent('')
+            setKindCode('')
+            setCategoryPath('')
+            setPathFields([''])
+            setPathFromModal(false)
+            setPathDetermined(false)
+            setPathPreview('')
+            setModalStartPath('')
+            setModalOpen(false)
+            autoSubtypeKeyRef.current = ''
+            return
+        }
+
+        const matches = findTypeMatches(catalog, type)
+        const subtypeMatch = matches.find((item) => item.hasSubtypes)
+        const kindMatch =
+            matches.find((item) => item.matchKind === 'kind' && item.kind) || null
+
+        if (subtypeMatch) {
+            const path = buildParentCatalogPath(
+                purpose || 'Стоматология',
+                subtypeMatch.category,
+                subtypeMatch.parent,
+            )
+            const canonicalType =
+                subtypeMatch.parent.productName ||
+                subtypeMatch.parent.name ||
+                type
+            setPurpose((prev) => prev || 'Стоматология')
+            setCategoryCode(subtypeMatch.category.code)
+            setHandpieceParent(subtypeMatch.parentCode)
+            setKindCode('')
+            setProductName(canonicalType)
+            setCategoryPath(path)
+            setPathFields(pathToFields(path))
+            setPathFromModal(true)
+            setPathDetermined(true)
+            if (openSubtypes) {
+                const key = `parent:${subtypeMatch.parentCode}`
+                if (autoSubtypeKeyRef.current !== key) {
+                    autoSubtypeKeyRef.current = key
+                    openModalAt(path)
+                }
+            }
+            return
+        }
+
+        if (kindMatch?.kind) {
+            const parent =
+                kindMatch.parent ||
+                handpieceParentForKind(kindMatch.kind.code) ||
+                null
+            const path = buildKindCatalogPath(
+                purpose || 'Стоматология',
+                kindMatch.category,
+                parent,
+                kindMatch.kind,
+            )
+            const canonicalType = getProductName(
+                kindMatch.kind,
+                kindMatch.category.code,
+            )
+            setPurpose((prev) => (prev === OTHER_PURPOSE ? 'Стоматология' : prev || 'Стоматология'))
+            setCategoryCode(kindMatch.category.code)
+            setHandpieceParent(
+                kindMatch.parentCode || handpieceParentCodeForKind(kindMatch.kind.code),
+            )
+            setKindCode(kindMatch.kind.code)
+            setProductName(canonicalType || type)
+            setCategoryPath(path)
+            setPathFields(pathToFields(path))
+            setPathFromModal(true)
+            setPathDetermined(true)
+            autoSubtypeKeyRef.current = `kind:${kindMatch.kind.code}`
+            setModalOpen(false)
+            setPathPreview('')
+            setModalStartPath('')
+            return
+        }
+
+        autoSubtypeKeyRef.current = ''
+        applyUndeterminedPath(type)
+        setModalOpen(false)
+        setPathPreview('')
+        setModalStartPath('')
+    }
+
+    const handleProductTypeChange = (value) => {
+        setProductName(value)
+        if (typeResolveTimerRef.current) {
+            window.clearTimeout(typeResolveTimerRef.current)
+        }
+        typeResolveTimerRef.current = window.setTimeout(() => {
+            resolveProductType(value, { openSubtypes: true })
+        }, 350)
+    }
+
+    const handleProductTypeBlur = () => {
+        if (typeResolveTimerRef.current) {
+            window.clearTimeout(typeResolveTimerRef.current)
+            typeResolveTimerRef.current = null
+        }
+        resolveProductType(productName, { openSubtypes: true })
+    }
+
+    useEffect(() => {
+        return () => {
+            if (typeResolveTimerRef.current) {
+                window.clearTimeout(typeResolveTimerRef.current)
+            }
+        }
+    }, [])
+
+    useEffect(() => {
+        if (!catalog || !loaded) return
+        const type = String(productName || '').trim()
+        if (!type) return
+        if (pathDetermined && kindCode && kindCode !== OTHER_KIND_CODE) return
+        if (kindCode === OTHER_KIND_CODE && String(categoryPath || '').trim()) return
+        resolveProductType(type, { openSubtypes: false })
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- resolve once catalog/load ready
+    }, [catalog, loaded])
+
     const handleClearAll = () => {
         setCategoryCode('')
         setHandpieceParent('')
         setKindCode('')
-        setProductName('')
         setCategoryPath('')
-        setPathFields([''])
         setPathFromModal(false)
+        setPathDetermined(false)
         setPathPreview('')
         setModalStartPath('')
+        autoSubtypeKeyRef.current = ''
+        const type = String(productName || '').trim()
+        if (type) {
+            applyUndeterminedPath(type)
+        } else {
+            setPathFields([''])
+        }
         if (modalOpen) {
             setModalKey((prev) => prev + 1)
+            setModalOpen(false)
         }
     }
 
@@ -702,15 +966,23 @@ function Stage2() {
         setCategoryPath(selection.path || '')
         setPathFields(pathToFields(selection.path || ''))
         setPathFromModal(Boolean(String(selection.path || '').trim()))
+        setPathDetermined(
+            Boolean(selection.kindCode) && selection.kindCode !== OTHER_KIND_CODE,
+        )
         if (selection.kindCode === OTHER_KIND_CODE) {
             setPurpose(OTHER_PURPOSE)
-            setProductName('')
         } else {
-            setProductName(selection.productName || '')
+            setPurpose((prev) => (prev === OTHER_PURPOSE ? 'Стоматология' : prev || 'Стоматология'))
+            if (selection.productName) {
+                setProductName(selection.productName)
+            }
         }
         setPathPreview('')
         setModalStartPath('')
         setModalOpen(false)
+        autoSubtypeKeyRef.current = selection.kindCode
+            ? `kind:${selection.kindCode}`
+            : autoSubtypeKeyRef.current
     }
 
     const handleModalClose = () => {
@@ -720,6 +992,21 @@ function Stage2() {
     }
 
     const commitPathFields = (fields, { manual = false } = {}) => {
+        const type = String(productName || '').trim()
+
+        if (!pathDetermined && type) {
+            const normalized = normalizeUndeterminedPathFields(fields, type)
+            const path = fieldsToPathKeepAll(normalized)
+            setPathFields(normalized)
+            setCategoryPath(path)
+            setPathFromModal(false)
+            setKindCode(OTHER_KIND_CODE)
+            setPurpose(OTHER_PURPOSE)
+            setCategoryCode('')
+            setHandpieceParent('')
+            return
+        }
+
         const normalized = normalizePathFields(fields)
         const path = fieldsToCategoryPath(normalized)
         setPathFields(normalized)
@@ -729,8 +1016,8 @@ function Stage2() {
             setCategoryCode('')
             setHandpieceParent('')
             setKindCode('')
-            setProductName('')
             setPathFromModal(false)
+            setPathDetermined(false)
             return
         }
         if (manual) {
@@ -738,6 +1025,15 @@ function Stage2() {
             setPurpose(OTHER_PURPOSE)
             setCategoryCode('')
             setHandpieceParent('')
+            setPathDetermined(false)
+            if (type) {
+                const withType = normalizeUndeterminedPathFields(
+                    [...normalized.filter((item) => String(item).trim()), type],
+                    type,
+                )
+                setPathFields(withType)
+                setCategoryPath(fieldsToPathKeepAll(withType))
+            }
         }
     }
 
@@ -747,33 +1043,52 @@ function Stage2() {
             setPathPreview('')
             setModalStartPath('')
         }
+        const type = String(productName || '').trim()
+        const isTypeSlot =
+            !pathDetermined && type && index === pathFields.length - 1
+        if (isTypeSlot) return
+
         const next = [...pathFields]
         next[index] = value
-        if (!pathFromModal) {
-            commitPathFields(next.slice(0, index + 1), { manual: true })
+        if (!pathFromModal || !pathDetermined) {
+            commitPathFields(next, { manual: true })
             return
         }
-        // After modal path: typing in trailing empty or editing → extend manually
         commitPathFields(next, { manual: true })
     }
 
-    const handlePathFieldFocus = () => {
+    const handlePathFieldFocus = (index) => {
         if (!modalOpen) return
+        // Determined catalog path: click/focus on a segment opens the modal there — don't close it.
+        if (pathDetermined || pathFromModal) return
+        const type = String(productName || '').trim()
+        const isTypeSlot =
+            !pathDetermined && type && index === pathFields.length - 1
+        if (isTypeSlot) return
         setModalOpen(false)
         setPathPreview('')
         setModalStartPath('')
     }
 
+    const pathPrefixAt = (index) => {
+        const segments = []
+        for (let i = 0; i <= index; i += 1) {
+            const text = String(pathFields[i] || '').trim()
+            if (!text) break
+            segments.push(text)
+        }
+        return segments.join(' > ')
+    }
+
     const handlePathSegmentOpen = (index) => {
-        const prefix = fieldsToCategoryPath(pathFields.slice(0, index + 1))
-        const source = prefix || fieldsToCategoryPath(pathFields.slice(0, index))
-        setCategoryCode('')
-        setHandpieceParent('')
-        setKindCode('')
-        setProductName('')
-        setCategoryPath(source)
-        setPathFields(pathToFields(source))
-        setPathFromModal(Boolean(source))
+        const type = String(productName || '').trim()
+        const isTypeSlot =
+            !pathDetermined && type && index === pathFields.length - 1
+        if (isTypeSlot) return
+        if (!String(pathFields[index] || '').trim()) return
+
+        const source = pathPrefixAt(index)
+        if (!source) return
         openModalAt(source)
     }
 
@@ -864,17 +1179,31 @@ function Stage2() {
         if (!loaded || !productSnapshot) {
             throw new Error('Карточка ещё загружается, подождите секунду')
         }
-        if (!kindCode || !String(categoryPath || '').trim()) {
-            throw new Error('Выберите категорию продукта')
-        }
-        if (kindCode === OTHER_KIND_CODE && !String(productName || '').trim()) {
+        const trimmedProductName = String(productName || '').trim()
+        if (!trimmedProductName) {
             throw new Error('Укажите тип продукта')
         }
+        if (!String(categoryPath || '').trim()) {
+            throw new Error('Заполните путь категории')
+        }
+        if (kindCode === OTHER_KIND_CODE) {
+            const segments = splitCategoryPath(categoryPath)
+            if (segments.length < 2) {
+                throw new Error('Заполните путь категории')
+            }
+        } else if (!kindCode) {
+            throw new Error('Выберите подтип продукта в каталоге')
+        }
 
-        const trimmedProductName = String(productName || '').trim()
         const trimmedBrand = String(brandName || '').trim()
+        if (trimmedBrand && !brandDoc) {
+            throw new Error('Добавьте документы на бренд')
+        }
         const trimmedLine = String(productLine || '').trim()
         const nameText = composedFullName
+        const savePurpose =
+            purpose ||
+            (kindCode === OTHER_KIND_CODE ? OTHER_PURPOSE : 'Стоматология')
 
         await productsApi.saveIdentity(productId, {
             authorLastName: productSnapshot.authorLastName || '',
@@ -889,8 +1218,8 @@ function Stage2() {
         })
 
         await productsApi.saveCategory(productId, {
-            purpose,
-            kindCode,
+            purpose: savePurpose,
+            kindCode: kindCode || OTHER_KIND_CODE,
             productName: trimmedProductName,
             categoryPath,
             productLine: trimmedLine,
@@ -922,7 +1251,7 @@ function Stage2() {
         setNameAgreed(Boolean(nameText))
     }
 
-    const isManualCategory = kindCode === OTHER_KIND_CODE && Boolean(String(categoryPath || '').trim())
+    const typeFilled = Boolean(String(productName || '').trim())
     const wizardTotal = kindCode
         ? productWizardTotal({
             kindCode,
@@ -940,107 +1269,6 @@ function Stage2() {
                 {error && <p className="form-error">{error}</p>}
 
                 <div className="stage2-workarea">
-                    <div className="field field--category">
-                        <h2 className="stage2-section-title">Категория продукта</h2>
-                        <p className="paragraph">Категория продукта (строится из вашего выбора)</p>
-
-                        <div className="category-picker">
-                            <button
-                                type="button"
-                                className="category-picker__burger"
-                                title="Меню"
-                                onClick={() => openModalAt(fieldsToCategoryPath(pathFields) || '')}
-                            >
-                                ☰
-                            </button>
-
-                            <div className="category-picker__path-box">
-                                <div className="category-picker__fields">
-                                    {displayedFields.map((value, index) => {
-                                        const placeholder =
-                                            index === 0 ? 'Категория' : 'Категория'
-                                        return (
-                                            <div
-                                                className="category-picker__segment"
-                                                key={`path-field-${index}`}
-                                            >
-                                                {index > 0 && (
-                                                    <span
-                                                        className="category-picker__chevron"
-                                                        aria-hidden="true"
-                                                    >
-                                                        ›
-                                                    </span>
-                                                )}
-                                                <CategoryPathField
-                                                    value={value}
-                                                    placeholder={placeholder}
-                                                    onChange={(event) =>
-                                                        handlePathFieldChange(
-                                                            index,
-                                                            event.target.value,
-                                                        )
-                                                    }
-                                                    onFocus={handlePathFieldFocus}
-                                                    onDoubleClick={() => {
-                                                        if (modalOpen) return
-                                                        handlePathSegmentOpen(index)
-                                                    }}
-                                                    title="Двойной клик — выбрать из каталога"
-                                                />
-                                            </div>
-                                        )
-                                    })}
-                                </div>
-                            </div>
-
-                            <button
-                                type="button"
-                                className="category-picker__clear"
-                                title="Очистить"
-                                onClick={handleClearAll}
-                            >
-                                ✕
-                            </button>
-                        </div>
-                    </div>
-
-                    {modalOpen && (
-                        <CategoryModal
-                            key={modalKey}
-                            catalog={catalog}
-                            purpose={purpose}
-                            initialPath={modalStartPath}
-                            onSelect={handleCategorySelect}
-                            onClose={handleModalClose}
-                            onDraftPathChange={handleModalDraftPath}
-                        />
-                    )}
-
-                    {isManualCategory && (
-                        <div
-                            className={`field--product-type${modalOpen ? ' field--product-type--after-modal' : ''}`}
-                        >
-                            <Tip text={PRODUCT_TYPE_TIP} />
-                            <label className="field--product-type__label" htmlFor="product-type">
-                                Тип продукта
-                            </label>
-                            <span className="field--product-type__star" aria-hidden="true">
-                                ✱
-                            </span>
-                            <input
-                                id="product-type"
-                                type="text"
-                                className="field--product-type__input"
-                                value={productName}
-                                onChange={(event) => setProductName(event.target.value)}
-                                placeholder="Введите значение"
-                            />
-                        </div>
-                    )}
-
-                    <div className="matches-divider" />
-
                     <div className="stage2-brand-block stage3-page">
                         <h2 className="stage2-section-title">Бренд и линейка продукта</h2>
 
@@ -1069,6 +1297,9 @@ function Stage2() {
                         <div className="stage3-row stage3-row--doc">
                             <span className="stage3-inline-label">
                                 Добавьте документы на бренд:
+                                {String(brandName || '').trim() ? (
+                                    <span className="stage2-brand-doc-required" aria-hidden="true"> ✱</span>
+                                ) : null}
                             </span>
                             <div className="stage3-doc-wrap">
                                 <FileInput
@@ -1114,9 +1345,146 @@ function Stage2() {
                                 onChange={(event) => setProductLine(event.target.value)}
                             />
                         </div>
+                    </div>
 
-                        <div className="matches-divider" />
+                    <div className="matches-divider" />
 
+                    <h2 className="stage2-section-title stage2-category-title">Категория продукта</h2>
+
+                    <div
+                        className={`field--product-type${modalOpen ? ' field--product-type--after-modal' : ''}`}
+                    >
+                        <Tip inline text={PRODUCT_TYPE_TIP} />
+                        <label className="field--product-type__label" htmlFor="product-type">
+                            Тип продукта
+                        </label>
+                        <span className="field--product-type__star" aria-hidden="true">
+                            ✱
+                        </span>
+                        <input
+                            id="product-type"
+                            type="text"
+                            className="field--product-type__input"
+                            value={productName}
+                            onChange={(event) => handleProductTypeChange(event.target.value)}
+                            onBlur={handleProductTypeBlur}
+                            placeholder="Введите значение"
+                        />
+                    </div>
+
+                    {typeFilled && !pathDetermined && (
+                        <p className="stage2-path-hint">
+                            Путь не определён, заполните путь категории
+                        </p>
+                    )}
+
+                    {typeFilled && (
+                        <div className="field field--category">
+                            <p className="paragraph">Категория продукта (строится из вашего выбора)</p>
+
+                            <div className="category-picker">
+                                <button
+                                    type="button"
+                                    className="category-picker__burger"
+                                    title="Меню"
+                                    onClick={() => {
+                                        if (modalOpen) {
+                                            handleModalClose()
+                                            return
+                                        }
+                                        openModalAt(
+                                            fieldsToPathKeepAll(
+                                                pathDetermined
+                                                    ? pathFields
+                                                    : pathFields.slice(0, -1),
+                                            ) || '',
+                                        )
+                                    }}
+                                >
+                                    ☰
+                                </button>
+
+                                <div className="category-picker__path-box">
+                                    <div className="category-picker__fields">
+                                        {displayedFields.map((value, index) => {
+                                            const type = String(productName || '').trim()
+                                            const isTypeSlot =
+                                                !pathDetermined &&
+                                                type &&
+                                                index === displayedFields.length - 1
+                                            return (
+                                                <div
+                                                    className="category-picker__segment"
+                                                    key={`path-field-${index}`}
+                                                >
+                                                    {index > 0 && (
+                                                        <span
+                                                            className="category-picker__chevron"
+                                                            aria-hidden="true"
+                                                        >
+                                                            ›
+                                                        </span>
+                                                    )}
+                                                    <CategoryPathField
+                                                        value={value}
+                                                        placeholder="Категория"
+                                                        onChange={(event) =>
+                                                            handlePathFieldChange(
+                                                                index,
+                                                                event.target.value,
+                                                            )
+                                                        }
+                                                        onFocus={() => handlePathFieldFocus(index)}
+                                                        onClick={() => {
+                                                            if (isTypeSlot || !String(value || '').trim()) return
+                                                            if (pathDetermined || pathFromModal) {
+                                                                handlePathSegmentOpen(index)
+                                                            }
+                                                        }}
+                                                        onDoubleClick={() => {
+                                                            if (isTypeSlot) return
+                                                            handlePathSegmentOpen(index)
+                                                        }}
+                                                        title={
+                                                            isTypeSlot
+                                                                ? 'Тип продукта'
+                                                                : 'Нажмите, чтобы открыть каталог на этом уровне'
+                                                        }
+                                                        readOnly={isTypeSlot || pathDetermined}
+                                                    />
+                                                </div>
+                                            )
+                                        })}
+                                    </div>
+                                </div>
+
+                                <button
+                                    type="button"
+                                    className="category-picker__clear"
+                                    title="Очистить"
+                                    onClick={handleClearAll}
+                                >
+                                    ✕
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {modalOpen && (
+                        <CategoryModal
+                            key={modalKey}
+                            catalog={catalog}
+                            purpose={purpose || 'Стоматология'}
+                            initialPath={modalStartPath}
+                            onSelect={handleCategorySelect}
+                            onClose={handleModalClose}
+                            onDraftPathChange={handleModalDraftPath}
+                        />
+                    )}
+
+                    <div className="matches-divider" />
+
+                    <div className="stage2-brand-block stage3-page">
                         <h2 className="stage2-section-title">Наименование линейки продукта</h2>
                         <p className="stage4-lead">
                             Наименование линейки продукта формируется из Логотипа + Типа

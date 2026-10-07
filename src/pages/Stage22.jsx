@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import BottomBar2 from "../components/BottomBar2";
+import VariantFlowHeader from "../components/VariantFlowHeader";
 import { catalogApi, productsApi } from "../api";
 import { formatVariantParameterLabel } from "../variantAxisDisplay";
 import { setProductWizard } from "../stageProgress";
@@ -211,12 +212,7 @@ function Stage22() {
   return (
     <>
       <div className="container">
-        <div className="divOne">
-          <h1 className="hOne">
-            Создание варианта параметра (модели) линейки продукта
-          </h1>
-          <p>***Наименование***</p>
-        </div>
+        <VariantFlowHeader product={product} productId={productId} />
         <h1 className="title">Варианты параметра продукта</h1>
         {!productId && (
           <p className="form-error">

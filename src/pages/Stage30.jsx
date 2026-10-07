@@ -6,6 +6,7 @@ import {
   variantFillStageHeading,
   variantFillStep,
 } from "../stageProgress";
+import VariantFlowHeader from "../components/VariantFlowHeader";
 import VariationPreview from "../components/VariationPreview";
 import { productsApi } from "../api";
 import {
@@ -136,12 +137,7 @@ function Stage30() {
   return (
     <>
       <div className="container stage20-page">
-        <div className="divOne">
-          <h1 className="hOne">
-            Создание варианта параметра (модели) линейки продукта
-          </h1>
-          <p>***Наименование***</p>
-        </div>
+        <VariantFlowHeader productId={productId} />
         <h1 className="title">
           {variantFillStageHeading(30, "Доставка продукта", null, productId)}
         </h1>

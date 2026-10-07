@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import BottomBar from "../components/BottomBar";
+import VariantFlowHeader from "../components/VariantFlowHeader";
 import { productsApi } from "../api";
 import {
   CUSTOM_VARIANT_FILL_STAGE_COUNT,
@@ -25,12 +26,7 @@ function Stage31() {
   return (
     <>
       <div className="container">
-        <div className="divOne">
-          <h1 className="hOne">
-            Создание варианта параметра (модели) линейки продукта
-          </h1>
-          <p>***Наименование***</p>
-        </div>
+        <VariantFlowHeader productId={productId} />
         <h1 className="title">
           {variantFillStageHeading(31, "Предварительный просмотр", null, productId)}
         </h1>
@@ -60,8 +56,9 @@ function Stage31() {
               onClick={async () => {
                 setBusy(true);
                 try {
-                  if (productId) {
-                    await productsApi.submitProductReview(productId);
+                  const variationId = params.get("variationId");
+                  if (productId && variationId) {
+                    await productsApi.submitReview(productId, variationId);
                   }
                   navigate({
                     pathname: "/stage22",
