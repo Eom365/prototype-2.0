@@ -213,7 +213,7 @@ function Stage22() {
     <>
       <div className="container">
         <VariantFlowHeader product={product} productId={productId} />
-        <h1 className="title">Варианты параметра продукта</h1>
+        <h1 className="title">Варианты параметра (модели) линейки продукта</h1>
         {!productId && (
           <p className="form-error">
             Откройте создание карточки с главной страницы.
