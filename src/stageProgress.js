@@ -100,6 +100,7 @@ function fillStepsFor(product, productId) {
 }
 
 export function variantFillTotal(product, productId) {
+  if (!product) return CUSTOM_VARIANT_FILL_STAGE_COUNT
   if (variantFillMode(product) === 'custom') return CUSTOM_VARIANT_FILL_STAGE_COUNT
   if (isVariantEdit(productId || product?.id)) return EDIT_KNOWN_VARIANT_FILL_STAGE_COUNT
   return KNOWN_VARIANT_FILL_STAGE_COUNT

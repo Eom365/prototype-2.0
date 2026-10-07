@@ -19,6 +19,11 @@ function getPurposeRoot(purpose) {
     return purpose === 'Стоматология' ? 'Профессиональная стоматология' : 'Стоматология'
 }
 
+function isPurposeRootLabel(label) {
+    const text = String(label || '').trim()
+    return text === 'Профессиональная стоматология' || text === 'Стоматология'
+}
+
 export const OTHER_KIND_CODE = 'other'
 const OTHER_PURPOSE = 'Иное'
 
@@ -31,7 +36,7 @@ const BRAND_TIPS = {
 }
 
 const PRODUCT_TYPE_TIP =
-    "Тип продукта — это название продукта, по которому определяется категория продукта. Не пишите бренд, модель и характеристики. Пример правильного заполнения: «Наконечник турбинный», «Стерилизатор», «Ноутбук»."
+    "Тип продукта — это название продукта, по которому определяется категория продукта. Тип продукта отображается в наименовании линейки продукта. Не указывайте бренд, модель и характеристики. Пример правильного заполнения: «Наконечник стоматолгогический турбинный», «Стерилизатор», «Ноутбук»."
 
 function FileInput({ value, onChange, placeholder, accept }) {
     const inputRef = useRef(null)
@@ -202,16 +207,106 @@ function buildParentCatalogPath(purpose, category, parent) {
     return `${rootLabel} > ${category.name} > ${parent.name}`
 }
 
-/** Word bag key so "прямой стоматологический наконечник" == "Стоматологический прямой наконечник". */
-function typeTokenKey(text) {
+function buildCategoryCatalogPath(purpose, category) {
+    const rootLabel = getPurposeRoot(purpose || 'Стоматология')
+    if (!category) return ''
+    return `${rootLabel} > ${category.name}`
+}
+
+function typeTokens(text) {
     return String(text || '')
         .toLowerCase()
         .replace(/[ё]/g, 'е')
         .split(/[^a-zа-я0-9:]+/i)
         .map((part) => part.trim())
         .filter(Boolean)
-        .sort()
-        .join(' ')
+}
+
+/** Word bag key so "прямой стоматологический наконечник" == "Стоматологический прямой наконечник". */
+function typeTokenKey(text) {
+    return typeTokens(text).sort().join(' ')
+}
+
+function stemRu(word) {
+    const w = String(word || '').toLowerCase().replace(/[ё]/g, 'е')
+    if (w.length < 4) return w
+    const endings = [
+        'ическими',
+        'ический',
+        'ическая',
+        'ическое',
+        'ические',
+        'ических',
+        'ическим',
+        'ческий',
+        'ческая',
+        'ческое',
+        'ческие',
+        'ческих',
+        'ческим',
+        'скими',
+        'ский',
+        'ская',
+        'ское',
+        'ские',
+        'ских',
+        'ским',
+        'ями',
+        'ами',
+        'ов',
+        'ев',
+        'ей',
+        'ий',
+        'ый',
+        'ой',
+        'ая',
+        'яя',
+        'ое',
+        'ее',
+        'ые',
+        'ие',
+        'ых',
+        'их',
+        'ую',
+        'юю',
+        'а',
+        'я',
+        'ы',
+        'и',
+        'е',
+        'у',
+        'ю',
+    ]
+    for (const ending of endings) {
+        if (w.length > ending.length + 3 && w.endsWith(ending)) {
+            return w.slice(0, -ending.length)
+        }
+    }
+    return w
+}
+
+function typeTokenKeySoft(text) {
+    return typeTokens(text).map(stemRu).filter(Boolean).sort().join(' ')
+}
+
+function stemsClose(a, b) {
+    if (!a || !b) return false
+    if (a === b) return true
+    if (a.length >= 4 && b.length >= 4 && (a.startsWith(b) || b.startsWith(a))) return true
+    if (Math.abs(a.length - b.length) > 2) return false
+    const maxLen = Math.max(a.length, b.length)
+    if (maxLen < 6) return false
+    let distance = 0
+    const shorter = a.length <= b.length ? a : b
+    const longer = a.length <= b.length ? b : a
+    let si = 0
+    for (let li = 0; li < longer.length && si < shorter.length; li += 1) {
+        if (longer[li] === shorter[si]) si += 1
+        else distance += 1
+        if (distance > 2) return false
+    }
+    distance += shorter.length - si
+    return distance <= 2
 }
 
 function typeTextMatches(query, label) {
@@ -221,7 +316,14 @@ function typeTextMatches(query, label) {
     if (q.toLowerCase() === l.toLowerCase()) return true
     const qKey = typeTokenKey(q)
     const lKey = typeTokenKey(l)
-    return Boolean(qKey) && qKey === lKey
+    if (qKey && qKey === lKey) return true
+    const qSoft = typeTokenKeySoft(q)
+    const lSoft = typeTokenKeySoft(l)
+    if (qSoft && qSoft === lSoft) return true
+    const qStems = [...new Set(typeTokens(q).map(stemRu).filter((item) => item.length >= 4))]
+    const lStems = [...new Set(typeTokens(l).map(stemRu).filter((item) => item.length >= 4))]
+    if (!qStems.length || !lStems.length) return false
+    return qStems.every((qs) => lStems.some((ls) => stemsClose(qs, ls)))
 }
 
 /**
@@ -288,6 +390,34 @@ function findTypeMatches(catalog, typeText) {
         }
     }
 
+    for (const category of catalog.categories || []) {
+        const key = `category:${category.code}`
+        if (seen.has(key)) continue
+        const names = [category.name]
+        if (category.code === 'handpieces') {
+            names.push(
+                'наконечник',
+                'наконечники',
+                'Стоматологический наконечник',
+                'наконечник стоматологический',
+                'стоматологический наконечник',
+            )
+        }
+        if (category.code === 'aerosols') {
+            names.push('Аэрозоль', 'аэрозоли', 'аэрозольная продукция', 'аэрозольный')
+        }
+        if (!names.some((name) => typeTextMatches(query, name))) continue
+        seen.add(key)
+        matches.push({
+            matchKind: 'category',
+            category,
+            parentCode: '',
+            parent: null,
+            kind: null,
+            hasSubtypes: true,
+        })
+    }
+
     return matches
 }
 
@@ -346,24 +476,32 @@ function buildDraftPath(prefix, tail, draft) {
 }
 
 function navigationFromPath(catalog, purpose, path) {
-    const rootLabel = getPurposeRoot(purpose || 'Стоматология')
     const segments = splitCategoryPath(path)
-    if (segments.length === 0) {
-        return { stack: [], customTail: [], path: '' }
+    const empty = {
+        stack: [],
+        customTail: [],
+        path: '',
+        selectedKindCode: '',
+        selectedParentCode: '',
+        selectedCategoryCode: '',
     }
+    if (segments.length === 0) return empty
 
-    const stack = []
+    const stack = [{ type: 'root' }]
     let index = 0
-
-    if (segments[0] === rootLabel) {
-        stack.push({ type: 'root' })
-        index = 1
-    } else {
-        stack.push({ type: 'root' })
+    while (index < segments.length && isPurposeRootLabel(segments[index])) {
+        index += 1
     }
 
     if (index >= segments.length) {
-        return { stack, customTail: [], path: segments.join(' > ') }
+        return {
+            stack,
+            customTail: [],
+            path: segments.join(' > '),
+            selectedKindCode: '',
+            selectedParentCode: '',
+            selectedCategoryCode: '',
+        }
     }
 
     const category = (catalog?.categories || []).find(
@@ -374,6 +512,9 @@ function navigationFromPath(catalog, purpose, path) {
             stack,
             customTail: segments.slice(index),
             path: segments.join(' > '),
+            selectedKindCode: '',
+            selectedParentCode: '',
+            selectedCategoryCode: '',
         }
     }
 
@@ -381,7 +522,14 @@ function navigationFromPath(catalog, purpose, path) {
     index += 1
 
     if (index >= segments.length) {
-        return { stack, customTail: [], path: segments.join(' > ') }
+        return {
+            stack,
+            customTail: [],
+            path: segments.join(' > '),
+            selectedKindCode: '',
+            selectedParentCode: '',
+            selectedCategoryCode: category.code,
+        }
     }
 
     if (category.code === 'handpieces') {
@@ -397,19 +545,71 @@ function navigationFromPath(catalog, purpose, path) {
                     data: { parentCode, parent, category },
                 })
             }
-            return { stack, customTail: [], path: segments.join(' > ') }
+            index += 1
+
+            let selectedKindCode = isLeaf ? parent.kinds[0] || '' : ''
+            if (index < segments.length) {
+                const kind = category.kinds.find(
+                    (item) =>
+                        item.name === segments[index] &&
+                        parent.kinds.includes(item.code),
+                )
+                if (kind) {
+                    selectedKindCode = kind.code
+                    index += 1
+                }
+            }
+
+            return {
+                stack,
+                customTail: index < segments.length ? segments.slice(index) : [],
+                path: segments.join(' > '),
+                selectedKindCode,
+                selectedParentCode: parentCode,
+                selectedCategoryCode: category.code,
+            }
+        }
+
+        const kindDirect = category.kinds.find((item) => item.name === segments[index])
+        if (kindDirect) {
+            const parent = handpieceParentForKind(kindDirect.code)
+            const parentCode = handpieceParentCodeForKind(kindDirect.code)
+            if (parent && parent.kinds.length > 1) {
+                stack.push({
+                    type: 'parent',
+                    data: { parentCode, parent, category },
+                })
+            }
+            return {
+                stack,
+                customTail: segments.slice(index + 1),
+                path: segments.join(' > '),
+                selectedKindCode: kindDirect.code,
+                selectedParentCode: parentCode,
+                selectedCategoryCode: category.code,
+            }
         }
     }
 
     const maybeKind = category.kinds.find((kind) => kind.name === segments[index])
     if (maybeKind) {
-        return { stack, customTail: [], path: segments.join(' > ') }
+        return {
+            stack,
+            customTail: segments.slice(index + 1),
+            path: segments.join(' > '),
+            selectedKindCode: maybeKind.code,
+            selectedParentCode: '',
+            selectedCategoryCode: category.code,
+        }
     }
 
     return {
         stack,
         customTail: segments.slice(index),
         path: segments.join(' > '),
+        selectedKindCode: '',
+        selectedParentCode: '',
+        selectedCategoryCode: category.code,
     }
 }
 
@@ -417,6 +617,9 @@ function CategoryModal({
     catalog,
     purpose,
     initialPath = '',
+    selectedKindCode: selectedKindCodeProp = '',
+    selectedParentCode: selectedParentCodeProp = '',
+    selectedCategoryCode: selectedCategoryCodeProp = '',
     onSelect,
     onClose,
     onDraftPathChange,
@@ -425,6 +628,23 @@ function CategoryModal({
     const initial = navigationFromPath(catalog, purpose, initialPath)
     const [stack, setStack] = useState(initial.stack)
     const [customTail, setCustomTail] = useState(initial.customTail)
+    const [showSelection, setShowSelection] = useState(true)
+    const selectedKindCode = selectedKindCodeProp || initial.selectedKindCode || ''
+    const selectedParentCode =
+        selectedParentCodeProp || initial.selectedParentCode || ''
+    const selectedCategoryCode =
+        selectedCategoryCodeProp || initial.selectedCategoryCode || ''
+    const openedHere =
+        showSelection &&
+        customTail.length === 0 &&
+        stack.length === initial.stack.length &&
+        stack.every((frame, index) => frame.type === initial.stack[index]?.type)
+    const markKind = openedHere ? selectedKindCode : ''
+    const markParent = openedHere ? selectedParentCode : ''
+    const markCategory =
+        openedHere && !selectedKindCode && !selectedParentCode
+            ? selectedCategoryCode
+            : ''
 
     useEffect(() => {
         const prefix = catalogPathSegments(initial.stack, rootLabel)
@@ -477,6 +697,7 @@ function CategoryModal({
                     key: 'root',
                     label: rootLabel,
                     hasChildren: true,
+                    selected: false,
                     onPick: () => {
                         const next = [{ type: 'root' }]
                         resetCustomFlow(next)
@@ -495,6 +716,7 @@ function CategoryModal({
                     key: cat.code,
                     label: cat.name,
                     hasChildren: true,
+                    selected: cat.code === markCategory,
                     onPick: () => {
                         const next = [...stack, { type: 'category', data: cat }]
                         resetCustomFlow(next)
@@ -517,6 +739,9 @@ function CategoryModal({
                                 key: code,
                                 label: parent.name,
                                 hasChildren: false,
+                                selected:
+                                    code === markParent ||
+                                    (kind && kind.code === markKind),
                                 data: { kind, category: cat },
                                 onPick: () => confirmKind(kind, cat, parent),
                             }
@@ -525,6 +750,7 @@ function CategoryModal({
                             key: code,
                             label: parent.name,
                             hasChildren: true,
+                            selected: code === markParent,
                             onPick: () => {
                                 const next = [
                                     ...stack,
@@ -550,6 +776,7 @@ function CategoryModal({
                     key: kind.code,
                     label: kind.name,
                     hasChildren: false,
+                    selected: kind.code === markKind,
                     data: { kind, category: cat },
                     onPick: () => confirmKind(kind, cat, null),
                 })),
@@ -567,6 +794,7 @@ function CategoryModal({
                         key: kind.code,
                         label: kind.name,
                         hasChildren: false,
+                        selected: kind.code === markKind,
                         data: { kind, category },
                         onPick: () => confirmKind(kind, category, parent),
                     })),
@@ -579,8 +807,14 @@ function CategoryModal({
     const { title, items } = getCurrent()
 
     const goBack = () => {
+        setShowSelection(false)
         if (customTail.length > 0) {
-            setCustomTail(customTail.slice(0, -1))
+            const prefix = catalogPathSegments(stack, rootLabel)
+            const nextTail = customTail.slice(0, -1)
+            const path = [...prefix, ...nextTail].join(' > ')
+            const nav = navigationFromPath(catalog, purpose, path)
+            setStack(nav.stack.length ? nav.stack : [{ type: 'root' }])
+            setCustomTail(nav.customTail)
             return
         }
         if (stack.length <= 1) {
@@ -618,7 +852,7 @@ function CategoryModal({
                         <button
                             key={item.key}
                             type="button"
-                            className="modal-sheet__item"
+                            className={`modal-sheet__item${item.selected ? ' modal-sheet__item--selected' : ''}`}
                             onClick={item.onPick}
                         >
                             <span>{item.label}</span>
@@ -829,9 +1063,39 @@ function Stage2() {
         }
 
         const matches = findTypeMatches(catalog, type)
-        const subtypeMatch = matches.find((item) => item.hasSubtypes)
+        const subtypeMatch = matches.find(
+            (item) => item.hasSubtypes && item.matchKind === 'parent' && item.parent,
+        )
+        const categoryMatch = matches.find(
+            (item) => item.matchKind === 'category' && item.category,
+        )
         const kindMatch =
             matches.find((item) => item.matchKind === 'kind' && item.kind) || null
+
+        if (categoryMatch?.category) {
+            const path = buildCategoryCatalogPath(
+                purpose || 'Стоматология',
+                categoryMatch.category,
+            )
+            setPurpose((prev) =>
+                prev === OTHER_PURPOSE ? 'Стоматология' : prev || 'Стоматология',
+            )
+            setCategoryCode(categoryMatch.category.code)
+            setHandpieceParent('')
+            setKindCode('')
+            setCategoryPath(path)
+            setPathFields(pathToFields(path))
+            setPathFromModal(true)
+            setPathDetermined(true)
+            if (openSubtypes) {
+                const key = `category:${categoryMatch.category.code}`
+                if (autoSubtypeKeyRef.current !== key) {
+                    autoSubtypeKeyRef.current = key
+                    openModalAt(path)
+                }
+            }
+            return
+        }
 
         if (subtypeMatch) {
             const path = buildParentCatalogPath(
@@ -1088,7 +1352,8 @@ function Stage2() {
         if (isTypeSlot) return
         if (!String(pathFields[index] || '').trim()) return
 
-        const source = pathPrefixAt(index)
+        const openIndex = index <= 0 ? 0 : index - 1
+        const source = pathPrefixAt(openIndex)
         if (!source) return
         openModalAt(source)
     }
@@ -1122,7 +1387,16 @@ function Stage2() {
         setBrandLogo(next)
     }
 
-    const displayedFields = pathFields
+    const isLeafCategory =
+        Boolean(kindCode) && kindCode !== OTHER_KIND_CODE
+    const displayedFields = (() => {
+        if (!pathDetermined && !isLeafCategory) return pathFields
+        const next = [...(pathFields || [])]
+        while (next.length > 0 && !String(next[next.length - 1] || '').trim()) {
+            next.pop()
+        }
+        return next.length ? next : pathFields
+    })()
     const composedFullName = [
         String(productName || '').trim(),
         String(brandName || '').trim(),
@@ -1253,14 +1527,16 @@ function Stage2() {
     }
 
     const typeFilled = Boolean(String(productName || '').trim())
-    const wizardTotal = kindCode
-        ? productWizardTotal({
-            kindCode,
-            categoryCode,
-            categoryPath,
-            variantAxes: productSnapshot?.variantAxes || [],
-        })
-        : 3
+    const wizardTotal = productWizardTotal(
+        kindCode
+            ? {
+                kindCode,
+                categoryCode,
+                categoryPath,
+                variantAxes: productSnapshot?.variantAxes || [],
+            }
+            : null,
+    )
 
     return (
         <>
@@ -1376,7 +1652,7 @@ function Stage2() {
 
                     {typeFilled && !pathDetermined && (
                         <p className="stage2-path-hint">
-                            Путь не определён, заполните путь категории
+                            Путь не определен, самостоятельно заполните категорию в поле ниже
                         </p>
                     )}
 
@@ -1469,6 +1745,18 @@ function Stage2() {
                                     ✕
                                 </button>
                             </div>
+
+                            <p className="stage2-category-result">
+                                Результат заполнения категории:{' '}
+                                <span className="stage2-category-result__path">
+                                    {String(
+                                        pathPreview ||
+                                            categoryPath ||
+                                            fieldsToPathKeepAll(displayedFields) ||
+                                            '',
+                                    ).trim() || '—'}
+                                </span>
+                            </p>
                         </div>
                     )}
 
@@ -1478,6 +1766,9 @@ function Stage2() {
                             catalog={catalog}
                             purpose={purpose || 'Стоматология'}
                             initialPath={modalStartPath}
+                            selectedKindCode={kindCode}
+                            selectedParentCode={handpieceParent}
+                            selectedCategoryCode={categoryCode}
                             onSelect={handleCategorySelect}
                             onClose={handleModalClose}
                             onDraftPathChange={handleModalDraftPath}

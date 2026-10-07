@@ -21,9 +21,11 @@ import {
   variantFillStageHeading,
 } from "../stageProgress";
 import {
+  descriptionTabRequiresFill,
   isDescriptionTabFilled,
   markVisited,
   tabClassName,
+  tabFilledState,
 } from "../wizardTabStatus";
 import "./Stage24.css";
 
@@ -190,6 +192,7 @@ const Stage24 = forwardRef(function Stage24(
   {
     embedded = false,
     contentOpen = true,
+    openDescriptionTick = 0,
     onContentOpenChange,
   },
   ref,
@@ -227,6 +230,19 @@ const Stage24 = forwardRef(function Stage24(
     setVisitedTabs((prev) => markVisited(prev, key));
     onContentOpenChange?.(true);
   };
+
+  useEffect(() => {
+    if (!embedded || !contentOpen) return;
+    if (activeTab) return;
+    setActiveTab("description");
+    setVisitedTabs((prev) => markVisited(prev, "description"));
+  }, [embedded, contentOpen, activeTab]);
+
+  useEffect(() => {
+    if (!embedded || !openDescriptionTick) return;
+    setActiveTab("description");
+    setVisitedTabs((prev) => markVisited(prev, "description"));
+  }, [embedded, openDescriptionTick]);
 
   useEffect(() => {
     if (!productId) return;
@@ -694,7 +710,12 @@ const Stage24 = forwardRef(function Stage24(
           {TABS.map((tab) => {
             const active = panelVisible && activeTab === tab.key;
             const visited = visitedTabs.includes(tab.key);
-            const filled = isDescriptionTabFilled(tab.key, form);
+            const filled = tabFilledState({
+              key: tab.key,
+              visited,
+              contentFilled: isDescriptionTabFilled(tab.key, form),
+              requiresFill: descriptionTabRequiresFill(tab.key),
+            });
             return (
               <button
                 key={tab.key}

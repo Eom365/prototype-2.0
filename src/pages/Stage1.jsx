@@ -224,7 +224,7 @@ function Stage1() {
         )}
       </div>
 
-      <BottomBar current={1} total={3} nextPath="/stage2" onSave={save} />
+      <BottomBar current={1} total={10} nextPath="/stage2" onSave={save} />
 
       {sellerModalOpen && (
         <div

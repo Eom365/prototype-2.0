@@ -164,6 +164,19 @@
     text-align: left;
 }
 
+.stage2-category-result {
+    margin: 12px 0 0;
+    font-size: 14px;
+    line-height: 1.45;
+    color: #222;
+    text-align: left;
+}
+
+.stage2-category-result__path {
+    font-weight: 600;
+    word-break: break-word;
+}
+
 .stage2-workarea > .field--category {
     width: var(--category-width);
     max-width: 100%;

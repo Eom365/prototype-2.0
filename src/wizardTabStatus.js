@@ -18,62 +18,58 @@ function hasText(value) {
 function conditionFilled(group) {
   if (!group) return false
   return (
-    hasText(group.temperatureFrom) ||
-    hasText(group.temperatureTo) ||
-    hasText(group.humidityFrom) ||
-    hasText(group.humidityTo) ||
+    hasText(group.temperatureFrom) &&
+    hasText(group.temperatureTo) &&
+    hasText(group.humidityFrom) &&
+    hasText(group.humidityTo) &&
     hasText(group.lighting)
   )
-}
-
-export function isDescriptionTabFilled(key, form) {
-  if (!form) return false
-  if (key === 'review') {
-    return (
-      isDescriptionTabFilled('description', form) &&
-      isDescriptionTabFilled('complectation', form) &&
-      isDescriptionTabFilled('applicationArea', form) &&
-      isDescriptionTabFilled('storageConditions', form) &&
-      isDescriptionTabFilled('precautions', form)
-    )
-  }
-  if (key === 'description') {
-    const d = form.description || {}
-    return (
-      hasText(d.purpose) ||
-      hasText(d.usage) ||
-      hasText(d.design) ||
-      hasText(d.principle)
-    )
-  }
-  if (key === 'complectation') {
-    return (form.complectation?.items || []).some(
-      (item) => hasText(item?.name) || hasText(item?.quantity),
-    )
-  }
-  if (key === 'applicationArea') {
-    const a = form.applicationArea || {}
-    return hasText(a.sphere) || hasText(a.method)
-  }
-  if (key === 'storageConditions') {
-    const s = form.storageConditions || {}
-    return (
-      conditionFilled(s.transport) ||
-      conditionFilled(s.storage) ||
-      conditionFilled(s.operation) ||
-      hasText(s.shelfLife)
-    )
-  }
-  if (key === 'precautions') {
-    const p = form.precautions || {}
-    return hasText(p.hazardClass) || hasText(p.safety) || hasText(p.disposal)
-  }
-  return false
 }
 
 function specFilled(spec) {
   if (!spec) return false
   return hasText(spec.value) || hasText(spec.customValue)
+}
+
+export function isDescriptionTabFilled(key, form) {
+  if (!form) return false
+  if (key === 'review') return false
+  if (key === 'description') {
+    const d = form.description || {}
+    return hasText(d.purpose) && hasText(d.principle)
+  }
+  if (key === 'complectation') {
+    const items = (form.complectation?.items || []).filter(
+      (item) => hasText(item?.name) || hasText(item?.quantity),
+    )
+    if (items.length === 0) return false
+    return items.every((item) => hasText(item?.name) && hasText(item?.quantity))
+  }
+  if (key === 'applicationArea') {
+    return hasText(form.applicationArea?.method)
+  }
+  if (key === 'storageConditions') {
+    const s = form.storageConditions || {}
+    return (
+      conditionFilled(s.transport) &&
+      conditionFilled(s.storage) &&
+      conditionFilled(s.operation)
+    )
+  }
+  if (key === 'precautions') {
+    const p = form.precautions || {}
+    return hasText(p.hazardClass) && hasText(p.safety) && hasText(p.disposal)
+  }
+  return false
+}
+
+export function descriptionTabRequiresFill(key) {
+  return (
+    key === 'description' ||
+    key === 'applicationArea' ||
+    key === 'storageConditions' ||
+    key === 'precautions'
+  )
 }
 
 export function isCharacteristicsTabFilled(key, ctx) {
@@ -85,49 +81,73 @@ export function isCharacteristicsTabFilled(key, ctx) {
     techGroups = [],
     customRows = [],
     productLine = '',
-    logo = null,
   } = ctx || {}
 
-  if (key === 'review') {
-    return (
-      isCharacteristicsTabFilled('main', ctx) ||
-      isCharacteristicsTabFilled('dimensions', ctx) ||
-      isCharacteristicsTabFilled('manufacturer', ctx) ||
-      isCharacteristicsTabFilled('garant', ctx) ||
-      isCharacteristicsTabFilled('tech', ctx) ||
-      isCharacteristicsTabFilled('custom', ctx)
-    )
-  }
+  if (key === 'review') return false
   if (key === 'main') {
     const fields = mainFields.filter((field) => field.code !== 'brand')
-    return (
-      hasText(productLine) ||
-      Boolean(logo) ||
-      fields.some((field) => specFilled(specs[field.code])) ||
-      weightFields.some((field) => specFilled(specs[field.code])) ||
-      specFilled(specs.brand)
-    )
+    const checks = fields.map((field) => specFilled(specs[field.code]))
+    if (mainFields.some((field) => field.code === 'brand')) {
+      checks.push(specFilled(specs.brand))
+    }
+    checks.push(hasText(productLine))
+    if (checks.length === 0) return false
+    return checks.every(Boolean)
   }
   if (key === 'dimensions') {
-    return ['length', 'width', 'height', 'weight', 'weightTolerance'].some(
-      (code) => specFilled(specs[code]),
-    )
+    const dimensionCodes = ['length', 'width', 'height']
+    const weightCodes = weightFields.map((field) => field.code)
+    const codes = weightCodes.length
+      ? [...dimensionCodes, ...weightCodes]
+      : [...dimensionCodes, 'weight', 'weightTolerance']
+    return codes.every((code) => specFilled(specs[code]))
   }
   if (key === 'manufacturer') {
-    return manufacturerFields.some((field) => specFilled(specs[field.code]))
+    if (!manufacturerFields.length) return false
+    return manufacturerFields.every((field) => specFilled(specs[field.code]))
   }
   if (key === 'garant') {
-    return specFilled(specs.warrantyPeriod) || specFilled(specs.serviceLife)
+    return (
+      specFilled(specs.warrantyPeriod) && specFilled(specs.serviceLife)
+    )
   }
   if (key === 'tech') {
-    return (techGroups || []).some((group) =>
-      (group.fields || []).some((field) => specFilled(specs[field.code])),
-    )
+    const fields = (techGroups || []).flatMap((group) => group.fields || [])
+    if (!fields.length) return false
+    return fields.every((field) => specFilled(specs[field.code]))
   }
   if (key === 'custom') {
-    return (customRows || []).some(
-      (row) => hasText(row?.name) || hasText(row?.value) || hasText(row?.customValue),
+    if (!customRows.length) return false
+    return customRows.every(
+      (row) =>
+        hasText(row?.name) &&
+        (hasText(row?.value) || hasText(row?.customValue)),
     )
   }
+  return false
+}
+
+export function characteristicsTabRequiresFill(key, ctx) {
+  const {
+    manufacturerFields = [],
+    techGroups = [],
+  } = ctx || {}
+
+  if (key === 'review') return false
+  if (key === 'main') return true
+  if (key === 'dimensions') return true
+  if (key === 'manufacturer') return manufacturerFields.length > 0
+  if (key === 'garant') return true
+  if (key === 'tech') {
+    return (techGroups || []).some((group) => (group.fields || []).length > 0)
+  }
+  if (key === 'custom') return false
+  return false
+}
+
+export function tabFilledState({ key, visited, contentFilled, requiresFill }) {
+  if (key === 'review') return Boolean(visited)
+  if (contentFilled) return true
+  if (!requiresFill && visited) return true
   return false
 }

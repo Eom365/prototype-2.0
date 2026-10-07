@@ -30,9 +30,11 @@ import {
   variantFillStageHeading,
 } from "../stageProgress";
 import {
+  characteristicsTabRequiresFill,
   isCharacteristicsTabFilled,
   markVisited,
   tabClassName,
+  tabFilledState,
 } from "../wizardTabStatus";
 import Stage24 from "./Stage24";
 import Stage25 from "./Stage25";
@@ -280,6 +282,7 @@ function Stage23() {
   const [panelFocus, setPanelFocus] = useState("characteristics");
   const [axisPreview, setAxisPreview] = useState([]);
   const [charsRefreshKey, setCharsRefreshKey] = useState(0);
+  const [openDescriptionTick, setOpenDescriptionTick] = useState(0);
   const axisRef = useRef(null);
   const nameRef = useRef(null);
   const descriptionRef = useRef(null);
@@ -489,7 +492,10 @@ function Stage23() {
   const isCustomFlow = resolveVariantFlow(progressProduct).mode === "custom";
   const showCustomVariantSetup = needsCustomVariantSetup(progressProduct);
 
-  const tabs = TABS;
+  const tabs =
+    showCustomVariantSetup
+      ? TABS.filter((tab) => tab.key !== "tech")
+      : TABS;
   const currentIndex = tabs.findIndex((tab) => tab.key === activeTab);
   const charTabContext = {
     specs,
@@ -502,8 +508,18 @@ function Stage23() {
     logo,
   };
 
+  const charsPanelOpen =
+    panelFocus === "characteristics" || panelFocus === "both";
+
   const selectTab = (key) => {
-    if (activeTab === key && panelFocus === "characteristics") {
+    if (key === "review") {
+      setActiveTab("review");
+      setVisitedTabs((prev) => markVisited(prev, "review"));
+      setPanelFocus("both");
+      setOpenDescriptionTick((prev) => prev + 1);
+      return;
+    }
+    if (activeTab === key && charsPanelOpen) {
       setActiveTab(null);
       setPanelFocus(null);
       return;
@@ -515,11 +531,19 @@ function Stage23() {
 
   const handleDescriptionOpenChange = (open) => {
     if (open) {
+      if (activeTab === "review") {
+        setPanelFocus("both");
+        return;
+      }
       setPanelFocus("description");
       setActiveTab(null);
       return;
     }
-    if (panelFocus === "description") {
+    if (panelFocus === "both" && activeTab === "review") {
+      setPanelFocus("characteristics");
+      return;
+    }
+    if (panelFocus === "description" || panelFocus === "both") {
       setPanelFocus(null);
     }
   };
@@ -845,10 +869,20 @@ function Stage23() {
           <>
             <div className="stage24-tabs" role="tablist">
               {tabs.map((tab) => {
-                const active =
-                  panelFocus === "characteristics" && activeTab === tab.key;
+                const active = charsPanelOpen && activeTab === tab.key;
                 const visited = visitedTabs.includes(tab.key);
-                const filled = isCharacteristicsTabFilled(tab.key, charTabContext);
+                const filled = tabFilledState({
+                  key: tab.key,
+                  visited,
+                  contentFilled: isCharacteristicsTabFilled(
+                    tab.key,
+                    charTabContext,
+                  ),
+                  requiresFill: characteristicsTabRequiresFill(
+                    tab.key,
+                    charTabContext,
+                  ),
+                });
                 return (
                   <button
                     key={tab.key}
@@ -873,7 +907,7 @@ function Stage23() {
             />
 
             {/* ===== ОСНОВНЫЕ ===== */}
-            {panelFocus === "characteristics" && activeTab === "main" && (
+            {charsPanelOpen && activeTab === "main" && (
               <div className="form">
                 <h2 className="stage24-section-title">Основные</h2>
                 <p className="stage23-subtitle-line">Заполните линейку, модель и артикул продукта от завода-изготовителя:</p>
@@ -916,7 +950,7 @@ function Stage23() {
             )}
 
             {/* ===== ГАБАРИТЫ И ВЕС ===== */}
-            {panelFocus === "characteristics" && activeTab === "dimensions" && (
+            {charsPanelOpen && activeTab === "dimensions" && (
               <div className="form">
                 <h2 className="stage24-section-title">
                   Габаритные размеры и вес
@@ -944,7 +978,7 @@ function Stage23() {
             )}
 
             {/* ===== ПРОИЗВОДИТЕЛЬ ===== */}
-            {panelFocus === "characteristics" && activeTab === "manufacturer" && (
+            {charsPanelOpen && activeTab === "manufacturer" && (
               <div className="form">
                 <h2 className="stage24-section-title">Производитель</h2>
                 <p className="stage23-subtitle-line">Заполните сведения о производителе продукта. <br />При заполнении ориентируйтесь на следующие документы:<br /> 1.Руководство по эксплуатации<br /></p>
@@ -962,7 +996,7 @@ function Stage23() {
             )}
 
             {/* ===== ГАРАНТИЙНЫЕ ОБЯЗАТЕЛЬСТВА ===== */}
-            {panelFocus === "characteristics" && activeTab === "garant" && (
+            {charsPanelOpen && activeTab === "garant" && (
               <div className="form">
                 <h2 className="stage24-section-title">Гарантийные обязательства</h2>
                 <p className="stage23-subtitle-line">
@@ -1009,7 +1043,7 @@ function Stage23() {
             )}
 
             {/* ===== ТЕХНИЧЕСКИЕ ХАРАКТЕРИСТИКИ ===== */}
-            {panelFocus === "characteristics" && activeTab === "tech" && (
+            {charsPanelOpen && activeTab === "tech" && (
               <div className="form">
                 <h2 className="stage24-section-title">
                   Технические характеристики
@@ -1126,7 +1160,7 @@ function Stage23() {
             )}
 
             {/* ===== ДОБАВЬТЕ ХАРАКТЕРИСТИКИ ===== */}
-            {panelFocus === "characteristics" && activeTab === "custom" && (
+            {charsPanelOpen && activeTab === "custom" && (
               <div className="form">
                 <h2 className="stage24-section-title">
                   Добавьте характеристики
@@ -1142,7 +1176,7 @@ function Stage23() {
             )}
 
             {/* ===== ПРОСМОТР ЗАПОЛНЕННЫХ ХАРАКТЕРИСТИК ===== */}
-            {panelFocus === "characteristics" && activeTab === "review" && (
+            {charsPanelOpen && activeTab === "review" && (
               <div className="form">
                 <h2 className="stage24-section-title">
                   Просмотр заполненных характеристик
@@ -1654,7 +1688,10 @@ function Stage23() {
         <Stage24
           ref={descriptionRef}
           embedded
-          contentOpen={panelFocus === "description"}
+          contentOpen={
+            panelFocus === "description" || panelFocus === "both"
+          }
+          openDescriptionTick={openDescriptionTick}
           onContentOpenChange={handleDescriptionOpenChange}
         />
       </div>
