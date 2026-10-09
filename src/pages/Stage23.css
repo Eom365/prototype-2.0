@@ -21,11 +21,11 @@
 .stage23-page .field-row {
   display: grid;
   grid-template-columns: 24px 30px minmax(140px, 200px) minmax(160px, 1fr) 140px;
-  align-items: center;
+
   gap: 12px;
   border-bottom: 1px solid #ddd;
   padding: 10px 0;
-  margin: 0;
+  margin-left: 0px;
 }
 
 .stage23-page .field-row--tech-custom {

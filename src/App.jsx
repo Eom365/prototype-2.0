@@ -34,6 +34,7 @@ import Stage28 from "./pages/Stage28";
 import Stage29 from "./pages/Stage29";
 import Stage30 from "./pages/Stage30";
 import Stage31 from "./pages/Stage31";
+import Add from "./pages/Add";
 
 function Stage13Redirect() {
   const location = useLocation();
@@ -96,6 +97,7 @@ function App() {
         <Route path="/stage29" element={<Stage29 />} />
         <Route path="/stage30" element={<Stage30 />} />
         <Route path="/stage31" element={<Stage31 />} />
+        <Route path="/add" element={<Add />} />
       </Routes>
     </BrowserRouter>
   );

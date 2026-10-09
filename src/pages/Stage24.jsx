@@ -30,14 +30,13 @@ import {
 import "./Stage24.css";
 
 const TABS = [
-  { key: "description", label: "Описание" },
+  { key: "description", label: "Порядок работы с продуктом" },
   { key: "complectation", label: "Комплектация" },
-  { key: "applicationArea", label: "Порядок работы с продуктом" },
   {
     key: "storageConditions",
     label: "Условия транспортировки, хранения и эксплуатации",
   },
-  { key: "precautions", label: "Меры безопасности" },
+  { key: "precautions", label: "Меры безопасности при работе с моделью" },
   { key: "review", label: "Просмотр заполненного описания" },
 ];
 
@@ -699,7 +698,7 @@ const Stage24 = forwardRef(function Stage24(
           <VariantFlowHeader product={product} productId={productId} />
         )}
         {embedded ? (
-          <h2 className="stage2-section-title stage24-embed-title">Описание продукта</h2>
+          <h2 className="stage2-section-title stage24-embed-title">Описание модели (параметра)</h2>
         ) : (
           <h1 className="title stage24-title">
             {variantFillStageHeading(24, "Описание продукта", product, productId)}

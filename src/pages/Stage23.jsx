@@ -47,7 +47,7 @@ import "./Stage23.css";
 const DIMENSIONS_HINT_IMAGE = "/images/dimensions.png";
 const WEIGHT_CODES = ["weight", "weightTolerance"];
 const FIELD_LABELS = {
-  article: "Артикул продукта от завода-изготовителя",
+  article: "Артикул модели (параметра) от завода-изготовителя",
 };
 
 function mainFieldsOrder(fields) {

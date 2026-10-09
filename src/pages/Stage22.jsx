@@ -161,26 +161,26 @@ function Stage22() {
   const openCreate = async () => {
     if (!productId || busy) return;
     setVariantFlow(productId, "create");
-    if (skipsVariantParamStage(product)) {
-      setBusy(true);
-      setError("");
-      try {
-        await productsApi.saveWantsVariants(productId, { wantsVariants: true });
-        const created = await productsApi.addVariation(productId, { values: [] });
-        if (!created?.id) throw new Error("Не удалось создать новый вариант");
-        const next = new URLSearchParams();
-        next.set("id", productId);
-        next.set("variationId", created.id);
-        navigate({ pathname: "/stage7", search: `?${next.toString()}` });
-      } catch (createError) {
-        setError(createError.message || "Не удалось создать вариант");
-      } finally {
-        setBusy(false);
-      }
-      return;
-    }
+    // if (skipsVariantParamStage(product)) {
+    //   setBusy(true);
+    //   setError("");
+    //   try {
+    //     await productsApi.saveWantsVariants(productId, { wantsVariants: true });
+    //     const created = await productsApi.addVariation(productId, { values: [] });
+    //     if (!created?.id) throw new Error("Не удалось создать новый вариант");
+    //     const next = new URLSearchParams();
+    //     next.set("id", productId);
+    //     next.set("variationId", created.id);
+    //     navigate({ pathname: "/stage7", search: `?${next.toString()}` });
+    //   } catch (createError) {
+    //     setError(createError.message || "Не удалось создать вариант");
+    //   } finally {
+    //     setBusy(false);
+    //   }
+    //   return;
+    // }
     navigate({
-      pathname: "/stage12",
+      pathname: "/Add",
       search: productId ? `?id=${productId}` : "",
     });
   };
@@ -212,8 +212,8 @@ function Stage22() {
   return (
     <>
       <div className="container">
-        <VariantFlowHeader product={product} productId={productId} />
-        <h1 className="title">Варианты параметра (модели) линейки продукта</h1>
+        {/* <VariantFlowHeader product={product} productId={productId} /> */}
+        {/* <h1 className="title">Модель (параметр)</h1> */}
         {!productId && (
           <p className="form-error">
             Откройте создание карточки с главной страницы.
@@ -221,9 +221,9 @@ function Stage22() {
         )}
         {error && <p className="form-error">{error}</p>}
 
-        <h2 className="section-title subtitle">Общая информация о продукте</h2>
+        <h2 className="section-title subtitle">Линейка продукта</h2>
 
-        <h3 className="subtitleYt">Презентация линейки продукции</h3>
+    
 
         <div className="field">
           <span className="standartW">
@@ -300,11 +300,11 @@ function Stage22() {
 
         <div className="divider" />
 
-        <h2 className="section-title">Варианты параметра (модели) линейки продукта</h2>
+        <h2 className="section-title">Модель (параметр)</h2>
 
         <div className="variants-board">
           <div className="variants-group">
-            <h3 className="variants-group__title">Созданные</h3>
+            {/* <h3 className="variants-group__title">Созданные</h3> */}
             <div className="variants-group__list">
               {created.map((variation) => (
                 <VariantCard
@@ -324,10 +324,11 @@ function Stage22() {
                   <span className="variants-create__icon">+</span>
                 </span>
                 <span className="variants-create__text">
-                Добавить вариант параметра продукта
+                Добавить 
                 </span>
               </button>
             </div>
+            
           </div>
         </div>
       </div>

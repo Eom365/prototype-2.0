@@ -256,9 +256,9 @@ function Stage7() {
               ? isProductWizard(productId)
                 ? "/stage3"
                 : "/stage22"
-              : "/stage12"
+              : "/stage22"
         }
-        nextPath="/stage14"
+        nextPath="/stage22"
       />
     </>
   );
