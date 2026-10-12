@@ -366,11 +366,11 @@ function Stage22() {
         current={3}
         total={4}
         prevPath="/stage2"
-        nextPath="/Add"
         previewPath="/stage22"
         managePath="/products"
         homeIconSrc="/images/Home.png"
         onSave={async () => { }}
+        onNext={() => openCreate()}
         showManage={hasFilledVariant}
         showNext={!hasFilledVariant}
       />
