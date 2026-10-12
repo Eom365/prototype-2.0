@@ -299,11 +299,12 @@
 }
 .variants-create {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  gap: 20px;
   align-items: stretch;
-  width: 170px;
+  width: 200px;
   margin: 0;
-  padding: 28px 12px 14px;
+  padding: 10px 10px 10px;
   border: 1.5px solid #222;
   border-radius: 10px;
   background: #fff;
@@ -311,6 +312,7 @@
   font-family: inherit;
   box-sizing: border-box;
   text-align: center;
+  max-height: 70px;
 }
 
 .variants-create:hover {
@@ -369,4 +371,134 @@
   height: 80px;
   width: 300px;
   font-size: 20px;
+}
+
+.iio {
+  font-size: 28px;
+}
+
+.lli {
+  font-weight: 500 !important;
+}
+
+.section-title {
+  font-weight: 500;
+  text-align: left;
+}
+
+.forg {
+  margin-top: 40px;
+}
+
+.gift {
+  height: 70px;
+  font-size: 18px;
+  border-radius: 10px;
+  background: #F0E68C;
+  border-color: #FF8C00;
+  padding-inline: 30px;
+}
+
+.variants-create {
+  display: flex;
+  flex-direction: row;
+  /* align-items: center; */
+  /* вместо stretch — центрируем по вертикали */
+  justify-content: flex-start;
+  /* выравниваем влево */
+  gap: 20px;
+  /* отступ между плюсом и текстом */
+  width: 170px;
+  /* пусть ширина подстраивается под контент */
+  min-width: 160px;
+  /* но не меньше этого */
+  margin: 0;
+  padding: 10px 16px;
+  border: 1.5px solid #222;
+  border-radius: 10px;
+  background: #fff;
+  cursor: pointer;
+  font-family: inherit;
+  box-sizing: border-box;
+  text-align: left;
+  /* текст выравниваем влево, а не по центру */
+}
+
+/* Круг с плюсом */
+.variants-create__image {
+  flex: 0 0 auto;
+  /* не сжимать и не растягивать */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #3b2418;
+  /* тёмный круг, как на макетах */
+  color: #ffffff;
+}
+
+.variants-create__icon {
+  font-size: 24px;
+  line-height: 1;
+  font-weight: 600;
+}
+
+/* Подпись «Добавить» */
+.variants-create__text {
+  flex: 1 1 auto;
+  display: inline-block;
+  text-align: left;
+  font-size: 16px;
+  color: #222;
+  white-space: nowrap;
+}
+
+.variant-tile__actions {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  gap: 6px;
+  z-index: 2;
+}
+
+.variant-tile__edit,
+.variant-tile__delete {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.9);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  line-height: 1;
+  padding: 0;
+  transition: background 0.15s;
+}
+
+.variant-tile__edit {
+  color: #333;
+}
+
+.variant-tile__edit:hover {
+  background: #f0f0f0;
+}
+
+.variant-tile__delete {
+  color: #e53935;
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.variant-tile__delete:hover {
+  background: #fdecea;
+}
+
+.variants-group__create-wrap {
+  margin-bottom: 24px;
 }

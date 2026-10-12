@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import BottomBar from '../components/BottomBar'
 import Tip from '../components/Tip'
+import PhotoGallery from '../components/PhotoGallery'
 import { catalogApi, productsApi } from '../api'
 import {
     HANDPIECE_PARENTS,
@@ -12,6 +13,7 @@ import {
 import { productWizardTotal } from '../stageProgress'
 import './Stage2.css'
 import './Stage2_3.css'
+import './Stage3.css'
 import '../components/ExcelImportModal.css'
 import InformationAboutProductLine from "../components/InformationAboutProductLine";
 
@@ -149,13 +151,11 @@ function fieldsToCategoryPath(fields) {
     return parts.join(' > ')
 }
 
-/** Path segments + one trailing empty field for extending the chain. */
 function pathToFields(path) {
     const segments = splitCategoryPath(path)
     return segments.length ? [...segments, ''] : ['']
 }
 
-/** Keep filled segments and one trailing empty field. */
 function normalizePathFields(fields) {
     const next = []
     for (const field of fields || []) {
@@ -175,7 +175,6 @@ function fieldsToPathKeepAll(fields) {
         .join(' > ')
 }
 
-/** Empty prefix slots + product type locked as the last segment. */
 function normalizeUndeterminedPathFields(fields, typeName) {
     const type = String(typeName || '').trim()
     if (!type) return ['']
@@ -222,7 +221,6 @@ function typeTokens(text) {
         .filter(Boolean)
 }
 
-/** Word bag key so "прямой стоматологический наконечник" == "Стоматологический прямой наконечник". */
 function typeTokenKey(text) {
     return typeTokens(text).sort().join(' ')
 }
@@ -231,51 +229,12 @@ function stemRu(word) {
     const w = String(word || '').toLowerCase().replace(/[ё]/g, 'е')
     if (w.length < 4) return w
     const endings = [
-        'ическими',
-        'ический',
-        'ическая',
-        'ическое',
-        'ические',
-        'ических',
-        'ическим',
-        'ческий',
-        'ческая',
-        'ческое',
-        'ческие',
-        'ческих',
-        'ческим',
-        'скими',
-        'ский',
-        'ская',
-        'ское',
-        'ские',
-        'ских',
-        'ским',
-        'ями',
-        'ами',
-        'ов',
-        'ев',
-        'ей',
-        'ий',
-        'ый',
-        'ой',
-        'ая',
-        'яя',
-        'ое',
-        'ее',
-        'ые',
-        'ие',
-        'ых',
-        'их',
-        'ую',
-        'юю',
-        'а',
-        'я',
-        'ы',
-        'и',
-        'е',
-        'у',
-        'ю',
+        'ическими', 'ический', 'ическая', 'ическое', 'ические', 'ических', 'ическим',
+        'ческий', 'ческая', 'ческое', 'ческие', 'ческих', 'ческим',
+        'скими', 'ский', 'ская', 'ское', 'ские', 'ских', 'ским',
+        'ями', 'ами', 'ов', 'ев', 'ей', 'ий', 'ый', 'ой', 'ая', 'яя',
+        'ое', 'ее', 'ые', 'ие', 'ых', 'их', 'ую', 'юю',
+        'а', 'я', 'ы', 'и', 'е', 'у', 'ю',
     ]
     for (const ending of endings) {
         if (w.length > ending.length + 3 && w.endsWith(ending)) {
@@ -326,10 +285,6 @@ function typeTextMatches(query, label) {
     return qStems.every((qs) => lStems.some((ls) => stemsClose(qs, ls)))
 }
 
-/**
- * Catalog matches for the typed product type (order of words does not matter).
- * Parent groups with several kinds are returned as hasSubtypes.
- */
 function findTypeMatches(catalog, typeText) {
     const query = String(typeText || '').trim()
     if (!query || !catalog) return []
@@ -936,6 +891,7 @@ function Stage2() {
     const [nameTouched, setNameTouched] = useState(false)
     const [nameAgreed, setNameAgreed] = useState(false)
     const [agreeBusy, setAgreeBusy] = useState(false)
+    const [showNoSub, setShowNoSub] = useState(false)
     const autoSubtypeKeyRef = useRef('')
     const typeResolveTimerRef = useRef(null)
 
@@ -986,8 +942,8 @@ function Stage2() {
                 setPathFromModal(Boolean(String(savedPath || '').trim()))
                 setPathDetermined(
                     Boolean(savedKind) &&
-                        savedKind !== OTHER_KIND_CODE &&
-                        Boolean(String(savedPath || '').trim()),
+                    savedKind !== OTHER_KIND_CODE &&
+                    Boolean(String(savedPath || '').trim()),
                 )
             }
             setProductLine(product.productLine || '')
@@ -1341,16 +1297,11 @@ function Stage2() {
 
         const next = [...pathFields]
         next[index] = value
-        if (!pathFromModal || !pathDetermined) {
-            commitPathFields(next, { manual: true })
-            return
-        }
         commitPathFields(next, { manual: true })
     }
 
     const handlePathFieldFocus = (index) => {
         if (!modalOpen) return
-        // Determined catalog path: click/focus on a segment opens the modal there — don't close it.
         if (pathDetermined || pathFromModal) return
         const type = String(productName || '').trim()
         const isTypeSlot =
@@ -1494,16 +1445,22 @@ function Stage2() {
         if (!trimmedProductName) {
             throw new Error('Укажите тип продукта')
         }
-        if (!String(categoryPath || '').trim()) {
-            throw new Error('Заполните путь категории')
-        }
-        if (kindCode === OTHER_KIND_CODE) {
-            const segments = splitCategoryPath(categoryPath)
-            if (segments.length < 2) {
+
+        // Если категория определена — проверяем корректность пути.
+        // Если не определена — сохраняем как есть, категорию потом
+        // допишут администраторы.
+        if (pathDetermined) {
+            if (!String(categoryPath || '').trim()) {
                 throw new Error('Заполните путь категории')
             }
-        } else if (!kindCode) {
-            throw new Error('Выберите подтип продукта в каталоге')
+            if (kindCode === OTHER_KIND_CODE) {
+                const segments = splitCategoryPath(categoryPath)
+                if (segments.length < 2) {
+                    throw new Error('Заполните путь категории')
+                }
+            } else if (!kindCode) {
+                throw new Error('Выберите подтип продукта в каталоге')
+            }
         }
 
         const trimmedBrand = String(brandName || '').trim()
@@ -1568,12 +1525,128 @@ function Stage2() {
     return (
         <>
             <div className="container stage2-page">
-                <InformationAboutProductLine productId={productId} />
-                <h1 className="title stage2-title">Этап 2 - Категория, бренд и наименование линейки продукта</h1>
-                {!productId && <p className="form-error">Откройте создание карточки с главной страницы.</p>}
-                {error && <p className="form-error">{error}</p>}
+                {/* <InformationAboutProductLine productId={productId} /> */}
+                <h1 className="title stage2-title">Этап 2 - Создание линейки</h1>
 
                 <div className="stage2-workarea">
+                    <h2 className="stage2-section-title stage2-category-title">Категория продукта</h2>
+
+                    <div
+                        className={`field--product-type${modalOpen ? ' field--product-type--after-modal' : ''}`}
+                    >
+                        <Tip inline text={PRODUCT_TYPE_TIP} />
+                        <label className="field--product-type__label" htmlFor="product-type">
+                            Тип продукта
+                        </label>
+                        <span className="field--product-type__star" aria-hidden="true">
+                            ✱
+                        </span>
+                        <input
+                            id="product-type"
+                            type="text"
+                            className="field--product-type__input"
+                            value={productName}
+                            onChange={(event) => handleProductTypeChange(event.target.value)}
+                            onBlur={handleProductTypeBlur}
+                            placeholder="Введите значение"
+                        />
+                    </div>
+
+                    {typeFilled && !pathDetermined && (
+                        <p className="stage2-category-note">
+                            Категория продукта не определена автоматически.
+                            Продолжайте заполнение - категорию заполнит менеджер во время проверки.
+                        </p>
+                    )}
+
+                    {typeFilled && pathDetermined && (
+                        <div className="field field--category">
+                            <p className="paragraph">Категория продукта (строится из вашего выбора)</p>
+
+                            <div className="category-picker">
+                                <button
+                                    type="button"
+                                    className="category-picker__burger"
+                                    title="Меню"
+                                    onClick={() => {
+                                        if (modalOpen) {
+                                            handleModalClose()
+                                            return
+                                        }
+                                        openModalAt(
+                                            fieldsToPathKeepAll(pathFields) || '',
+                                        )
+                                    }}
+                                >
+                                    ☰
+                                </button>
+
+                                <div className="category-picker__path-box">
+                                    <div className="category-picker__fields">
+                                        {displayedFields.map((value, index) => (
+                                            <div
+                                                className="category-picker__segment"
+                                                key={`path-field-${index}`}
+                                            >
+                                                {index > 0 && (
+                                                    <span
+                                                        className="category-picker__chevron"
+                                                        aria-hidden="true"
+                                                    >
+                                                        ›
+                                                    </span>
+                                                )}
+                                                <CategoryPathField
+                                                    value={value}
+                                                    placeholder="Категория"
+                                                    onChange={(event) =>
+                                                        handlePathFieldChange(
+                                                            index,
+                                                            event.target.value,
+                                                        )
+                                                    }
+                                                    onFocus={() => handlePathFieldFocus(index)}
+                                                    onClick={() => {
+                                                        if (!String(value || '').trim()) return
+                                                        if (pathDetermined || pathFromModal) {
+                                                            handlePathSegmentOpen(index)
+                                                        }
+                                                    }}
+                                                    onDoubleClick={() => {
+                                                        handlePathSegmentOpen(index)
+                                                    }}
+                                                    title="Нажмите, чтобы открыть каталог на этом уровне"
+                                                    readOnly
+                                                />
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <button
+                                    type="button"
+                                    className="category-picker__clear"
+                                    title="Очистить"
+                                    onClick={handleClearAll}
+                                >
+                                    ✕
+                                </button>
+                            </div>
+
+                            <p className="stage2-category-result">
+                                Результат заполнения категории:{' '}
+                                <span className="stage2-category-result__path">
+                                    {String(
+                                        pathPreview ||
+                                        categoryPath ||
+                                        fieldsToPathKeepAll(displayedFields) ||
+                                        '',
+                                    ).trim() || '—'}
+                                </span>
+                            </p>
+                        </div>
+                    )}
+
                     <div className="stage2-brand-block stage3-page">
                         <h2 className="stage2-section-title">Бренд и линейка продукта</h2>
 
@@ -1652,141 +1725,6 @@ function Stage2() {
                         </div>
                     </div>
 
-                    <div className="matches-divider" />
-
-                    <h2 className="stage2-section-title stage2-category-title">Категория продукта</h2>
-
-                    <div
-                        className={`field--product-type${modalOpen ? ' field--product-type--after-modal' : ''}`}
-                    >
-                        <Tip inline text={PRODUCT_TYPE_TIP} />
-                        <label className="field--product-type__label" htmlFor="product-type">
-                            Тип продукта
-                        </label>
-                        <span className="field--product-type__star" aria-hidden="true">
-                            ✱
-                        </span>
-                        <input
-                            id="product-type"
-                            type="text"
-                            className="field--product-type__input"
-                            value={productName}
-                            onChange={(event) => handleProductTypeChange(event.target.value)}
-                            onBlur={handleProductTypeBlur}
-                            placeholder="Введите значение"
-                        />
-                    </div>
-
-                    {typeFilled && !pathDetermined && (
-                        <p className="stage2-path-hint">
-                            Путь не определен, самостоятельно заполните категорию в поле ниже
-                        </p>
-                    )}
-
-                    {typeFilled && (
-                        <div className="field field--category">
-                            <p className="paragraph">Категория продукта (строится из вашего выбора)</p>
-
-                            <div className="category-picker">
-                                <button
-                                    type="button"
-                                    className="category-picker__burger"
-                                    title="Меню"
-                                    onClick={() => {
-                                        if (modalOpen) {
-                                            handleModalClose()
-                                            return
-                                        }
-                                        openModalAt(
-                                            fieldsToPathKeepAll(
-                                                pathDetermined
-                                                    ? pathFields
-                                                    : pathFields.slice(0, -1),
-                                            ) || '',
-                                        )
-                                    }}
-                                >
-                                    ☰
-                                </button>
-
-                                <div className="category-picker__path-box">
-                                    <div className="category-picker__fields">
-                                        {displayedFields.map((value, index) => {
-                                            const type = String(productName || '').trim()
-                                            const isTypeSlot =
-                                                !pathDetermined &&
-                                                type &&
-                                                index === displayedFields.length - 1
-                                            return (
-                                                <div
-                                                    className="category-picker__segment"
-                                                    key={`path-field-${index}`}
-                                                >
-                                                    {index > 0 && (
-                                                        <span
-                                                            className="category-picker__chevron"
-                                                            aria-hidden="true"
-                                                        >
-                                                            ›
-                                                        </span>
-                                                    )}
-                                                    <CategoryPathField
-                                                        value={value}
-                                                        placeholder="Категория"
-                                                        onChange={(event) =>
-                                                            handlePathFieldChange(
-                                                                index,
-                                                                event.target.value,
-                                                            )
-                                                        }
-                                                        onFocus={() => handlePathFieldFocus(index)}
-                                                        onClick={() => {
-                                                            if (isTypeSlot || !String(value || '').trim()) return
-                                                            if (pathDetermined || pathFromModal) {
-                                                                handlePathSegmentOpen(index)
-                                                            }
-                                                        }}
-                                                        onDoubleClick={() => {
-                                                            if (isTypeSlot) return
-                                                            handlePathSegmentOpen(index)
-                                                        }}
-                                                        title={
-                                                            isTypeSlot
-                                                                ? 'Тип продукта'
-                                                                : 'Нажмите, чтобы открыть каталог на этом уровне'
-                                                        }
-                                                        readOnly={isTypeSlot || pathDetermined}
-                                                    />
-                                                </div>
-                                            )
-                                        })}
-                                    </div>
-                                </div>
-
-                                <button
-                                    type="button"
-                                    className="category-picker__clear"
-                                    title="Очистить"
-                                    onClick={handleClearAll}
-                                >
-                                    ✕
-                                </button>
-                            </div>
-
-                            <p className="stage2-category-result">
-                                Результат заполнения категории:{' '}
-                                <span className="stage2-category-result__path">
-                                    {String(
-                                        pathPreview ||
-                                            categoryPath ||
-                                            fieldsToPathKeepAll(displayedFields) ||
-                                            '',
-                                    ).trim() || '—'}
-                                </span>
-                            </p>
-                        </div>
-                    )}
-
                     {modalOpen && (
                         <CategoryModal
                             key={modalKey}
@@ -1802,8 +1740,6 @@ function Stage2() {
                             onDraftPathChange={handleModalDraftPath}
                         />
                     )}
-
-                    <div className="matches-divider" />
 
                     <div className="stage2-brand-block stage3-page">
                         <h2 className="stage2-section-title">Наименование линейки продукта</h2>
@@ -1827,21 +1763,100 @@ function Stage2() {
                                 placeholder="Логотип Тип продукта Бренд Линейка"
                             />
                         </div>
-                        {/* <div className="stage2-agree-wrap">
+                    </div>
+
+                    <div className="stage2-media-section"></div>
+                    <div
+                        style={{
+                            width: 'var(--category-width)',
+                            maxWidth: '100%',
+                            alignSelf: 'center',
+                            textAlign: 'left',
+                            display: 'block',
+                        }}
+                    >
+                        {/* ================= Презентационное видео ================= */}
+                        <h2
+                            className="subtitle hyt"
+                            style={{ textAlign: 'left', marginLeft: 0, marginRight: 0 }}
+                        >
+                            Презентационное видео продукта
+                        </h2>
+                        <div className="video-row" style={{ justifyContent: 'flex-start' }}>
                             <button
                                 type="button"
-                                className="excel-import-trigger__btn"
-                                onClick={handleAgreeName}
-                                disabled={agreeBusy || !String(fullName || '').trim()}
+                                className="add-photo-btn"
+                                onClick={() => setShowNoSub(true)}
                             >
-                                {agreeBusy ? 'Сохранение…' : nameAgreed ? 'Согласовано' : 'Согласовать'}
+                                <span className="add-photo-btn__icon">＋</span>
+                                <span className="add-photo-btn__text">Добавить видео</span>
                             </button>
-                        </div> */}
+
+                            {showNoSub && (
+                                <span className="no-sub-text">
+                                    Оплатите подписку и добавьте видео
+                                </span>
+                            )}
+                        </div>
+
+                        {/* ================= Презентационные фото ================= */}
+                        <h2
+                            className="subtitle hyt"
+                            style={{ textAlign: 'left', marginLeft: 0, marginRight: 0 }}
+                        >
+                            Презентационные фотографии продукта
+                        </h2>
+                        <p className="section-description standart" style={{ textAlign: 'left' }}>
+                            Загрузите изображения, которые показывают ассортимент линейки продукции.
+                        </p>
+                        <p style={{ textAlign: 'left' }}>Требования к фотографиям: </p>
+                        <p className="pBold standartOne" style={{ textAlign: 'left' }}>
+                            Фон: продукт на фотографии должен быть на белом фоне.
+                            <br /> Ракурс: продукт должен занимать 2/3 изображения.
+                            <br />
+                            Формат: JPG, PNG. <br /> Размер фотографий: <br /> минимальный - 1000
+                            X 1000 px <br />
+                            рекомендуемый - 1600 X 1600 px <br /> максимальный - 2560 X 1440 px
+                        </p>
+                        <p className="pBold" style={{ textAlign: 'left' }}>
+                            Пример правильного заполнения:
+                        </p>
+
+                        <div
+                            className="presentation-images"
+                            style={{ justifyContent: 'flex-start' }}
+                        >
+                            <img
+                                src="/images/image1.png"
+                                alt="Презентационное изображение повышающих наконечников"
+                            />
+                            <img
+                                src="/images/image2.png"
+                                alt="Презентационное изображение смартфонов"
+                            />
+                        </div>
+
+                        {!productId && (
+                            <p className="form-error" style={{ textAlign: 'left' }}>
+                                Откройте создание карточки с главной страницы.
+                            </p>
+                        )}
+                        {productId && (
+                            <PhotoGallery productId={productId} role="presentation" />
+                        )}
+                    </div>
                     </div>
                 </div>
-            </div>
+            {/* </div> */}
 
-            <BottomBar current={2} total={wizardTotal} prevPath="/stage1" nextPath="/stage3" onSave={save} />
+            <BottomBar
+                current={2}
+                total={4}
+                prevPath="/stage1"
+                nextPath="/stage22"
+                homeIconSrc="/images/Home.png"
+                onSave={save}
+            />
         </>
     )
 }

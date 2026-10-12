@@ -21,7 +21,7 @@ function CustomCharacteristicsBlock({ rows, unitGroups, onChange }) {
 
     return (
         <div className="custom-spec-block">
-            <h3 className="subtitle subtitle--spaced">Иное</h3>
+            {/* <h3 className="subtitle subtitle--spaced">Иное</h3> */}
             {rows.map((row) => (
                 <div className="custom-spec-row" key={row.id}>
                     <span className="info-icon" title="Подсказка">ⓘ</span>

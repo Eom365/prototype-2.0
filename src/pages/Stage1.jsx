@@ -110,11 +110,12 @@ function Stage1() {
   return (
     <>
       <div className="container stage1-page">
-        <h1 className="title">Этап 1 - Проверка идентичности продукта</h1>
-        <h2 className="subtitle standart">
+        <h1 className="title">Этап 1 - Создание линейки</h1>
+        <h2 className="title">Проверка идентичности продукта</h2>
+        <h3 className="subtitle standart">
           Введите информацию о товаре для поиска совпадений среди существующих
           карточек товаров
-        </h2>
+        </h3>
 
         {!productId && (
           <p className="form-error">
@@ -224,7 +225,13 @@ function Stage1() {
         )}
       </div>
 
-      <BottomBar current={1} total={11} nextPath="/stage2" onSave={save} />
+      <BottomBar
+        current={1}
+        total={4}
+        nextPath="/stage2"
+        homeIconSrc="/images/Home.png"
+        onSave={save}
+      />
 
       {sellerModalOpen && (
         <div

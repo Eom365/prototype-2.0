@@ -36,6 +36,7 @@ import Stage30 from "./pages/Stage30";
 import Stage31 from "./pages/Stage31";
 import Add from "./pages/Add";
 
+
 function Stage13Redirect() {
   const location = useLocation();
   return (

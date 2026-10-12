@@ -1,0 +1,312 @@
+/* Фиксированный футер, который не конфликтует с .bottom-bar */
+.preview-bar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 60px;
+    padding: 12px 24px;
+    background: #ffffff;
+    border-top: 1px solid #e5e5e5;
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.04);
+    box-sizing: border-box;
+}
+
+.preview-bar__home {
+    width: 56px;
+    height: 56px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.preview-bar__home:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.preview-bar__home-img {
+    width: 44px;
+    height: 44px;
+    object-fit: contain;
+    display: block;
+}
+
+.preview-bar__preview {
+    flex: 1 0 auto;
+    min-width: 280px;
+    max-width: 420px;
+    padding: 14px 32px;
+    border: 2px solid #111;
+    border-radius: 12px;
+    background: #f5c93f;
+    color: #111;
+    font-size: 17px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: filter 0.15s, transform 0.05s;
+}
+
+.preview-bar__preview:hover:not(:disabled) {
+    filter: brightness(0.96);
+}
+
+.preview-bar__preview:active:not(:disabled) {
+    transform: translateY(1px);
+}
+
+.preview-bar__preview:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.preview-bar__manage {
+    flex: 0 0 auto;
+    padding: 14px 24px;
+    border: 2px solid #e5e5e5;
+    border-radius: 12px;
+    background: #f5f5f5;
+    color: #999;
+    font-size: 15px;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    transition: filter 0.15s;
+}
+
+.preview-bar__manage:hover:not(:disabled) {
+    filter: brightness(0.97);
+}
+
+.preview-bar__manage:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    color: #b0b0b0;
+}
+
+.preview-bar__manage {
+    flex: 0 0 auto;
+    padding: 14px 24px;
+    border: 2px solid #1e7e34;
+    border-radius: 12px;
+    background: #2ecc71;
+    color: black;
+    font-size: 15px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: filter 0.15s, transform 0.05s;
+}
+
+.preview-bar__manage:hover:not(:disabled) {
+    filter: brightness(0.96);
+}
+
+.preview-bar__manage:active:not(:disabled) {
+    transform: translateY(1px);
+}
+
+.preview-bar__manage:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background: #b8e6c9;
+    border-color: #b8e6c9;
+    color: black;
+}
+
+.preview-bar__stage {
+    font-size: 14px;
+    color: #555;
+    font-weight: 500;
+    white-space: nowrap;
+    margin-right: 8px;
+}
+
+.preview-bar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 12px 24px;
+    background: #ffffff;
+    border-top: 1px solid #e5e5e5;
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.04);
+    box-sizing: border-box;
+}
+
+.preview-bar__left {
+    position: absolute;
+    left: 24px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.preview-bar__center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+}
+
+.preview-bar__prev {
+    flex: 0 0 auto;
+    padding: 10px 18px;
+    border: 2px solid #d0d0d0;
+    border-radius: 12px;
+    background: #ffffff;
+    color: #333;
+    font-size: 14px;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    transition: filter 0.15s, background 0.15s;
+}
+
+.preview-bar__prev:hover:not(:disabled) {
+    background: #f5f5f5;
+    border-color: #b0b0b0;
+}
+
+.preview-bar__prev:active:not(:disabled) {
+    transform: translateY(1px);
+}
+
+.preview-bar__prev:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.preview-bar__stage {
+    font-size: 14px;
+    color: #555;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.preview-bar__home {
+    width: 56px;
+    height: 56px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.preview-bar__home:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.preview-bar__home-img {
+    width: 44px;
+    height: 44px;
+    object-fit: contain;
+    display: block;
+}
+
+.preview-bar__preview {
+    flex: 0 0 auto;
+    padding: 14px 32px;
+    border: 2px solid #111;
+    border-radius: 12px;
+    background: #f5c93f;
+    color: #111;
+    font-size: 17px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: filter 0.15s, transform 0.05s;
+}
+
+.preview-bar__preview:hover:not(:disabled) {
+    filter: brightness(0.96);
+}
+
+.preview-bar__preview:active:not(:disabled) {
+    transform: translateY(1px);
+}
+
+.preview-bar__preview:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.preview-bar__manage {
+    flex: 0 0 auto;
+    padding: 14px 24px;
+    border: 2px solid #1e7e34;
+    border-radius: 12px;
+    background: #2ecc71;
+    color: #000;
+    font-size: 15px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: filter 0.15s, transform 0.05s;
+}
+
+.preview-bar__manage:hover:not(:disabled) {
+    filter: brightness(0.96);
+}
+
+.preview-bar__manage:active:not(:disabled) {
+    transform: translateY(1px);
+}
+
+.preview-bar__manage:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background: #b8e6c9;
+    border-color: #b8e6c9;
+}
+
+.preview-bar__next {
+    flex: 0 0 auto;
+    padding: 14px 24px;
+    border: 2px solid #1e7e34;
+    border-radius: 12px;
+    background: #2ecc71;
+    color: #ffffff;
+    font-size: 15px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: filter 0.15s, transform 0.05s;
+}
+
+.preview-bar__next:hover:not(:disabled) {
+    filter: brightness(0.96);
+}
+
+.preview-bar__next:active:not(:disabled) {
+    transform: translateY(1px);
+}
+
+.preview-bar__next:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background: #b8e6c9;
+    border-color: #b8e6c9;
+}

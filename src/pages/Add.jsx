@@ -14,12 +14,20 @@ import DimensionsGroup from "../components/DimensionsGroup";
 import ImageHint from "../components/ImageHint";
 import VariantFlowHeader from "../components/VariantFlowHeader";
 import PhotoGallery from "../components/PhotoGallery";
+import PackTypeHint from "../components/PackTypeHint";
 import { catalogApi, productsApi } from "../api";
 import {
     axisValueFromVariation,
+    blankWarehouse,
+    composeAddress,
+    discountsFrom,
+    emptyDiscounts,
+    pointsFrom,
+    pointsPayload,
     sameId,
     useCardIds,
     variationSpecsFrom,
+    warehouseFormFrom,
 } from "../cardScope";
 import {
     CUSTOM_CODE_PREFIX,
@@ -64,8 +72,12 @@ import "./Add.css";
 import "./Stage7.css";
 import "./Stage2.css";
 import "./Stage5.css";
+import "./Stage8.css";
+import "./Stage9.css";
+import "./Stage10.css";
 import "./Stage24.css";
 import "./Stage23.css";
+import PreviewBar from "../components/PreviewBar";
 
 /* =========================================================
    БЛОК ДОКУМЕНТОВ (из Stage7)
@@ -131,6 +143,22 @@ const FIELD_LABELS = {
     weight: "Вес модели без упаковки",
 };
 
+const CURRENCY_SYMBOLS = {
+    RUB: "₽",
+    CNY: "¥",
+};
+
+/* Ключи секций, для которых выводится блок «Иное» */
+const EXTRA_SECTION_KEYS = [
+    "functional",
+    "technical",
+    "material",
+    "affiliation",
+    "power",
+    "display",
+    "system",
+];
+
 function mainFieldsOrder(fields) {
     const rank = { article: 0, model: 1 };
     return [...fields].sort((a, b) => (rank[a.code] ?? 10) - (rank[b.code] ?? 10));
@@ -165,8 +193,8 @@ const TABS = [
     { key: "manufacturer", label: "Фотографии модели" },
     { key: "garant", label: "Упаковка модели" },
     { key: "tech", label: "Стоимость модели и система лояльности" },
-    { key: "custom", label: "Достака модели" },
-    { key: "review", label: "Просмотр заполненных характеристик" },
+    { key: "custom", label: "Доставка модели" },
+    // { key: "review", label: "Просмотр заполненных характеристик" },
 ];
 
 const CHARACTERISTIC_SECTIONS = [
@@ -446,6 +474,28 @@ const Add = forwardRef(function Add(_props, ref) {
     const [nextStage, setNextStage] = useState("/stage24");
     const [specs, setSpecs] = useState({});
     const [customRows, setCustomRows] = useState(() => normalizeCustomRows([]));
+
+    /*
+     * customRowsBySection — общий объект-стейт для блоков «Иное»
+     * во всех разделах (functional, technical, material, affiliation,
+     * power, display, system).
+     */
+    const [customRowsBySection, setCustomRowsBySection] = useState(() =>
+        EXTRA_SECTION_KEYS.reduce((acc, key) => {
+            acc[key] = normalizeCustomRows([]);
+            return acc;
+        }, {}),
+    );
+
+    const getSectionCustomRows = useCallback(
+        (key) => customRowsBySection[key] || [],
+        [customRowsBySection],
+    );
+
+    const setSectionCustomRows = useCallback((key, rows) => {
+        setCustomRowsBySection((prev) => ({ ...prev, [key]: rows }));
+    }, []);
+
     const [techCustomFields, setTechCustomFields] = useState([]);
     const [techCustomValues, setTechCustomValues] = useState({});
     const [techCustomUnits, setTechCustomUnits] = useState({});
@@ -453,9 +503,9 @@ const Add = forwardRef(function Add(_props, ref) {
     const [categorySnapshot, setCategorySnapshot] = useState(null);
     const [stabilized, setStabilized] = useState(false);
     const [logo, setLogo] = useState(null);
-    const [activeTab, setActiveTab] = useState("main");
-    const [visitedTabs, setVisitedTabs] = useState(["main"]);
-    const [panelFocus, setPanelFocus] = useState("characteristics");
+    const [activeTab, setActiveTab] = useState(null);
+    const [visitedTabs, setVisitedTabs] = useState([]);
+    const [panelFocus, setPanelFocus] = useState(null);
     const [axisPreview, setAxisPreview] = useState([]);
     const [nameOptions, setNameOptions] = useState([]);
     const [charsRefreshKey, setCharsRefreshKey] = useState(0);
@@ -468,6 +518,31 @@ const Add = forwardRef(function Add(_props, ref) {
     const axisPreviewSigRef = useRef("");
     const nameOptionsSigRef = useRef("");
     const [nameFeatureCodes, setNameFeatureCodes] = useState([]);
+
+    /* ---------- Упаковка ---------- */
+    const [packType, setPackType] = useState("");
+    const [packMaterial, setPackMaterial] = useState("");
+    const [packMaterialCustom, setPackMaterialCustom] = useState("");
+    const [packSizeUnit, setPackSizeUnit] = useState("sm");
+    const [packSizes, setPackSizes] = useState({
+        length: "",
+        width: "",
+        height: "",
+    });
+    const [isFragile, setIsFragile] = useState("");
+    const [weight, setWeight] = useState("");           // ← вернули
+    const [weightUnit, setWeightUnit] = useState("gram");
+
+    /* ---------- Стоимость и система лояльности ---------- */
+    const [currency, setCurrency] = useState("RUB");
+    const [price, setPrice] = useState("");
+    const [discounts, setDiscounts] = useState(() => emptyDiscounts());
+
+    /* ---------- Доставка (склады) ---------- */
+    const [addresses, setAddresses] = useState([]);
+    const [showForm, setShowForm] = useState(false);
+    const [editingId, setEditingId] = useState(null);
+    const [newAddress, setNewAddress] = useState(blankWarehouse);
 
     const toggleNameFeature = (code) => {
         setNameFeatureCodes((prev) =>
@@ -547,6 +622,28 @@ const Add = forwardRef(function Add(_props, ref) {
                     productLine: loadedProduct.productLine || "",
                 });
 
+                // Загрузка данных упаковки
+                setPackType(loadedProduct.packType || "");
+                setPackMaterial(loadedProduct.packMaterial || "");
+                setPackMaterialCustom(loadedProduct.packMaterialCustom || "");
+                setPackSizeUnit(loadedProduct.packSizeUnit || "sm");
+                setPackSizes({
+                    length: loadedProduct.packLength || "",
+                    width: loadedProduct.packWidth || "",
+                    height: loadedProduct.packHeight || "",
+                });
+                setIsFragile(loadedProduct.isFragile || "");
+                setWeight(loadedProduct.packWeight || "");
+                setWeightUnit(loadedProduct.packWeightUnit || "gram");
+
+                // Загрузка стоимости и системы лояльности
+                setCurrency(loadedProduct.currency || "RUB");
+                setPrice(loadedProduct.price || "");
+                setDiscounts(discountsFrom(loadedProduct, variationId || null));
+
+                // Загрузка складов / адресов отгрузки
+                setAddresses(pointsFrom(loadedProduct, variationId || null));
+
                 const kind = findKind(catalog, loadedProduct.kindCode);
                 const fields = kind?.characteristics || [];
                 const techFields = flow.stabilized
@@ -588,19 +685,24 @@ const Add = forwardRef(function Add(_props, ref) {
                     setTechCustomUnits(techUnits);
 
                     const knownTechCodes = new Set(techFields.map((item) => item.code));
-                    setCustomRows(
-                        normalizeCustomRows(
+                    const variationValues = variation.values || [];
+                    const nextBySection = {};
+                    for (const key of EXTRA_SECTION_KEYS) {
+                        nextBySection[key] = normalizeCustomRows(
                             customRowsFromValues(
-                                (variation.values || []).filter(
+                                variationValues.filter(
                                     (item) =>
                                         item.code?.startsWith(CUSTOM_CODE_PREFIX) &&
-                                        !knownTechCodes.has(item.code),
+                                        !knownTechCodes.has(item.code) &&
+                                        (item.section === key ||
+                                            (!item.section && key === "functional")),
                                 ),
-                                { variationId },
+                                { variationId, section: key },
                                 catalog.unitGroups,
                             ),
-                        ),
-                    );
+                        );
+                    }
+                    setCustomRowsBySection(nextBySection);
                     setLogo(
                         (loadedProduct.files || []).find(
                             (file) =>
@@ -637,20 +739,25 @@ const Add = forwardRef(function Add(_props, ref) {
                     setSpecs(next);
 
                     const knownTechCodes = new Set(techFields.map((item) => item.code));
-                    setCustomRows(
-                        normalizeCustomRows(
+                    const productValues = loadedProduct.values || [];
+                    const nextBySection = {};
+                    for (const key of EXTRA_SECTION_KEYS) {
+                        nextBySection[key] = normalizeCustomRows(
                             customRowsFromValues(
-                                (loadedProduct.values || []).filter(
+                                productValues.filter(
                                     (item) =>
                                         !item.variationId &&
                                         item.code?.startsWith(CUSTOM_CODE_PREFIX) &&
-                                        !knownTechCodes.has(item.code),
+                                        !knownTechCodes.has(item.code) &&
+                                        (item.section === key ||
+                                            (!item.section && key === "functional")),
                                 ),
-                                {},
+                                { section: key },
                                 catalog.unitGroups,
                             ),
-                        ),
-                    );
+                        );
+                    }
+                    setCustomRowsBySection(nextBySection);
                     const techValues = {};
                     const techUnits = {};
                     for (const field of techFields) {
@@ -735,6 +842,87 @@ const Add = forwardRef(function Add(_props, ref) {
         }
     };
 
+    const handleDiscountChange = (index, field, value) => {
+        setDiscounts((prev) =>
+            prev.map((item, i) =>
+                i === index ? { ...item, [field]: value } : item,
+            ),
+        );
+    };
+
+    const toggleDiscount = (index) => {
+        setDiscounts((prev) =>
+            prev.map((item, i) =>
+                i === index ? { ...item, enabled: !item.enabled } : item,
+            ),
+        );
+    };
+
+    /* ---------- Обработчики адресов отгрузки ---------- */
+    const handleNewAddressChange = (field, value) => {
+        setNewAddress((prev) => ({ ...prev, [field]: value }));
+    };
+
+    const closeAddressForm = () => {
+        setNewAddress(blankWarehouse());
+        setEditingId(null);
+        setShowForm(false);
+    };
+
+    const handleSaveAddress = () => {
+        const addressString = composeAddress(newAddress);
+        const stored = {
+            address: addressString,
+            name: newAddress.name,
+            postalCode: newAddress.index,
+            region: newAddress.region,
+            city: newAddress.city,
+            street: newAddress.street,
+            house: newAddress.house,
+            office: newAddress.office,
+        };
+
+        setAddresses((prev) => {
+            if (editingId == null) {
+                return [...prev, { id: Date.now(), active: true, quantity: "", ...stored }];
+            }
+            return prev.map((item) =>
+                item.id === editingId ? { ...item, ...stored } : item,
+            );
+        });
+        closeAddressForm();
+    };
+
+    const toggleAddress = (id) => {
+        setAddresses((prev) =>
+            prev.map((a) => (a.id === id ? { ...a, active: !a.active } : a)),
+        );
+    };
+
+    const handleQuantityChange = (id, value) => {
+        setAddresses((prev) =>
+            prev.map((a) => (a.id === id ? { ...a, quantity: value } : a)),
+        );
+    };
+
+    const openNewAddress = () => {
+        if (showForm && editingId == null) {
+            closeAddressForm();
+            return;
+        }
+        setEditingId(null);
+        setNewAddress(blankWarehouse());
+        setShowForm(true);
+    };
+
+    const editAddress = (id) => {
+        const current = addresses.find((item) => item.id === id);
+        if (!current) return;
+        setNewAddress(warehouseFormFrom(current));
+        setEditingId(id);
+        setShowForm(true);
+    };
+
     const kind = findKind(catalog, kindCode);
     const groups = buildGroups(kind);
     const mainGroup = groups.find((group) => group.name === "Основные");
@@ -768,9 +956,7 @@ const Add = forwardRef(function Add(_props, ref) {
     const isCustomFlow = resolveVariantFlow(product).mode === "custom";
     const showCustomVariantSetup = needsCustomVariantSetup(product);
 
-    const tabs = showCustomVariantSetup
-        ? TABS.filter((tab) => tab.key !== "tech")
-        : TABS;
+    const tabs = TABS;
     const currentIndex = tabs.findIndex((tab) => tab.key === activeTab);
     const charTabContext = {
         specs,
@@ -778,7 +964,7 @@ const Add = forwardRef(function Add(_props, ref) {
         weightFields,
         manufacturerFields,
         techGroups,
-        customRows,
+        customRowsBySection,
         productLine,
         logo,
     };
@@ -786,13 +972,6 @@ const Add = forwardRef(function Add(_props, ref) {
         panelFocus === "characteristics" || panelFocus === "both";
 
     const selectTab = (key) => {
-        if (key === "review") {
-            setActiveTab("review");
-            setVisitedTabs((prev) => markVisited(prev, "review"));
-            setPanelFocus("both");
-            setOpenDescriptionTick((prev) => prev + 1);
-            return;
-        }
         if (activeTab === key && charsPanelOpen) {
             setActiveTab(null);
             setPanelFocus(null);
@@ -810,15 +989,7 @@ const Add = forwardRef(function Add(_props, ref) {
 
     const handleDescriptionOpenChange = (open) => {
         if (open) {
-            if (activeTab === "review") {
-                setPanelFocus("both");
-                return;
-            }
             closeCharacteristicsForDescription();
-            return;
-        }
-        if (panelFocus === "both" && activeTab === "review") {
-            setPanelFocus("characteristics");
             return;
         }
         if (panelFocus === "description" || panelFocus === "both") {
@@ -840,7 +1011,7 @@ const Add = forwardRef(function Add(_props, ref) {
         loaded,
         productId,
         specs,
-        customRows,
+        customRowsBySection,
         productLine,
         techCustomValues,
         techCustomUnits,
@@ -907,6 +1078,40 @@ const Add = forwardRef(function Add(_props, ref) {
                 productLine: productLine.trim() || categorySnapshot.productLine || "",
             });
         }
+
+        // Сохранение упаковки
+        await productsApi.savePackaging(productId, {
+            packType,
+            packMaterial,
+            packMaterialCustom,
+            packSizeUnit,
+            packLength: packSizes.length,
+            packWidth: packSizes.width,
+            packHeight: packSizes.height,
+            isFragile,
+            packWeight: weight,
+            packWeightUnit: weightUnit,
+        });
+
+        // Сохранение стоимости и системы лояльности
+        await productsApi.savePrice(productId, {
+            variationId: variationId || null,
+            currency,
+            price,
+            discounts: discounts.map((item) => ({
+                enabled: item.enabled,
+                from: item.from,
+                to: item.to,
+                value: item.value,
+            })),
+        });
+
+        // Сохранение складов / адресов отгрузки
+        await productsApi.saveShipments(productId, {
+            variationId: variationId || null,
+            items: pointsPayload(addresses),
+        });
+
         const latest = variationId ? await productsApi.get(productId) : null;
         const variation =
             variationId && latest
@@ -935,8 +1140,11 @@ const Add = forwardRef(function Add(_props, ref) {
                     String(techCustomUnits[field.code] || field.unit || "").trim() ||
                     null,
             })),
-            ...serializeCustomRows(customRows).filter(
-                (row) => !techCodes.has(row.code),
+            // Дополнительные характеристики из блоков «Иное» каждой секции
+            ...EXTRA_SECTION_KEYS.flatMap((sectionKey) =>
+                serializeCustomRows(getSectionCustomRows(sectionKey))
+                    .filter((row) => !techCodes.has(row.code))
+                    .map((row) => ({ ...row, section: sectionKey })),
             ),
         ];
         if (variationId) {
@@ -1094,6 +1302,18 @@ const Add = forwardRef(function Add(_props, ref) {
                 />
             ));
 
+    /* Универсальный блок «Иное» для разделов */
+    const renderSectionOther = (sectionKey) => (
+        <>
+            <h3 className="qw chars-subsection-title">Иное</h3>
+            <CustomCharacteristicsBlock
+                rows={getSectionCustomRows(sectionKey)}
+                unitGroups={catalog?.unitGroups}
+                onChange={(rows) => setSectionCustomRows(sectionKey, rows)}
+            />
+        </>
+    );
+
     const renderSection = (key) => {
         // 1. Идентификация
         if (key === "identification") {
@@ -1136,8 +1356,9 @@ const Add = forwardRef(function Add(_props, ref) {
                             checkbox={
                                 field.code === "model"
                                     ? {
-                                        checked: nameFeatureCodes.includes(field.code),
-                                        onChange: () => toggleNameFeature(field.code),
+                                        checked: true,
+                                        disabled: true,
+                                        onChange: () => { },
                                     }
                                     : undefined
                             }
@@ -1454,6 +1675,8 @@ const Add = forwardRef(function Add(_props, ref) {
                             onChange: () => toggleNameFeature("energyClass"),
                         }}
                     />
+
+                    {renderSectionOther("functional")}
                 </>
             );
         }
@@ -1676,6 +1899,8 @@ const Add = forwardRef(function Add(_props, ref) {
                                 </div>
                             );
                         })}
+
+                    {renderSectionOther("technical")}
                 </>
             );
         }
@@ -1779,6 +2004,8 @@ const Add = forwardRef(function Add(_props, ref) {
                         onChange={(patch) => updateSpec("season", patch)}
                         checkbox={{ checked: nameFeatureCodes.includes("season"), onChange: () => toggleNameFeature("season") }}
                     />
+
+                    {renderSectionOther("affiliation")}
                 </>
             );
         }
@@ -1999,6 +2226,8 @@ const Add = forwardRef(function Add(_props, ref) {
                         onChange={(patch) => updateSpec("maxPower", patch)}
                         checkbox={{ checked: nameFeatureCodes.includes("maxPower"), onChange: () => toggleNameFeature("maxPower") }}
                     />
+
+                    {renderSectionOther("power")}
                 </>
             );
         }
@@ -2066,6 +2295,8 @@ const Add = forwardRef(function Add(_props, ref) {
                             ))}
                         </div>
                     </div>
+
+                    {renderSectionOther("display")}
                 </>
             );
         }
@@ -2342,6 +2573,8 @@ const Add = forwardRef(function Add(_props, ref) {
                         onChange={(patch) => updateSpec("portType", patch)}
                         checkbox={{ checked: nameFeatureCodes.includes("portType"), onChange: () => toggleNameFeature("portType") }}
                     />
+
+                    {renderSectionOther("system")}
                 </>
             );
         }
@@ -2364,6 +2597,7 @@ const Add = forwardRef(function Add(_props, ref) {
                             }}
                         />
                     ))}
+                    {key === "material" && renderSectionOther("material")}
                 </>
             );
         }
@@ -2376,9 +2610,6 @@ const Add = forwardRef(function Add(_props, ref) {
     };
 
     const visibleDocFields = getVisibleDocumentFields(product, requiredFields);
-    const uploadedDocs = visibleDocFields
-        .map(([name, label]) => ({ name, label, file: docs[name] }))
-        .filter((item) => item.file);
 
     const requiredDocFields = visibleDocFields.filter(([name]) =>
         requiredFields.has(name),
@@ -2387,6 +2618,13 @@ const Add = forwardRef(function Add(_props, ref) {
         ([name]) => !requiredFields.has(name),
     );
 
+    const uploadedRequiredDocs = requiredDocFields
+        .map(([name, label]) => ({ name, label, file: docs[name] }))
+        .filter((item) => item.file);
+
+    const uploadedOptionalDocs = optionalDocFields
+        .map(([name, label]) => ({ name, label, file: docs[name] }))
+        .filter((item) => item.file);
     const renderDocField = ([name, label, placeholder]) => (
         <div className="field" key={name}>
             <label className="label">{label}</label>
@@ -2443,15 +2681,10 @@ const Add = forwardRef(function Add(_props, ref) {
     return (
         <>
             <div
-                className={`container add-page stage7-page stage24-page stage23-page${phase === "review" ? " stage23-page--review" : ""}`}
+                className={`container add-page stage7-page stage24-page stage23-page stage9-page stage10-page${phase === "review" ? " stage23-page--review" : ""}`}
             >
                 <h1 className="title">
-                    {variantFillStageHeading(
-                        7,
-                        "Создание модели (параметра)",
-                        product,
-                        productId,
-                    )}
+                    Этап 4 - Создание модели (параметра)
                 </h1>
 
                 {!productId && (
@@ -2492,47 +2725,78 @@ const Add = forwardRef(function Add(_props, ref) {
                 {openDocsGroup === "required" && requiredDocFields.length > 0 && (
                     <div className="docs-body form">
                         {requiredDocFields.map(renderDocField)}
+
+                        {uploadedRequiredDocs.length > 0 && (
+                            <div className="uploaded-docs">
+                                <h3 className="uploaded-docs__title">Загруженные документы</h3>
+                                <div className="uploaded-docs__list">
+                                    {uploadedRequiredDocs.map(({ name, label, file }) => (
+                                        <div className="file-card-row" key={name}>
+                                            <div className="file-card">
+                                                <span className="file-card__icon">📄</span>
+                                                <span className="file-card__name">{label}</span>
+                                                <button
+                                                    type="button"
+                                                    className="file-card__remove"
+                                                    onClick={() => handleDocFileRemove(name)}
+                                                    title="Удалить"
+                                                >
+                                                    ✕
+                                                </button>
+                                            </div>
+                                            <a
+                                                className="file-card__download"
+                                                href={file.url}
+                                                download={file.name}
+                                            >
+                                                Скачать
+                                            </a>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 )}
 
                 {openDocsGroup === "optional" && optionalDocFields.length > 0 && (
                     <div className="docs-body form">
                         {optionalDocFields.map(renderDocField)}
-                    </div>
-                )}
 
-                {uploadedDocs.length > 0 && (
-                    <div className="uploaded-docs">
-                        <h3 className="uploaded-docs__title">Загруженные документы</h3>
-                        <div className="uploaded-docs__list">
-                            {uploadedDocs.map(({ name, label, file }) => (
-                                <div className="file-card-row" key={name}>
-                                    <div className="file-card">
-                                        <span className="file-card__icon">📄</span>
-                                        <span className="file-card__name">{label}</span>
-                                        <button
-                                            type="button"
-                                            className="file-card__remove"
-                                            onClick={() => handleDocFileRemove(name)}
-                                            title="Удалить"
-                                        >
-                                            ✕
-                                        </button>
-                                    </div>
-                                    <a
-                                        className="file-card__download"
-                                        href={file.url}
-                                        download={file.name}
-                                    >
-                                        Скачать
-                                    </a>
+                        {uploadedOptionalDocs.length > 0 && (
+                            <div className="uploaded-docs">
+                                <h3 className="uploaded-docs__title">Загруженные документы</h3>
+                                <div className="uploaded-docs__list">
+                                    {uploadedOptionalDocs.map(({ name, label, file }) => (
+                                        <div className="file-card-row" key={name}>
+                                            <div className="file-card">
+                                                <span className="file-card__icon">📄</span>
+                                                <span className="file-card__name">{label}</span>
+                                                <button
+                                                    type="button"
+                                                    className="file-card__remove"
+                                                    onClick={() => handleDocFileRemove(name)}
+                                                    title="Удалить"
+                                                >
+                                                    ✕
+                                                </button>
+                                            </div>
+                                            <a
+                                                className="file-card__download"
+                                                href={file.url}
+                                                download={file.name}
+                                            >
+                                                Скачать
+                                            </a>
+                                        </div>
+                                    ))}
                                 </div>
-                            ))}
-                        </div>
+                            </div>
+                        )}
                     </div>
                 )}
 
-                <div className="matches-divider stage23-bundle-divider" />
+                {/* <div className="matches-divider stage23-bundle-divider" /> */}
 
                 <h2 className="stage2-section-title">
                     Характеристики модели (параметра)
@@ -2585,10 +2849,9 @@ const Add = forwardRef(function Add(_props, ref) {
                                     Технические, физические и функциональные характеристики модели
                                 </h2>
                                 <p className="stage23-subtitle-line">
-                                    Ознакомьтесь с разделами и заполните значения характеристик, которые
+                                    Заполните значения характеристик, которые
                                     соответствуют модели (параметру).<br />
-                                    Во время заполнения выберите 2 характеристики, которые будут
-                                    отображаться в наименовании модели (параметра).
+                                    
                                 </p>
 
                                 <p className="stage23-subtitle-line">
@@ -2601,8 +2864,7 @@ const Add = forwardRef(function Add(_props, ref) {
                                     <span className="field-checkbox field-checkbox--hint" aria-hidden="true">
                                         <input type="checkbox" checked readOnly tabIndex={-1} />
                                     </span>
-                                    Отметьте галочкой характеристики — они попадут в
-                                    наименование модели (параметра).
+                                    Отметьте галочкой характеристики, которые будут отображаться в наименовании модели (параметра).
                                 </p>
 
                                 {CHARACTERISTIC_SECTIONS.map((section) => (
@@ -2618,7 +2880,7 @@ const Add = forwardRef(function Add(_props, ref) {
 
                         {charsPanelOpen && activeTab === "dimensions" && (
                             <div className="form">
-                                <h2 className="stage24-section-title">Наименование модели</h2>
+                                <h2 className="stage24-section-title">Наименование модели (параметра)</h2>
                                 <p className="stage23-subtitle-line">
                                     Посмотрите наименование модели (параметра).
                                 </p>
@@ -2629,76 +2891,44 @@ const Add = forwardRef(function Add(_props, ref) {
                                     </span>
                                     <span className="required-mark-slot" aria-hidden="true" />
                                     <span className="field-name">Наименование модели</span>
-                                    <input
-                                        type="text"
-                                        className="field-input"
-                                        value="Наименование линейки + Модель + 1 характеристика + 2 характеристика"
-                                        readOnly
-                                    />
+                                    <span className="field-text">
+                                        (Наименование линейки + Модель + 1 характеристика + 2 характеристика)
+                                    </span>
                                 </div>
+
+                                <p className="uui">
+                                    Удалите выбранные характеристики или выберите другие в разделе
+                                    "Технические, физические и функциональные характеристики модели"
+                                </p>
 
                                 <div className="field-row">
                                     <button
                                         type="button"
                                         title="Удалить"
-                                        style={{
-                                            width: 28,
-                                            height: 28,
-                                            border: "none",
-                                            background: "transparent",
-                                            color: "red",
-                                            fontSize: 18,
-                                            fontWeight: 700,
-                                            cursor: "pointer",
-                                            display: "inline-flex",
-                                            alignItems: "center",
-                                            justifyContent: "center",
-                                            borderRadius: "50%",
-                                            flexShrink: 0,
-                                        }}
+                                        className="field-row__remove"
                                     >
                                         ✕
                                     </button>
                                     <span className="required-mark-slot" aria-hidden="true" />
                                     <span className="field-name">1 характеристика</span>
-                                    <input
-                                        type="text"
-                                        className="field-input"
-                                        placeholder="Введите значение"
-                                        readOnly
-                                    />
+                                    <span className="field-text">
+                                        {specs.model?.value || "Значение"}
+                                    </span>
                                 </div>
 
                                 <div className="field-row">
                                     <button
                                         type="button"
                                         title="Удалить"
-                                        style={{
-                                            width: 28,
-                                            height: 28,
-                                            border: "none",
-                                            background: "transparent",
-                                            color: "red",
-                                            fontSize: 18,
-                                            fontWeight: 700,
-                                            cursor: "pointer",
-                                            display: "inline-flex",
-                                            alignItems: "center",
-                                            justifyContent: "center",
-                                            borderRadius: "50%",
-                                            flexShrink: 0,
-                                        }}
+                                        className="field-row__remove"
                                     >
                                         ✕
                                     </button>
                                     <span className="required-mark-slot" aria-hidden="true" />
                                     <span className="field-name">2 характеристика</span>
-                                    <input
-                                        type="text"
-                                        className="field-input"
-                                        placeholder="Введите значение"
-                                        readOnly
-                                    />
+                                    <span className="field-text">
+                                        {specs.color?.value || "Значение "}
+                                    </span>
                                 </div>
                             </div>
                         )}
@@ -2763,521 +2993,655 @@ const Add = forwardRef(function Add(_props, ref) {
                         {charsPanelOpen && activeTab === "garant" && (
                             <div className="form">
                                 <h2 className="stage24-section-title">
-                                    Гарантийные обязательства
+                                    Упаковка модели (параметра)
                                 </h2>
                                 <p className="stage23-subtitle-line">
-                                    Укажите гарантийный срок эксплуатации и срок службы продукта:
+                                    Добавьте описание заводской упаковки, в которой продукт
+                                    поступает к покупателю.
                                 </p>
 
-                                {WARRANTY_FIELDS.map((wf) => {
-                                    const spec = specs[wf.code] || {
-                                        value: "",
-                                        customValue: "",
-                                        unit: wf.defaultUnit,
-                                    };
-                                    return (
-                                        <div
-                                            className={`field-row ${wf.required ? "field-row--required" : ""}`}
-                                            key={wf.code}
-                                        >
-                                            <span className="info-icon" title={wf.hint}>
-                                                ⓘ
-                                            </span>
-                                            <span className="required-mark-slot">
-                                                {wf.required && (
-                                                    <span className="required-mark">✱</span>
-                                                )}
-                                            </span>
-                                            <span className="field-name">{wf.name}</span>
+                                <div className="section">
+                                    <h3 className="chars-subsection-title">
+                                        Укажите вид упаковки:
+                                    </h3>
+
+                                    <div className="radio-row">
+                                        <label className="radio-label">
                                             <input
-                                                type="number"
-                                                min="0"
-                                                step="1"
-                                                className="field-input"
-                                                placeholder="Введите число"
-                                                value={spec.value || ""}
+                                                type="radio"
+                                                name="packType"
+                                                value="box"
+                                                checked={packType === "box"}
+                                                onChange={() => {
+                                                    setPackType("box");
+                                                    setPackMaterial("");
+                                                }}
+                                            />
+                                            <span>Коробка</span>
+                                        </label>
+                                        <PackTypeHint packType="box" />
+                                    </div>
+
+                                    <div className="radio-row">
+                                        <label className="radio-label">
+                                            <input
+                                                type="radio"
+                                                name="packType"
+                                                value="case"
+                                                checked={packType === "case"}
+                                                onChange={() => {
+                                                    setPackType("case");
+                                                    setPackMaterial("");
+                                                }}
+                                            />
+                                            <span>Футляр</span>
+                                        </label>
+                                        <PackTypeHint packType="case" />
+                                    </div>
+
+                                    <div className="radio-row">
+                                        <label className="radio-label">
+                                            <input
+                                                type="radio"
+                                                name="packType"
+                                                value="blister"
+                                                checked={packType === "blister"}
+                                                onChange={() => {
+                                                    setPackType("blister");
+                                                    setPackMaterial("");
+                                                }}
+                                            />
+                                            <span>Блистер</span>
+                                        </label>
+                                        <PackTypeHint packType="blister" />
+                                    </div>
+                                </div>
+
+                                <div className="section">
+                                    <h3 className="chars-subsection-title">
+                                        Укажите материал упаковки:
+                                    </h3>
+                                    {!packType && (
+                                        <p className="material-hint">
+                                            Сначала выберите вид упаковки выше
+                                        </p>
+                                    )}
+
+                                    {packType === "box" && (
+                                        <div className="material-buttons">
+                                            <button
+                                                type="button"
+                                                className={`material-btn ${packMaterial === "cardboard" ? "material-btn--active" : ""}`}
+                                                onClick={() => setPackMaterial("cardboard")}
+                                            >
+                                                Картон
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className={`material-btn ${packMaterial === "plastic" ? "material-btn--active" : ""}`}
+                                                onClick={() => setPackMaterial("plastic")}
+                                            >
+                                                Пластик
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className={`material-btn ${packMaterial === "other" ? "material-btn--active" : ""}`}
+                                                onClick={() => setPackMaterial("other")}
+                                            >
+                                                Иное
+                                            </button>
+                                            {packMaterial === "other" && (
+                                                <input
+                                                    type="text"
+                                                    className="material-input"
+                                                    placeholder="Введите своё значение"
+                                                    value={packMaterialCustom}
+                                                    onChange={(event) =>
+                                                        setPackMaterialCustom(event.target.value)
+                                                    }
+                                                />
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {packType === "case" && (
+                                        <div className="material-buttons">
+                                            <button
+                                                type="button"
+                                                className={`material-btn ${packMaterial === "hdpe" ? "material-btn--active" : ""}`}
+                                                onClick={() => setPackMaterial("hdpe")}
+                                            >
+                                                Полиэтилен высокой плотности
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className={`material-btn ${packMaterial === "plastic" ? "material-btn--active" : ""}`}
+                                                onClick={() => setPackMaterial("plastic")}
+                                            >
+                                                Пластик
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className={`material-btn ${packMaterial === "nylon" ? "material-btn--active" : ""}`}
+                                                onClick={() => setPackMaterial("nylon")}
+                                            >
+                                                Нейлон
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className={`material-btn ${packMaterial === "other" ? "material-btn--active" : ""}`}
+                                                onClick={() => setPackMaterial("other")}
+                                            >
+                                                Иное
+                                            </button>
+                                            {packMaterial === "other" && (
+                                                <input
+                                                    type="text"
+                                                    className="material-input"
+                                                    placeholder="Введите своё значение"
+                                                    value={packMaterialCustom}
+                                                    onChange={(event) =>
+                                                        setPackMaterialCustom(event.target.value)
+                                                    }
+                                                />
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {packType === "blister" && (
+                                        <div className="material-buttons">
+                                            <button
+                                                type="button"
+                                                className={`material-btn ${packMaterial === "hdpe" ? "material-btn--active" : ""}`}
+                                                onClick={() => setPackMaterial("hdpe")}
+                                            >
+                                                Полиэтилен высокой плотности
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className={`material-btn ${packMaterial === "pet" ? "material-btn--active" : ""}`}
+                                                onClick={() => setPackMaterial("pet")}
+                                            >
+                                                Полиэтилентерефталат
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className={`material-btn ${packMaterial === "pvc" ? "material-btn--active" : ""}`}
+                                                onClick={() => setPackMaterial("pvc")}
+                                            >
+                                                Поливинилхлорид
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className={`material-btn ${packMaterial === "other" ? "material-btn--active" : ""}`}
+                                                onClick={() => setPackMaterial("other")}
+                                            >
+                                                Иное
+                                            </button>
+                                            {packMaterial === "other" && (
+                                                <input
+                                                    type="text"
+                                                    className="material-input"
+                                                    placeholder="Введите своё значение"
+                                                    value={packMaterialCustom}
+                                                    onChange={(event) =>
+                                                        setPackMaterialCustom(event.target.value)
+                                                    }
+                                                />
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div>
+                                    <h3>Хрупкий продукт</h3>
+                                    <div className="radio-group">
+                                        <label className="radio-label">
+                                            <input
+                                                type="radio"
+                                                name="isFragile"
+                                                value="yes"
+                                                checked={isFragile === "yes"}
+                                                onChange={(event) => setIsFragile(event.target.value)}
+                                            />
+                                            <span>Да</span>
+                                        </label>
+                                        <label className="radio-label">
+                                            <input
+                                                type="radio"
+                                                name="isFragile"
+                                                value="no"
+                                                checked={isFragile === "no"}
+                                                onChange={(event) => setIsFragile(event.target.value)}
+                                            />
+                                            <span>Нет</span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <h3>Вес продукта в упаковке</h3>
+                                    <div className="weight-row">
+                                        <input
+                                            type="text"
+                                            className="dimension-input"
+                                            placeholder="Значение"
+                                            value={weight}
+                                            onChange={(event) => setWeight(event.target.value)}
+                                        />
+                                        <select
+                                            className="dimension-select"
+                                            value={weightUnit}
+                                            onChange={(event) => setWeightUnit(event.target.value)}
+                                        >
+                                            <option value="gram">Грамм</option>
+                                            <option value="kilogram">Килограмм</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                {/* <div className="section">
+                                    <h3 className="chars-subsection-title">
+                                        Укажите внешние размеры упаковки (длина x ширина x высота):
+                                    </h3>
+                                    {["length", "width", "height"].map((name) => (
+                                        <div className="dimension-row" key={name}>
+                                            <label className="dimension-label">
+                                                {name === "length"
+                                                    ? "Длина"
+                                                    : name === "width"
+                                                        ? "Ширина"
+                                                        : "Высота"}
+                                            </label>
+                                            <input
+                                                type="text"
+                                                className="dimension-input"
+                                                value={packSizes[name]}
                                                 onChange={(event) =>
-                                                    updateSpec(wf.code, { value: event.target.value })
+                                                    setPackSizes((prev) => ({
+                                                        ...prev,
+                                                        [name]: event.target.value,
+                                                    }))
+                                                }
+                                            />
+                                            <span className="dimension-unit">
+                                                {packSizeUnit === "sm"
+                                                    ? "сантиметров"
+                                                    : "миллиметров"}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div> */}
+
+                                <div className="section">
+                                    <h3 className="chars-subsection-title">
+                                        Укажите внешние размеры упаковки (длина x ширина x высота):
+                                    </h3>
+                                    {["length", "width", "height"].map((name) => (
+                                        <div className="dimension-row" key={name}>
+                                            <label className="dimension-label">
+                                                {name === "length"
+                                                    ? "Длина"
+                                                    : name === "width"
+                                                        ? "Ширина"
+                                                        : "Высота"}
+                                            </label>
+                                            <input
+                                                type="text"
+                                                className="dimension-input"
+                                                value={packSizes[name]}
+                                                onChange={(event) =>
+                                                    setPackSizes((prev) => ({
+                                                        ...prev,
+                                                        [name]: event.target.value,
+                                                    }))
                                                 }
                                             />
                                             <select
-                                                className="field-select"
-                                                value={spec.unit || wf.defaultUnit}
-                                                onChange={(event) =>
-                                                    updateSpec(wf.code, { unit: event.target.value })
-                                                }
+                                                className="dimension-select"
+                                                value={packSizeUnit}
+                                                onChange={(event) => setPackSizeUnit(event.target.value)}
                                             >
-                                                {TIME_UNITS.map((u) => (
-                                                    <option key={u.value} value={u.value}>
-                                                        {u.label}
-                                                    </option>
-                                                ))}
+                                                <option value="sm">Сантиметры</option>
+                                                <option value="mm">Миллиметры</option>
                                             </select>
                                         </div>
-                                    );
-                                })}
+                                    ))}
+                                </div>
+
+                                <div className="section">
+                                    <h3 className="chars-subsection-title">
+                                        Добавьте фотографии упаковки продукта:
+                                    </h3>
+                                    {productId && (
+                                        <PhotoGallery
+                                            productId={productId}
+                                            role="package"
+                                            variationId={variationId || undefined}
+                                        />
+                                    )}
+                                </div>
                             </div>
                         )}
 
                         {charsPanelOpen && activeTab === "tech" && (
                             <div className="form">
                                 <h2 className="stage24-section-title">
-                                    Технические характеристики
+                                    Стоимость модели и система лояльности
                                 </h2>
                                 <p className="stage23-subtitle-line">
-                                    Заполните технические характеристики продукта:
+                                    Укажите стоимость модели и выберите систему лояльности
                                 </p>
 
-                                {techGroups.length === 0 && techCustomFields.length === 0 && (
-                                    <p className="paragraph">
-                                        Для выбранной категории технические характеристики не
-                                        заданы.
+                                {/* ===== Стоимость товара ===== */}
+                                <div className="section">
+                                    <h3 className="chars-subsection-title">
+                                        Стоимость модели
+                                    </h3>
+
+                                    <div className="price-row">
+                                        <label className="price-label">
+                                            Выберите валюту:
+                                        </label>
+
+                                        <div className="currency-group">
+                                            <button
+                                                type="button"
+                                                className={`currency-btn ${currency === "RUB" ? "currency-btn--active" : ""}`}
+                                                onClick={() => setCurrency("RUB")}
+                                            >
+                                                ₽ RUB
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className={`currency-btn ${currency === "CNY" ? "currency-btn--active" : ""}`}
+                                                onClick={() => setCurrency("CNY")}
+                                            >
+                                                ¥ CNY
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div className="price-row">
+                                        <label className="price-label">
+                                            Введите стоимость модели:
+                                        </label>
+                                        <div className="price-input-wrap">
+                                            <span className="price-symbol">
+                                                {CURRENCY_SYMBOLS[currency]}
+                                            </span>
+                                            <input
+                                                type="text"
+                                                className="price-input"
+                                                value={price}
+                                                onChange={(event) =>
+                                                    setPrice(event.target.value)
+                                                }
+                                                placeholder=""
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* ===== Система лояльности ===== */}
+                                <div className="section">
+                                    <h3 className="chars-subsection-title">
+                                        <span className="info-icon" title="Подсказка">
+                                            ⓘ
+                                        </span>
+                                        Система лояльности
+                                    </h3>
+
+                                    <p className="loyalty-subtitle">
+                                        1.Предоставить скидку от количества продукта
                                     </p>
-                                )}
-                                {techGroups.map((group) => (
-                                    <div key={group.name}>
-                                        <h3 className="subtitle subtitle--spaced">{group.name}</h3>
-                                        {renderFields(group.fields)}
-                                    </div>
-                                ))}
-                                {techCustomFields.length > 0 && (
-                                    <div>
-                                        {techGroups.length > 0 && (
-                                            <h3 className="subtitle subtitle--spaced">
-                                                Добавленные характеристики
-                                            </h3>
-                                        )}
-                                        {techCustomFields.map((field) => {
-                                            const units = allUnitOptions(catalog?.unitGroups);
-                                            const known = new Set(units.map((item) => item.value));
-                                            const currentUnit = String(
-                                                techCustomUnits[field.code] || field.unit || "",
-                                            ).trim();
-                                            const unitMode =
-                                                currentUnit && !known.has(currentUnit)
-                                                    ? "other"
-                                                    : "preset";
-                                            return (
-                                                <div
-                                                    className="field-row field-row--tech-custom"
-                                                    key={field.code}
-                                                >
-                                                    <span className="info-icon" title="Подсказка">
-                                                        ⓘ
-                                                    </span>
-                                                    <span className="required-mark-slot" aria-hidden="true" />
-                                                    <span className="field-name">{field.name}</span>
-                                                    <div className="tech-custom-control">
-                                                        <input
-                                                            type="text"
-                                                            className="field-input"
-                                                            placeholder="Значение"
-                                                            value={techCustomValues[field.code] || ""}
-                                                            onChange={(event) =>
-                                                                setTechCustomValues((prev) => ({
-                                                                    ...prev,
-                                                                    [field.code]: event.target.value,
-                                                                }))
-                                                            }
-                                                        />
-                                                        <select
-                                                            className="field-select"
-                                                            value={unitMode === "other" ? "other" : currentUnit}
-                                                            onChange={(event) => {
-                                                                const next = event.target.value;
-                                                                if (next === "other") {
-                                                                    setTechCustomUnits((prev) => ({
-                                                                        ...prev,
-                                                                        [field.code]:
-                                                                            currentUnit && !known.has(currentUnit)
-                                                                                ? currentUnit
-                                                                                : "",
-                                                                    }));
-                                                                    return;
-                                                                }
-                                                                setTechCustomUnits((prev) => ({
-                                                                    ...prev,
-                                                                    [field.code]: next,
-                                                                }));
-                                                            }}
-                                                        >
-                                                            <option value="">Единица измерения</option>
-                                                            {units.map((unit) => (
-                                                                <option key={unit.value} value={unit.value}>
-                                                                    {unit.label}
-                                                                </option>
-                                                            ))}
-                                                            <option value="other">Иное</option>
-                                                        </select>
-                                                        {unitMode === "other" && (
-                                                            <input
-                                                                type="text"
-                                                                className="field-input tech-custom-control__unit"
-                                                                placeholder="Своя единица"
-                                                                value={currentUnit}
-                                                                onChange={(event) =>
-                                                                    setTechCustomUnits((prev) => ({
-                                                                        ...prev,
-                                                                        [field.code]: event.target.value,
-                                                                    }))
-                                                                }
-                                                            />
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                )}
+
+                                    {discounts.map((discount, index) => (
+                                        <div
+                                            className={`loyalty-row${index === 0 ? " loyalty-row--first" : ""}`}
+                                            key={index}
+                                        >
+                                            <button
+                                                type="button"
+                                                className={`toggle ${discount.enabled ? "toggle--on" : ""}`}
+                                                onClick={() => toggleDiscount(index)}
+                                                title={discount.enabled ? "Выключить" : "Включить"}
+                                            >
+                                                <span className="toggle__knob" />
+                                            </button>
+
+                                            <div className="loyalty-row__content">
+                                                <span className="loyalty-text">
+                                                    При покупке от
+                                                </span>
+                                                <input
+                                                    type="text"
+                                                    className="loyalty-input loyalty-input--small"
+                                                    value={discount.from}
+                                                    onChange={(event) =>
+                                                        handleDiscountChange(
+                                                            index,
+                                                            "from",
+                                                            event.target.value,
+                                                        )
+                                                    }
+                                                    disabled={!discount.enabled}
+                                                />
+                                                <span className="loyalty-text">до</span>
+                                                <input
+                                                    type="text"
+                                                    className="loyalty-input loyalty-input--small"
+                                                    value={discount.to}
+                                                    onChange={(event) =>
+                                                        handleDiscountChange(
+                                                            index,
+                                                            "to",
+                                                            event.target.value,
+                                                        )
+                                                    }
+                                                    disabled={!discount.enabled}
+                                                />
+                                                <span className="loyalty-text">
+                                                    штук, стоимость за единицу продукта составит
+                                                </span>
+                                                <span className="loyalty-currency">
+                                                    {CURRENCY_SYMBOLS[currency]}
+                                                </span>
+                                                <input
+                                                    type="text"
+                                                    className="loyalty-input loyalty-input--price"
+                                                    value={discount.value}
+                                                    onChange={(event) =>
+                                                        handleDiscountChange(
+                                                            index,
+                                                            "value",
+                                                            event.target.value,
+                                                        )
+                                                    }
+                                                    disabled={!discount.enabled}
+                                                />
+                                                <span className="info-icon" title="Подсказка">
+                                                    ⓘ
+                                                </span>
+                                                {index === 0 && (
+                                                    <span className="required-mark">✱</span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
                         )}
 
                         {charsPanelOpen && activeTab === "custom" && (
                             <div className="form">
                                 <h2 className="stage24-section-title">
-                                    Добавьте характеристики
+                                    Доставка модели
                                 </h2>
                                 <p className="stage23-subtitle-line">
-                                    Заполните наименование характеристики, ее значение и
-                                    выберите единицу измерения:
+                                    Выберите склад и укажите количество продукта
+                                    на каждом складе
                                 </p>
 
-                                <CustomCharacteristicsBlock
-                                    rows={customRows}
-                                    unitGroups={catalog?.unitGroups}
-                                    onChange={setCustomRows}
-                                />
-                            </div>
-                        )}
+                                <button
+                                    className="add-address-btn"
+                                    type="button"
+                                    onClick={openNewAddress}
+                                >
+                                    <span className="add-address-btn__icon">＋</span>
+                                    <span className="add-address-btn__text">
+                                        Добавить адрес отгрузки
+                                    </span>
+                                </button>
 
-                        {charsPanelOpen && activeTab === "review" && (
-                            <div className="form">
-                                <h2 className="stage24-section-title">
-                                    Просмотр заполненных характеристик
-                                </h2>
-                                <p className="stage23-subtitle-line">
-                                    Проверьте значения перед отправкой:
-                                </p>
-
-                                {(() => {
-                                    const rows = [];
-                                    const brandField = mainFields.find((f) => f.code === "brand");
-                                    if (brandField) {
-                                        const text = formatSpecValue(
-                                            brandField,
-                                            specs[brandField.code],
-                                            catalog?.unitGroups,
-                                        );
-                                        if (text) {
-                                            rows.push({
-                                                label: FIELD_LABELS[brandField.code] || brandField.name,
-                                                value: text,
-                                            });
-                                        }
-                                    }
-                                    if (logo) {
-                                        rows.push({
-                                            label: "Логотип",
-                                            value: logo.name,
-                                            isImage: true,
-                                            imageUrl: logo.url,
-                                        });
-                                    }
-                                    if (productLine?.trim()) {
-                                        rows.push({
-                                            label: "Линейка продукции",
-                                            value: productLine.trim(),
-                                        });
-                                    }
-                                    for (const field of mainFieldsOrder(mainFields)) {
-                                        if (field.code === "brand") continue;
-                                        const text = formatSpecValue(
-                                            field,
-                                            specs[field.code],
-                                            catalog?.unitGroups,
-                                        );
-                                        if (text) {
-                                            rows.push({
-                                                label: FIELD_LABELS[field.code] || field.name,
-                                                value: text,
-                                            });
-                                        }
-                                    }
-                                    for (const field of weightFields) {
-                                        const text = formatSpecValue(
-                                            field,
-                                            specs[field.code],
-                                            catalog?.unitGroups,
-                                        );
-                                        if (text) {
-                                            rows.push({
-                                                label: FIELD_LABELS[field.code] || field.name,
-                                                value: text,
-                                            });
-                                        }
-                                    }
-                                    if (rows.length === 0) return null;
-                                    return (
-                                        <div className="review-block">
-                                            <h3 className="subtitle subtitle--spaced">Основные</h3>
-                                            <div className="review-list">
-                                                {rows.map((row, i) => (
-                                                    <div className="review-row" key={i}>
-                                                        <span className="review-row__label">
-                                                            {row.label}
-                                                        </span>
-                                                        <span className="review-row__value">
-                                                            {row.isImage ? (
-                                                                <img
-                                                                    src={row.imageUrl}
-                                                                    alt={row.value}
-                                                                    className="review-row__img"
-                                                                />
-                                                            ) : (
-                                                                row.value
-                                                            )}
-                                                        </span>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    );
-                                })()}
-
-                                {(() => {
-                                    const rows = [];
-                                    for (const field of dimensionsGroup?.fields || []) {
-                                        const text = formatSpecValue(
-                                            field,
-                                            specs[field.code],
-                                            catalog?.unitGroups,
-                                        );
-                                        if (text) {
-                                            rows.push({
-                                                label: FIELD_LABELS[field.code] || field.name,
-                                                value: text,
-                                            });
-                                        }
-                                    }
-                                    for (const field of weightFields) {
-                                        const text = formatSpecValue(
-                                            field,
-                                            specs[field.code],
-                                            catalog?.unitGroups,
-                                        );
-                                        if (text) {
-                                            rows.push({
-                                                label: FIELD_LABELS[field.code] || field.name,
-                                                value: text,
-                                            });
-                                        }
-                                    }
-                                    if (rows.length === 0) return null;
-                                    return (
-                                        <div className="review-block">
-                                            <h3 className="subtitle subtitle--spaced">
-                                                Габаритные размеры и вес
-                                            </h3>
-                                            <div className="review-list">
-                                                {rows.map((row, i) => (
-                                                    <div className="review-row" key={i}>
-                                                        <span className="review-row__label">
-                                                            {row.label}
-                                                        </span>
-                                                        <span className="review-row__value">
-                                                            {row.value}
-                                                        </span>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    );
-                                })()}
-
-                                {(() => {
-                                    const rows = [];
-                                    for (const field of (manufacturerGroup?.fields || []).filter(
-                                        (f) =>
-                                            f.code !== "brand" &&
-                                            f.code !== "warranty" &&
-                                            f.code !== "warrantyPeriod" &&
-                                            f.code !== "serviceLife",
-                                    )) {
-                                        const text = formatSpecValue(
-                                            field,
-                                            specs[field.code],
-                                            catalog?.unitGroups,
-                                        );
-                                        if (text) {
-                                            rows.push({
-                                                label: FIELD_LABELS[field.code] || field.name,
-                                                value: text,
-                                            });
-                                        }
-                                    }
-                                    if (rows.length === 0) return null;
-                                    return (
-                                        <div className="review-block">
-                                            <h3 className="subtitle subtitle--spaced">
-                                                Производитель
-                                            </h3>
-                                            <div className="review-list">
-                                                {rows.map((row, i) => (
-                                                    <div className="review-row" key={i}>
-                                                        <span className="review-row__label">
-                                                            {row.label}
-                                                        </span>
-                                                        <span className="review-row__value">
-                                                            {row.value}
-                                                        </span>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    );
-                                })()}
-
-                                {(() => {
-                                    const rows = [];
-                                    for (const wf of WARRANTY_FIELDS) {
-                                        const spec = specs[wf.code];
-                                        if (!spec || !String(spec.value || "").trim()) continue;
-                                        const unitLabel =
-                                            TIME_UNITS.find(
-                                                (u) => u.value === (spec.unit || wf.defaultUnit),
-                                            )?.label || "";
-                                        rows.push({
-                                            label: wf.name,
-                                            value: `${String(spec.value).trim()} ${unitLabel}`.trim(),
-                                        });
-                                    }
-                                    if (rows.length === 0) return null;
-                                    return (
-                                        <div className="review-block">
-                                            <h3 className="subtitle subtitle--spaced">
-                                                Гарантийные обязательства
-                                            </h3>
-                                            <div className="review-list">
-                                                {rows.map((row, i) => (
-                                                    <div className="review-row" key={i}>
-                                                        <span className="review-row__label">
-                                                            {row.label}
-                                                        </span>
-                                                        <span className="review-row__value">
-                                                            {row.value}
-                                                        </span>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    );
-                                })()}
-
-                                {(() => {
-                                    const rows = [];
-                                    for (const group of techGroups) {
-                                        for (const field of group.fields) {
-                                            const text = formatSpecValue(
-                                                field,
-                                                specs[field.code],
-                                                catalog?.unitGroups,
-                                            );
-                                            if (text) {
-                                                rows.push({
-                                                    label: FIELD_LABELS[field.code] || field.name,
-                                                    value: text,
-                                                    group: group.name,
-                                                });
+                                {/* Форма добавления нового адреса */}
+                                {showForm && (
+                                    <div className="address-form">
+                                        <input
+                                            type="text"
+                                            className="address-form__input"
+                                            placeholder="Наименование склада"
+                                            value={newAddress.name}
+                                            onChange={(e) =>
+                                                handleNewAddressChange("name", e.target.value)
                                             }
-                                        }
-                                    }
-                                    for (const field of techCustomFields) {
-                                        const text = displayCustomCharacteristic(
-                                            {
-                                                customValue: String(
-                                                    techCustomValues[field.code] || "",
-                                                ).trim(),
-                                                unit: String(
-                                                    techCustomUnits[field.code] || field.unit || "",
-                                                ).trim(),
-                                            },
-                                            catalog?.unitGroups,
-                                        );
-                                        if (text) {
-                                            rows.push({
-                                                label: field.name,
-                                                value: text,
-                                            });
-                                        }
-                                    }
-                                    if (rows.length === 0) return null;
-                                    return (
-                                        <div className="review-block">
-                                            <h3 className="subtitle subtitle--spaced">
-                                                Технические характеристики
-                                            </h3>
-                                            <div className="review-list">
-                                                {rows.map((row, i) => (
-                                                    <div className="review-row" key={i}>
-                                                        <span className="review-row__label">
-                                                            {row.label}
-                                                        </span>
-                                                        <span className="review-row__value">
-                                                            {row.value}
-                                                        </span>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    );
-                                })()}
+                                        />
+                                        <input
+                                            type="text"
+                                            className="address-form__input"
+                                            placeholder="Индекс"
+                                            value={newAddress.index}
+                                            onChange={(e) =>
+                                                handleNewAddressChange("index", e.target.value)
+                                            }
+                                        />
+                                        <input
+                                            type="text"
+                                            className="address-form__input"
+                                            placeholder="Область"
+                                            value={newAddress.region}
+                                            onChange={(e) =>
+                                                handleNewAddressChange("region", e.target.value)
+                                            }
+                                        />
+                                        <input
+                                            type="text"
+                                            className="address-form__input"
+                                            placeholder="Город"
+                                            value={newAddress.city}
+                                            onChange={(e) =>
+                                                handleNewAddressChange("city", e.target.value)
+                                            }
+                                        />
+                                        <input
+                                            type="text"
+                                            className="address-form__input"
+                                            placeholder="Улица"
+                                            value={newAddress.street}
+                                            onChange={(e) =>
+                                                handleNewAddressChange("street", e.target.value)
+                                            }
+                                        />
+                                        <input
+                                            type="text"
+                                            className="address-form__input"
+                                            placeholder="Дом"
+                                            value={newAddress.house}
+                                            onChange={(e) =>
+                                                handleNewAddressChange("house", e.target.value)
+                                            }
+                                        />
+                                        <input
+                                            type="text"
+                                            className="address-form__input"
+                                            placeholder="Офис"
+                                            value={newAddress.office}
+                                            onChange={(e) =>
+                                                handleNewAddressChange("office", e.target.value)
+                                            }
+                                        />
 
-                                {(() => {
-                                    const filled = (customRows || []).filter((row) => {
-                                        const name = (row.name || "").trim();
-                                        const value = (row.value || "").trim();
-                                        return name && value;
-                                    });
-                                    if (filled.length === 0) return null;
-                                    return (
-                                        <div className="review-block">
-                                            <h3 className="subtitle subtitle--spaced">
-                                                Дополнительные характеристики
-                                            </h3>
-                                            <div className="review-list">
-                                                {filled.map((row, i) => {
-                                                    const valueText = formatCustomRowDisplay(
-                                                        row,
-                                                        catalog?.unitGroups,
-                                                    );
-                                                    return (
-                                                        <div className="review-row" key={i}>
-                                                            <span className="review-row__label">
-                                                                {row.name}
-                                                            </span>
-                                                            <span className="review-row__value">
-                                                                {valueText}
-                                                            </span>
-                                                        </div>
-                                                    );
-                                                })}
-                                            </div>
+                                        <div className="address-form__actions">
+                                            <button
+                                                type="button"
+                                                className="address-form__btn address-form__btn--cancel"
+                                                onClick={closeAddressForm}
+                                                title="Отмена"
+                                            >
+                                                ✕
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className="address-form__btn address-form__btn--save"
+                                                onClick={handleSaveAddress}
+                                                title="Сохранить"
+                                            >
+                                                ✓
+                                            </button>
                                         </div>
-                                    );
-                                })()}
+                                    </div>
+                                )}
 
-                                {specs &&
-                                    Object.values(specs).every(
-                                        (v) => !v?.value?.trim() && !v?.customValue?.trim(),
-                                    ) &&
-                                    (!customRows || customRows.length === 0) &&
-                                    !logo &&
-                                    !productLine?.trim() && (
-                                        <p className="paragraph">
-                                            Пока ничего не заполнено. Вернитесь на предыдущие вкладки
-                                            и заполните характеристики.
-                                        </p>
-                                    )}
+                                {/* Список адресов */}
+                                <div className="address-list">
+                                    {addresses.map((item) => (
+                                        <div className="address-item" key={item.id}>
+                                            <button
+                                                type="button"
+                                                className={`toggle ${item.active ? "toggle--on" : ""}`}
+                                                onClick={() => toggleAddress(item.id)}
+                                                title={
+                                                    item.active ? "Выключить" : "Включить"
+                                                }
+                                            >
+                                                <span className="toggle__knob" />
+                                            </button>
+
+                                            <div className="address-body">
+                                                <div className="address-text">
+                                                    {item.address}
+                                                </div>
+
+                                                <div className="address-status">
+                                                    {item.active
+                                                        ? "Склад активный"
+                                                        : "Склад неактивный"}
+                                                </div>
+                                            </div>
+
+                                            <button
+                                                type="button"
+                                                className="address-edit"
+                                                onClick={() => editAddress(item.id)}
+                                                title="Редактировать"
+                                            >
+                                                ✎
+                                            </button>
+
+                                            {item.active && (
+                                                <div className="address-quantity">
+                                                    <span className="address-quantity__label">
+                                                        Количество товаров на складе:
+                                                    </span>
+                                                    <input
+                                                        type="text"
+                                                        className="address-quantity__input"
+                                                        value={item.quantity}
+                                                        onChange={(e) =>
+                                                            handleQuantityChange(
+                                                                item.id,
+                                                                e.target.value,
+                                                            )
+                                                        }
+                                                    />
+                                                    <span className="address-quantity__unit">
+                                                        штук
+                                                    </span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
                         )}
                     </>
@@ -3393,20 +3757,27 @@ const Add = forwardRef(function Add(_props, ref) {
                                         )}
                                 </div>
                             ))}
-                            <CustomCharacteristicsBlock
-                                rows={customRows}
-                                unitGroups={catalog?.unitGroups}
-                                onChange={setCustomRows}
-                            />
+                            {EXTRA_SECTION_KEYS.map((sectionKey) => (
+                                <div key={sectionKey}>
+                                    <h3 className="qw chars-subsection-title">Иное</h3>
+                                    <CustomCharacteristicsBlock
+                                        rows={getSectionCustomRows(sectionKey)}
+                                        unitGroups={catalog?.unitGroups}
+                                        onChange={(rows) =>
+                                            setSectionCustomRows(sectionKey, rows)
+                                        }
+                                    />
+                                </div>
+                            ))}
                         </div>
                     </>
                 )}
 
                 <p className="modal-sheet__subhint nm"></p>
 
-                {showCustomVariantSetup && (
+                {showCustomVariantSetup && categorySnapshot?.kindCode && categorySnapshot.kindCode !== "other" && (
                     <>
-                        <div className="matches-divider stage23-bundle-divider" />
+                        {/* <div className="matches-divider stage23-bundle-divider" /> */}
                         <Stage25
                             ref={axisRef}
                             embedded
@@ -3414,12 +3785,12 @@ const Add = forwardRef(function Add(_props, ref) {
                             onSelectionChange={handleAxisSelectionChange}
                             onNameOptionsChange={handleNameOptionsChange}
                         />
-                        <div className="matches-divider stage23-bundle-divider" />
+                        {/* <div className="matches-divider stage23-bundle-divider" /> */}
                         <Stage26 ref={nameRef} embedded previewOptions={nameOptions} />
                     </>
                 )}
 
-                <div className="matches-divider stage23-bundle-divider" />
+                {/* <div className="matches-divider stage23-bundle-divider" /> */}
                 <Stage24
                     ref={descriptionRef}
                     embedded
@@ -3429,35 +3800,37 @@ const Add = forwardRef(function Add(_props, ref) {
                     onDescriptionInteract={closeCharacteristicsForDescription}
                 />
             </div>
-
-            <BottomBar
-                current={fillProgressStep(7, product, productId)}
-                total={fillProgressTotal(product, productId) || VARIANT_FILL_STAGE_COUNT}
-                prevPath="/stage22"
-                nextPath="/stage22"
-                onSave={async () => {
-                    await persist();
-                    setCharsRefreshKey((prev) => prev + 1);
-                    let savedVariationId = variationId;
-                    if (showCustomVariantSetup && axisPreview.length > 0) {
-                        savedVariationId =
-                            (await axisRef.current?.save?.()) || savedVariationId;
-                        if (savedVariationId && productId) {
-                            const next = new URLSearchParams(location.search);
-                            next.set("id", productId);
-                            next.set("variationId", savedVariationId);
-                            navigate(
-                                { pathname: location.pathname, search: `?${next.toString()}` },
-                                { replace: true },
-                            );
-                        }
-                        await nameRef.current?.save?.(savedVariationId);
-                    }
-                    await descriptionRef.current?.save?.();
-                }}
-            />
-        </>
-    );
-});
+                        <BottomBar
+                            current={4}
+                            total={4}
+                            prevPath="/stage22"
+                            nextPath="/stage22"
+                            onSave={async () => {
+                                await persist();
+                                setCharsRefreshKey((prev) => prev + 1);
+                                let savedVariationId = variationId;
+                                if (showCustomVariantSetup && axisPreview.length > 0) {
+                                    savedVariationId =
+                                        (await axisRef.current?.save?.()) || savedVariationId;
+                                    if (savedVariationId && productId) {
+                                        const next = new URLSearchParams(location.search);
+                                        next.set("id", productId);
+                                        next.set("variationId", savedVariationId);
+                                        navigate(
+                                            { pathname: location.pathname, search: `?${next.toString()}` },
+                                            { replace: true },
+                                        );
+                                    }
+                                    await nameRef.current?.save?.(savedVariationId);
+                                }
+                                await descriptionRef.current?.save?.();
+                            }}
+                            // previewPath="/stage22"
+                            // managePath="/products"
+                            homeIconSrc="../images/Home.png"
+                        />
+                    </>
+                );
+            });
 
 export default Add;

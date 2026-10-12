@@ -8,6 +8,7 @@ import { formatVariantParameterLabel } from "../variantAxisDisplay";
 import { setProductWizard } from "../stageProgress";
 import { skipsVariantParamStage } from "../variantFlow";
 import "./Stage22.css";
+import PreviewBar from "../components/PreviewBar";
 
 function LinePhotos({ photos }) {
   const [mainIndex, setMainIndex] = useState(0);
@@ -152,37 +153,54 @@ function Stage22() {
   const brandStatus = brandName.trim() && brandDoc ? "Подтвержден" : "";
   const variations = product?.variations || [];
   const variantLabel = (variation) =>
-    formatVariantParameterLabel(product, variation, catalog);
+    formatVariantParameterLabel(product, variation, catalog) ||
+    variation.fullName ||
+    variation.model ||
+    `Вариант ${variation.id.slice(0, 6)}`;
   const created = variations.filter((item) => {
-    const status = (item.reviewStatus || "filling").toLowerCase();
-    return status === "pending" || status === "approved";
+    const status = (item.reviewStatus || "").toLowerCase();
+    return status !== "rejected" && status !== "archived";
+  });
+  const hasFilledVariant = variations.some((variation) => {
+    const values = variation.values || [];
+    const hasValues = values.some(
+      (item) =>
+        String(item.value || "").trim() ||
+        String(item.customValue || "").trim(),
+    );
+    if (hasValues) return true;
+
+    const description =
+      variation.description?.purpose ||
+      variation.description?.principle ||
+      (variation.complectation?.items || []).length;
+    if (description) return true;
+
+    const status = (variation.reviewStatus || "").toLowerCase();
+    if (status && status !== "filling") return true;
+
+    return false;
   });
 
   const openCreate = async () => {
     if (!productId || busy) return;
     setVariantFlow(productId, "create");
-    // if (skipsVariantParamStage(product)) {
-    //   setBusy(true);
-    //   setError("");
-    //   try {
-    //     await productsApi.saveWantsVariants(productId, { wantsVariants: true });
-    //     const created = await productsApi.addVariation(productId, { values: [] });
-    //     if (!created?.id) throw new Error("Не удалось создать новый вариант");
-    //     const next = new URLSearchParams();
-    //     next.set("id", productId);
-    //     next.set("variationId", created.id);
-    //     navigate({ pathname: "/stage7", search: `?${next.toString()}` });
-    //   } catch (createError) {
-    //     setError(createError.message || "Не удалось создать вариант");
-    //   } finally {
-    //     setBusy(false);
-    //   }
-    //   return;
-    // }
-    navigate({
-      pathname: "/Add",
-      search: productId ? `?id=${productId}` : "",
-    });
+    setBusy(true);
+    setError("");
+    try {
+      await productsApi.saveWantsVariants(productId, { wantsVariants: true });
+      const created = await productsApi.addVariation(productId, { values: [] });
+      if (!created?.id) throw new Error("Не удалось создать вариант");
+
+      const next = new URLSearchParams();
+      next.set("id", productId);
+      next.set("variationId", created.id);
+      navigate({ pathname: "/Add", search: `?${next.toString()}` });
+    } catch (createError) {
+      setError(createError.message || "Не удалось создать вариант");
+    } finally {
+      setBusy(false);
+    }
   };
 
   const openEdit = (variation) => {
@@ -221,7 +239,9 @@ function Stage22() {
         )}
         {error && <p className="form-error">{error}</p>}
 
-        <h2 className="section-title subtitle">Линейка продукта</h2>
+        <h1 className="iio"> Этап 3 - Черновик карточки продукта</h1>
+
+        <h2 className="section-title subtitle lli">Линейка продукта</h2>
 
     
 
@@ -305,16 +325,7 @@ function Stage22() {
         <div className="variants-board">
           <div className="variants-group">
             {/* <h3 className="variants-group__title">Созданные</h3> */}
-            <div className="variants-group__list">
-              {created.map((variation) => (
-                <VariantCard
-                  key={variation.id}
-                  label={variantLabel(variation)}
-                  photoUrl={variantPhoto(files, variation.id)}
-                  onEdit={() => openEdit(variation)}
-                  onDelete={() => removeVariant(variation)}
-                />
-              ))}
+            <div className="variants-group__create-wrap">
               <button
                 type="button"
                 className="variants-create"
@@ -323,17 +334,46 @@ function Stage22() {
                 <span className="variants-create__image" aria-hidden="true">
                   <span className="variants-create__icon">+</span>
                 </span>
-                <span className="variants-create__text">
-                Добавить 
-                </span>
+                <span className="variants-create__text">Добавить</span>
               </button>
+            </div>
+
+            <div className="variants-group__list">
+              {created.map((variation) => (
+                <VariantCard
+                  key={variation.id}
+                  label={variantLabel(variation) === "—"
+                    ? "2 характеристики"
+                    : variantLabel(variation)
+                  }
+                  photoUrl={variantPhoto(files, variation.id)}
+                  onEdit={() => openEdit(variation)}
+                  onDelete={() => removeVariant(variation)}
+                />
+              ))}
             </div>
             
           </div>
         </div>
+        {/* <div className="forg">
+          <button className="gift">
+            Предварительный просмотр 
+          </button>
+        </div> */}
       </div>
 
-      <BottomBar2 showStep={false} homeLabel="На главную" nextLabel="Управление товарами" />
+      <PreviewBar
+        current={3}
+        total={4}
+        prevPath="/stage2"
+        nextPath="/Add"
+        previewPath="/stage22"
+        managePath="/products"
+        homeIconSrc="/images/Home.png"
+        onSave={async () => { }}
+        showManage={hasFilledVariant}
+        showNext={!hasFilledVariant}
+      />
     </>
   );
 }

@@ -346,10 +346,10 @@ function Stage2_3() {
       </div>
 
       <BottomBar
-        current={3}
-        total={5}
-        prevPath="/stage2"
-        nextPath="/stage4"
+        current={1}
+        total={2}
+        nextPath="/Add"
+        homeIconSrc="/images/Home.png"
         onSave={save}
       />
     </>
