@@ -209,7 +209,7 @@ function Stage22() {
     const next = new URLSearchParams();
     if (productId) next.set("id", productId);
     next.set("variationId", variation.id);
-    navigate({ pathname: "/stage7", search: `?${next.toString()}` });
+    navigate({ pathname: "/Add", search: `?${next.toString()}` });
   };
 
   const removeVariant = async (variation) => {
