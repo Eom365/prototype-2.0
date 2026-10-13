@@ -265,3 +265,31 @@
   color: #777;
   font-size: 14px;
 }
+
+
+/* Inline-вариант значка — используется рядом с полями формы */
+.page-help-btn--inline {
+  position: static;
+  top: auto;
+  right: auto;
+  bottom: auto;
+  left: auto;
+  margin: 0;
+  flex: 0 0 auto;
+}
+
+/* Обёртка поля: поле ввода + значок «?» справа */
+.field-row-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.field-row-wrap .field-control {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.field-row-wrap .input {
+  width: 100%;
+}

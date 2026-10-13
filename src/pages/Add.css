@@ -574,3 +574,549 @@
     outline: none;
     border-color: #6c63ff;
 }
+
+.ttr {
+    margin-top: 20px;
+    margin-bottom: -40px;
+}
+
+.utt {
+    background: #ffe9c7;
+    padding: 13px;
+    border: 1.5px solid #944806;
+    border-radius: 6px;
+}
+
+/* .chars-subtabs {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 20px 0 24px;
+} */
+
+/* .chars-subtab {
+    background: none;
+    border: none;
+    font-size: 15px;
+    color: #1f2937;
+    cursor: pointer;
+    padding: 8px 16px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+    font-family: inherit;
+} */
+
+.chars-subtab:hover {
+    color: #000;
+}
+
+/* .chars-subtab--active {
+    border: 1.5px solid #1f2937;
+    background: #fff;
+    font-weight: 500;
+    padding: 8px 16px;
+} */
+
+.chars-subtab__chevron {
+    width: 8px;
+    height: 8px;
+    border-right: 1.5px solid #1f2937;
+    border-bottom: 1.5px solid #1f2937;
+    transform: rotate(45deg);
+    margin-top: -4px;
+}
+
+/* .chars-subtabs {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 20px 0 24px;
+} */
+
+/* Общий вид — простой текст (активный раздел) */
+.chars-subtab {
+    background: none;
+    border: none;
+    font-size: 15px;
+    color: #1f2937;
+    padding: 8px 4px;
+    font-family: inherit;
+}
+
+
+/* Неактивный — кнопка с рамкой и шевроном */
+/* .chars-subtab--button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border: 1.5px solid #1f2937;
+    border-radius: 8px;
+    background: #fff;
+    cursor: pointer;
+    transition: background 0.15s ease;
+    font-size: 18px;
+} */
+
+.chars-subtab--button:hover {
+    background: #87CEFA;
+}
+
+/* .chars-subtab__chevron {
+    width: 8px;
+    height: 8px;
+    border-right: 1.5px solid #1f2937;
+    border-bottom: 1.5px solid #1f2937;
+    transform: rotate(45deg);
+    margin-top: -4px;
+} */
+
+/* ===== Переключатель Обязательные / Дополнительные ===== */
+.chars-subtabs {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 20px 0 28px;
+}
+
+/* Активный пункт — простой жирный текст */
+.chars-subtab--active {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1f2937;
+    padding: 8px 4px;
+    cursor: default;
+    user-select: none;
+}
+
+/* Неактивный пункт — кнопка с рамкой и шевроном */
+.chars-subtab--button {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 18px;
+    font-size: 18px;
+    font-family: inherit;
+    color: #1f2937;
+    background: #fff;
+    border: 1.5px solid #1f2937;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.chars-subtab--button:hover {
+    background: #87CEFA;
+}
+
+.chars-subtab--button:active {
+    transform: scale(0.98);
+}
+
+/* Шеврон (галочка вниз) */
+.chars-subtab__chevron {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-right: 2px solid #1f2937;
+    border-bottom: 2px solid #1f2937;
+    transform: rotate(45deg) translateY(-2px);
+}
+
+.chars-subtab--active {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1f2937;
+    padding: 8px 18px;
+    border-radius: 8px;
+    background: #eef1f6;
+    /* мягкий серо-голубой фон */
+    cursor: default;
+    user-select: none;
+}
+
+/* ===== Переключатель Обязательные / Дополнительные ===== */
+.add-page .chars-subtabs {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 20px 0 28px;
+}
+
+/* Активный пункт — светлая плашка */
+.add-page .chars-subtab--active {
+    display: inline-flex;
+    align-items: center;
+    padding: 10px 20px;
+    font-size: 16px;
+    font-weight: 500;
+    color: #1f2937;
+    background: #eceef1;
+    /* ← светлая серо-голубая заливка */
+    border: none;
+    border-radius: 6px;
+    cursor: default;
+    user-select: none;
+}
+
+/* Неактивный пункт — кнопка с рамкой и шевроном */
+.add-page .chars-subtab--button {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 20px;
+    font-size: 16px;
+    font-family: inherit;
+    color: #1f2937;
+    background: #fff;
+    border: 1.5px solid #1f2937;
+    border-radius: 6px;
+    cursor: pointer;
+    /* transition: background 0.15s ease; */
+}
+
+.add-page .chars-subtab--button:hover {
+    background: #87CEFA;
+}
+
+/* Шеврон (галочка вниз) */
+.add-page .chars-subtab__chevron {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-right: 2px solid #1f2937;
+    border-bottom: 2px solid #1f2937;
+    transform: rotate(45deg) translate(-2px, -2px);
+}
+
+/* ===== Табы Обязательные / Дополнительные ===== */
+.add-page .chars-subtabs {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    margin: 20px 0 28px;
+    background: #ebebeb;
+    /* серая полоса-подложка */
+    border-bottom: 1px solid #d9d9d9;
+}
+
+.add-page .chars-subtab {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 24px;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 500;
+    color: #1f2937;
+    background: #ebebeb;
+    /* неактивный — на серой подложке */
+    border: none;
+    border-right: 1px solid #d0d0d0;
+    /* разделитель между табами */
+    cursor: pointer;
+    transition: background 0.15s ease;
+    white-space: nowrap;
+}
+
+.add-page .chars-subtab:last-child {
+    border-right: none;
+}
+
+.add-page .chars-subtab:hover {
+    background: #e2e2e2;
+}
+
+/* Активный — белый, чуть выше остальных */
+.add-page .chars-subtab--active {
+    background: #ffffff;
+    color: #111;
+    font-weight: 600;
+    cursor: default;
+    padding-bottom: 13px;
+    /* компенсирует утолщение границы */
+    box-shadow: 0 -1px 0 #d9d9d9;
+    /* тонкая линия сверху */
+}
+
+.add-page .chars-subtab--active:hover {
+    background: #ffffff;
+}
+
+/* ===== Табы Обязательные / Дополнительные ===== */
+.add-page .chars-subtabs {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    margin: 20px 0 28px;
+    background: #fff;
+    width: 100%;
+    /* height: 20px; */
+}
+
+/* Неактивный — белый с тонкой рамкой */
+.add-page .chars-subtab {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 24px;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 500;
+    color: #1f2937;
+    background: #ffffff;
+    border: 1px solid #d9d9d9;
+    border-right: none;
+    cursor: pointer;
+    transition: background 0.15s ease;
+    white-space: nowrap;
+}
+
+.add-page .chars-subtab:last-child {
+    border-right: 1px solid #d9d9d9;
+}
+
+.add-page .chars-subtab:hover {
+    background: #f5f5f5;
+}
+
+/* Активный — серая заливка, без рамки по бокам */
+.add-page .chars-subtab--active {
+    background: #ebebeb;
+    color: #111;
+    font-weight: 600;
+    cursor: default;
+    border: 1px solid #d9d9d9;
+    border-right: none;
+}
+
+.add-page .chars-subtab--active:hover {
+    background: #ebebeb;
+}
+
+/* У активного, если он последний, правую границу оставляем */
+.add-page .chars-subtab--active:last-child {
+    border-right: 1px solid #A6CAF0;
+}
+
+/* ===== Табы Обязательные / Дополнительные ===== */
+.add-page .chars-subtabs {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    margin: 20px 0 28px;
+    background: #fff;
+    width: 100%;
+    border-bottom: 15px solid #A6CAF0;
+    /* ← толстая серая линия снизу */
+}
+
+/* Неактивный — белый с тонкой рамкой */
+.add-page .chars-subtab {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 24px;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 500;
+    color: #1f2937;
+    background: #ffffff;
+    border: 1px solid #d9d9d9;
+    border-bottom: none;
+    /* линия снизу общая — не дублируем */
+    border-right: none;
+    cursor: pointer;
+    transition: background 0.15s ease;
+    white-space: nowrap;
+}
+
+.add-page .chars-subtab:last-child {
+    border-right: 1px solid #d9d9d9;
+}
+
+.add-page .chars-subtab:hover {
+    background: #f5f5f5;
+}
+
+/* Активный — серая заливка */
+.add-page .chars-subtab--active {
+    background: #A6CAF0;
+    color: #111;
+    font-weight: 600;
+    cursor: default;
+    border: 1px solid #d9d9d9;
+    border-bottom: none;
+    border-right: none;
+}
+
+.add-page .chars-subtab--active:hover {
+    background: #ebebeb;
+}
+
+.add-page .chars-subtab--active:last-child {
+    border-right: 1px solid #d9d9d9;
+}
+
+/* ===== Аккордеон дополнительных характеристик ===== */
+.add-page .chars-accordion {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin-top: 16px;
+}
+
+.add-page .chars-accordion__item {
+    border-top: 3px solid #1a1a1a;
+    /* толстая линия сверху */
+    background: #fff;
+}
+
+.add-page .chars-accordion__item:last-child {
+    border-bottom: 3px solid #1a1a1a;
+    /* толстая линия снизу */
+}
+
+.add-page .chars-accordion__toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+    padding: 18px 20px;
+    background: #fff;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    font-family: inherit;
+    font-size: 18px;
+    font-weight: 400;
+    color: #1a1a1a;
+    transition: background 0.15s ease;
+}
+
+.add-page .chars-accordion__toggle:hover {
+    background: #f5f7fa;
+}
+
+.add-page .chars-accordion__toggle--open {
+    background: #f5f7fa;
+    font-weight: 500;
+}
+
+.add-page .chars-accordion__title {
+    flex: 1;
+}
+
+/* Шеврон ▼ */
+.add-page .chars-accordion__chevron {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-right: 2.5px solid #1a1a1a;
+    border-bottom: 2.5px solid #1a1a1a;
+    transform: rotate(45deg) translate(-3px, -3px);
+    transition: transform 0.2s ease;
+    flex-shrink: 0;
+}
+
+.add-page .chars-accordion__chevron--open {
+    transform: rotate(-135deg) translate(-3px, -3px);
+}
+
+.add-page .chars-accordion__body {
+    padding: 8px 20px 24px;
+    background: #fff;
+}
+
+/* Кнопка «Показать все» / «Свернуть все» */
+.add-page .chars-accordion__show-all {
+    margin-top: 24px;
+    padding: 12px 28px;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 500;
+    color: #1a1a1a;
+    background: #fff;
+    border: 1.5px solid #1a1a1a;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.add-page .chars-accordion__show-all:hover {
+    background: #f0f0f0;
+}
+
+/* ===== Левое меню + контент ===== */
+.add-page .chars-layout {
+    display: grid;
+    grid-template-columns: 300px minmax(0, 1fr);
+    gap: 32px;
+    margin-top: 24px;
+    align-items: flex-start;
+}
+
+.add-page .chars-sidebar {
+    position: sticky;
+    top: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 16px 12px;
+    background: #f7f7f7;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    max-height: calc(100vh - 32px);
+    overflow-y: auto;
+}
+
+.add-page .chars-sidebar__group {
+    padding: 10px 10px 6px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #1a1a1a;
+}
+
+.add-page .chars-sidebar__group:not(:first-child) {
+    margin-top: 12px;
+    border-top: 1px solid #e0e0e0;
+}
+
+.add-page .chars-sidebar__item {
+    display: block;
+    width: 100%;
+    padding: 8px 10px;
+    font-family: inherit;
+    font-size: 14px;
+    line-height: 1.35;
+    text-align: left;
+    color: #333;
+    background: transparent;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.add-page .chars-sidebar__item:hover {
+    background: #ececec;
+}
+
+.add-page .chars-sidebar__item--active {
+    background: #d6e4f5;
+    color: #111;
+    font-weight: 600;
+}
+
+.add-page .chars-content {
+    min-width: 0;
+}
+
+.add-page .chars-content .chars-section__title,
+.add-page .chars-content .chars-section__body {
+    margin-left: 0;
+}

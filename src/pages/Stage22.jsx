@@ -1,5 +1,5 @@
 // Варианты параметров продукта
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import BottomBar2 from "../components/BottomBar2";
 import VariantFlowHeader from "../components/VariantFlowHeader";
@@ -9,6 +9,7 @@ import { setProductWizard } from "../stageProgress";
 import { skipsVariantParamStage } from "../variantFlow";
 import "./Stage22.css";
 import PreviewBar from "../components/PreviewBar";
+import PageHelp from "../components/PageHelp";
 
 function LinePhotos({ photos }) {
   const [mainIndex, setMainIndex] = useState(0);
@@ -46,7 +47,7 @@ function variantPhoto(files, variationId) {
     .filter(
       (file) =>
         String(file.variationId || "").toLowerCase() ===
-          String(variationId || "").toLowerCase() && file.role === "product",
+        String(variationId || "").toLowerCase() && file.role === "product",
     )
     .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
   return own[0]?.url || null;
@@ -111,6 +112,13 @@ function Stage22() {
   const [catalog, setCatalog] = useState(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+
+  /* ---------- Inline-редактирование ---------- */
+  const [editingField, setEditingField] = useState(null);
+  const [draft, setDraft] = useState("");
+  const [saving, setSaving] = useState(false);
+  const logoInputRef = useRef(null);
+  const brandDocInputRef = useRef(null);
 
   const reload = () => {
     if (!productId) return;
@@ -182,6 +190,147 @@ function Stage22() {
     return false;
   });
 
+  /* ---------- Редактирование полей ---------- */
+  const [brandEdited, setBrandEdited] = useState(false);
+  const handleBrandDocFileChange = async (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file || !productId) return;
+    setSaving(true);
+    setError("");
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("role", "document");
+      formData.append("documentType", "brand");
+      await productsApi.upload(productId, formData);
+      await reload();
+    } catch (uploadError) {
+      setError(uploadError.message || "Не удалось загрузить документ");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleBrandDocRemove = async () => {
+    if (!brandDoc?.id) return;
+    setSaving(true);
+    setError("");
+    try {
+      await productsApi.deleteFile(brandDoc.id);
+      await reload();
+    } catch (removeError) {
+      setError(removeError.message || "Не удалось удалить документ");
+    } finally {
+      setSaving(false);
+    }
+  };
+  const startEdit = (field, value) => {
+    setEditingField(field);
+    setDraft(value || "");
+    setError("");
+  };
+
+  const cancelEdit = () => {
+    setEditingField(null);
+    setDraft("");
+  };
+
+  const withSave = async (fn) => {
+    if (saving) return;
+    setSaving(true);
+    setError("");
+    try {
+      await fn();
+      cancelEdit();
+      await reload();
+    } catch (saveError) {
+      setError(saveError.message || "Не удалось сохранить");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const saveBrandName = () =>
+    withSave(async () => {
+      const nextBrand = draft.trim();
+      const prevBrand = (product?.brandName || "").trim();
+      const changed = nextBrand !== prevBrand;
+
+      await productsApi.saveIdentity(productId, {
+        authorLastName: product?.authorLastName || "",
+        authorFirstName: product?.authorFirstName || "",
+        authorMiddleName: product?.authorMiddleName || "",
+        tradeName: product?.tradeName || "",
+        brandName: nextBrand,
+        manufacturerName: product?.manufacturerName || "",
+        manufacturerCountry: product?.manufacturerCountry || "",
+        productIdentifier: product?.productIdentifier || "",
+        internalArticle: product?.internalArticle || "",
+      });
+
+      // Показываем поле документов только при реальном изменении бренда
+      if (changed) setBrandEdited(true);
+    });
+
+  const saveProductLine = () =>
+    withSave(() =>
+      productsApi.saveCategory(productId, {
+        purpose: product?.purpose || "",
+        kindCode: product?.kindCode || "",
+        productName: product?.productName || "",
+        categoryPath: product?.categoryPath || "",
+        productLine: draft.trim(),
+      }),
+    );
+
+  const saveLineName = () =>
+    withSave(() =>
+      productsApi.saveName(productId, {
+        fullName: draft.trim(),
+        nameIncludesLogo: Boolean(logo),
+        nameIncludesType: false,
+        nameIncludesBrand: false,
+        nameIncludesLine: false,
+        nameIncludesModel: false,
+      }),
+    );
+
+  const handleLogoFileChange = async (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file || !productId) return;
+    setSaving(true);
+    setError("");
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("role", "logo");
+      await productsApi.upload(productId, formData);
+      await reload();
+    } catch (uploadError) {
+      setError(uploadError.message || "Не удалось загрузить логотип");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleLogoRemove = async () => {
+    if (!logo?.id) return;
+    setSaving(true);
+    setError("");
+    try {
+      await productsApi.deleteFile(logo.id);
+      await reload();
+    } catch (removeError) {
+      setError(removeError.message || "Не удалось удалить логотип");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  /* ---------- Создание / редактирование варианта ---------- */
+
   const openCreate = async () => {
     if (!productId || busy) return;
     setVariantFlow(productId, "create");
@@ -227,23 +376,77 @@ function Stage22() {
     }
   };
 
+  /* ---------- Универсальная строка с карандашом ---------- */
+
+  const EditableValue = ({ field, value, onSave, children }) => {
+    const editing = editingField === field;
+    if (!editing) {
+      return (
+        <>
+          {children || value || "—"}
+          <button
+            type="button"
+            className="row__edit"
+            onClick={() => startEdit(field, value)}
+            title="Редактировать"
+          >
+            ✎
+          </button>
+        </>
+      );
+    }
+    return (
+      <span className="row__edit-wrap">
+        <input
+          type="text"
+          className="row__edit-input"
+          value={draft}
+          onChange={(event) => setDraft(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") onSave();
+            if (event.key === "Escape") cancelEdit();
+          }}
+          autoFocus
+        />
+        <button
+          type="button"
+          className="row__edit-ok"
+          onClick={onSave}
+          disabled={saving}
+          title="Сохранить"
+        >
+          ✓
+        </button>
+        <button
+          type="button"
+          className="row__edit-cancel"
+          onClick={cancelEdit}
+          disabled={saving}
+          title="Отмена"
+        >
+          ✕
+        </button>
+      </span>
+    );
+  };
+
   return (
     <>
       <div className="container">
-        {/* <VariantFlowHeader product={product} productId={productId} /> */}
-        {/* <h1 className="title">Модель (параметр)</h1> */}
-        {!productId && (
+        {/* {!productId && (
           <p className="form-error">
             Откройте создание карточки с главной страницы.
           </p>
-        )}
+        )} */}
         {error && <p className="form-error">{error}</p>}
 
-        <h1 className="iio"> Этап 3 - Черновик карточки продукта</h1>
+        <h1 className="iio">
+          {hasFilledVariant
+            ? "Черновик карточки продукта"
+            : "Этап 3 - Черновик карточки продукта"}
+        </h1>
 
         <h2 className="section-title subtitle lli">Линейка продукта</h2>
-
-    
 
         <div className="field">
           <span className="standartW">
@@ -263,57 +466,167 @@ function Stage22() {
           <LinePhotos photos={photos} />
         </div>
 
+        <input
+          type="file"
+          accept="image/*"
+          ref={logoInputRef}
+          onChange={handleLogoFileChange}
+          style={{ display: "none" }}
+        />
+
+        <input
+          type="file"
+          accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+          ref={brandDocInputRef}
+          onChange={handleBrandDocFileChange}
+          style={{ display: "none" }}
+        />
+
         {/* ===== Основные данные ===== */}
         <div className="rows">
           <div className="row">
-            <span className="row__label">Категория продукта:</span>
+            <span className="row__label">Категория линейки:</span>
             <span className="row__value row__value--breadcrumb">
               {category || "—"}
             </span>
           </div>
 
+          {/* ===== Данные о бренде ===== */}
+          <div className="rows rows--brand">
+            <div className="row">
+              <span className="row__label">Бренд</span>
+              <span className="row__value">
+                {brandStatus ? (
+                  <span className="row__status">{brandStatus}</span>
+                ) : (
+                  "—"
+                )}
+              </span>
+            </div>
+
+            <div className="row">
+              <span className="row__label">Название бренда:</span>
+              <span className="row__value">
+                <EditableValue
+                  field="brandName"
+                  value={brandName}
+                  onSave={saveBrandName}
+                />
+              </span>
+            </div>
+
+            {brandEdited && brandName.trim() && (
+              <div className="row">
+                <span className="row__label">Документы на бренд:</span>
+                <span className="row__value">
+                  {brandDoc ? (
+                    <>
+                      <button
+                        type="button"
+                        className="row__edit"
+                        onClick={() => brandDocInputRef.current?.click()}
+                        disabled={saving}
+                        title="Заменить документ"
+                      >
+                        ✎
+                      </button>
+                      <button
+                        type="button"
+                        className="row__edit row__edit--danger"
+                        onClick={handleBrandDocRemove}
+                        disabled={saving}
+                        title="Удалить документ"
+                      >
+                        ✕
+                      </button>
+                      <a
+                        href={brandDoc.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="row__doc-link"
+                      >
+                        {brandDoc.originalName || "Документ"}
+                      </a>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        className="row__edit"
+                        onClick={() => brandDocInputRef.current?.click()}
+                        disabled={saving}
+                        title="Загрузить документ"
+                      >
+                        ✎
+                      </button>
+                      —
+                    </>
+                  )}
+                </span>
+              </div>
+            )}
+
+            <div className="row">
+              <span className="row__label">Логотип</span>
+              <span className="row__value">
+                {logo ? (
+                  <>
+                    <img src={logo.url} alt="Логотип" className="row__logo" />
+                    <button
+                      type="button"
+                      className="row__edit"
+                      onClick={() => logoInputRef.current?.click()}
+                      disabled={saving}
+                      title="Заменить логотип"
+                    >
+                      ✎
+                    </button>
+                    <button
+                      type="button"
+                      className="row__edit row__edit--danger"
+                      onClick={handleLogoRemove}
+                      disabled={saving}
+                      title="Удалить логотип"
+                    >
+                      ✕
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    —
+                    <button
+                      type="button"
+                      className="row__edit"
+                      onClick={() => logoInputRef.current?.click()}
+                      disabled={saving}
+                      title="Загрузить логотип"
+                    >
+                      ✎
+                    </button>
+                  </>
+                )}
+              </span>
+            </div>
+
+            <div className="row">
+              <span className="row__label">Линейка продукта:</span>
+              <span className="row__value">
+                <EditableValue
+                  field="productLine"
+                  value={productLine}
+                  onSave={saveProductLine}
+                />
+              </span>
+            </div>
+          </div>
+
           <div className="row">
-            <span className="row__label">Наименование продукта:</span>
+            <span className="row__label">Наименование линейки:</span>
             <span className="row__value">
               {logo && (
                 <img src={logo.url} alt="Логотип" className="row__mini-logo" />
               )}
               {productName || "—"}
-            </span>
-          </div>
-
-          <div className="row">
-            <span className="row__label">Линейка продукта:</span>
-            <span className="row__value">{productLine || "—"}</span>
-          </div>
-        </div>
-
-        {/* ===== Данные о бренде (отдельно, с отступом 50px) ===== */}
-        <div className="rows rows--brand">
-          <div className="row">
-            <span className="row__label">Бренд</span>
-            <span className="row__value">
-              {brandStatus ? (
-                <span className="row__status">{brandStatus}</span>
-              ) : (
-                "—"
-              )}
-            </span>
-          </div>
-
-          <div className="row">
-            <span className="row__label">Название бренда:</span>
-            <span className="row__value">{brandName || "—"}</span>
-          </div>
-
-          <div className="row">
-            <span className="row__label">Логотип</span>
-            <span className="row__value">
-              {logo ? (
-                <img src={logo.url} alt="Логотип" className="row__logo" />
-              ) : (
-                "—"
-              )}
             </span>
           </div>
         </div>
@@ -324,8 +637,12 @@ function Stage22() {
 
         <div className="variants-board">
           <div className="variants-group">
-            {/* <h3 className="variants-group__title">Созданные</h3> */}
             <div className="variants-group__create-wrap">
+              <PageHelp
+                inline
+                context="Добавление модели"
+                buttonTitle="Подсказка по добавлению модели"
+              />
               <button
                 type="button"
                 className="variants-create"
@@ -342,9 +659,10 @@ function Stage22() {
               {created.map((variation) => (
                 <VariantCard
                   key={variation.id}
-                  label={variantLabel(variation) === "—"
-                    ? "2 характеристики"
-                    : variantLabel(variation)
+                  label={
+                    variantLabel(variation) === "—"
+                      ? "2 характеристики"
+                      : variantLabel(variation)
                   }
                   photoUrl={variantPhoto(files, variation.id)}
                   onEdit={() => openEdit(variation)}
@@ -352,14 +670,8 @@ function Stage22() {
                 />
               ))}
             </div>
-            
           </div>
         </div>
-        {/* <div className="forg">
-          <button className="gift">
-            Предварительный просмотр 
-          </button>
-        </div> */}
       </div>
 
       <PreviewBar
@@ -373,6 +685,7 @@ function Stage22() {
         onNext={() => openCreate()}
         showManage={hasFilledVariant}
         showNext={!hasFilledVariant}
+        showStep={!hasFilledVariant}
       />
     </>
   );

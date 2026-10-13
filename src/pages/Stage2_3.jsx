@@ -348,7 +348,7 @@ function Stage2_3() {
       <BottomBar
         current={1}
         total={2}
-        nextPath="/Add"
+        nextPath="/stage2"
         homeIconSrc="/images/Home.png"
         onSave={save}
       />

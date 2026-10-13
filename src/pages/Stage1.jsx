@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import BottomBar from "../components/BottomBar";
+import PageHelp from "../components/PageHelp";
 import { productsApi } from "../api";
 import { setProductWizard } from "../stageProgress";
 import "./Stage1.css";
@@ -126,8 +127,21 @@ function Stage1() {
 
         <div className="form">
           <div className="field">
-            <label className="label">Наименование продукта</label>
-            <p className="pInfo">При заполнении ориентируйтесь на следующие документы:<br /> 1.Руководство по эксплуатации<br />2.Сертификат соответствия или декларация о соответствии <br />3.Регистрационное удостоверение</p>
+            <div className="label-row">
+              <PageHelp
+                inline
+                context="Наименование продукта"
+                buttonTitle="Подсказка по полю «Наименование продукта»"
+              />
+              <label className="label">Наименование продукта</label>
+              
+            </div>
+            <p className="pInfo">
+              При заполнении ориентируйтесь на следующие документы:<br />
+              1.Руководство по эксплуатации<br />
+              2.Сертификат соответствия или декларация о соответствии <br />
+              3.Регистрационное удостоверение
+            </p>
             <p className="pBold">
               Пример правильного заполнения: Ноутбук HUAWEI MateBook D 15;
               Смартфон Apple iPhone 15 Pro
@@ -147,9 +161,20 @@ function Stage1() {
           </div>
 
           <div className="field">
-            <label className="label">Наименование бренда</label>
-            <p className="field-description standart" >{BRAND_DESCRIPTION}</p>
-            <p className="pInfo">При заполнении ориентируйтесь на следующие документы:<br /> 1.Свидетельство на товарный знак</p>
+            <div className="label-row">
+              <PageHelp
+                inline
+                context="Наименование бренда"
+                buttonTitle="Подсказка по полю «Наименование бренда»"
+              />
+              <label className="label">Наименование бренда</label>
+              
+            </div>
+            <p className="field-description standart">{BRAND_DESCRIPTION}</p>
+            <p className="pInfo">
+              При заполнении ориентируйтесь на следующие документы:<br />
+              1.Свидетельство на товарный знак
+            </p>
             <p className="pBold">Пример правильного заполнения: "HUAWEI"</p>
             <input
               type="text"
@@ -163,9 +188,24 @@ function Stage1() {
           </div>
 
           <div className="field">
-            <label className="label">Производитель товара</label>
-            <p className="pInfo">При заполнении ориентируйтесь на следующие документы:<br /> 1.Руководство по эксплуатации<br />2.Сертификат соответствия или декларация о соответствии <br />3.Регистрационное удостоверение</p>
-            <p className="pBold">Пример правильного заполнения: "Huawei Device Co., Ltd."</p>
+            <div className="label-row">
+              <PageHelp
+                inline
+                context="Наименование бренда"
+                buttonTitle="Подсказка по полю «Наименование бренда»"
+              />
+              <label className="label">Производитель товара</label>
+             
+            </div>
+            <p className="pInfo">
+              При заполнении ориентируйтесь на следующие документы:<br />
+              1.Руководство по эксплуатации<br />
+              2.Сертификат соответствия или декларация о соответствии <br />
+              3.Регистрационное удостоверение
+            </p>
+            <p className="pBold">
+              Пример правильного заполнения: "Huawei Device Co., Ltd."
+            </p>
             <div className="field-control">
               <span className="required-mark">✱</span>
               <input

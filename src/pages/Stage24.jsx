@@ -3,6 +3,7 @@ import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import BottomBar from "../components/BottomBar";
 import HazardClassField from "../components/HazardClassField";
 import VariantFlowHeader from "../components/VariantFlowHeader";
+import PageHelp from "../components/PageHelp";
 import { productsApi } from "../api";
 import {
   formatHazardClass,
@@ -67,10 +68,25 @@ function ensureMinCompItems(items) {
   return next;
 }
 
-function DescField({ label, value, onChange, placeholder = "" }) {
+function DescField({
+  label,
+  value,
+  onChange,
+  placeholder = "",
+  helpContext = "",
+}) {
   return (
     <div className="desc-field">
-      <label className="desc-field__label">{label}</label>
+      <div className="desc-field__label-row">
+        {helpContext && (
+          <PageHelp
+            inline
+            context={helpContext}
+            buttonTitle={`Подсказка по полю «${helpContext}»`}
+          />
+        )}
+        <label className="desc-field__label">{label}</label>
+      </div>
       <input
         type="text"
         className="desc-field__input"
@@ -406,6 +422,7 @@ const Stage24 = forwardRef(function Stage24(
         <div className="desc-fields">
           <DescField
             label="Назначение модели"
+            helpContext="Назначение модели"
             value={form.description.purpose}
             onChange={(v) =>
               patchForm("description", { ...form.description, purpose: v })
@@ -413,6 +430,7 @@ const Stage24 = forwardRef(function Stage24(
           />
           <DescField
             label="Принцип действия модели"
+            helpContext="Принцип действия модели"
             value={form.description.principle}
             onChange={(v) =>
               patchForm("description", { ...form.description, principle: v })
@@ -453,7 +471,13 @@ const Stage24 = forwardRef(function Stage24(
           </div>
           {items.map((item, index) => (
             <div className="comp-row" key={index}>
+              <PageHelp
+                inline
+                context={`Комплектация — строка ${index + 1}`}
+                buttonTitle="Подсказка по строке комплектации"
+              />
               <span className="comp-row__label">{index + 1}.</span>
+              
               <input
                 type="text"
                 className="comp-row__input"
@@ -550,8 +574,10 @@ const Stage24 = forwardRef(function Stage24(
               })
             }
           />
+          
           <StorageGroup
             title="Условия хранения на складе"
+            
             values={form.storageConditions.storage}
             onChange={(v) =>
               patchForm("storageConditions", {
@@ -594,6 +620,7 @@ const Stage24 = forwardRef(function Stage24(
 
           <DescField
             label="Указание мер безопасности"
+            helpContext="Указание мер безопасности"
             value={form.precautions.safety}
             onChange={(v) =>
               patchForm("precautions", { ...form.precautions, safety: v })
@@ -601,6 +628,7 @@ const Stage24 = forwardRef(function Stage24(
           />
           <DescField
             label="Утилизация товаров и упаковки"
+            helpContext="Указание мер безопасности"
             value={form.precautions.disposal}
             onChange={(v) =>
               patchForm("precautions", { ...form.precautions, disposal: v })
@@ -661,9 +689,16 @@ const Stage24 = forwardRef(function Stage24(
 
         {panelVisible && activeTab && (
           <>
-            <h2 className="stage24-section-title">{currentTab?.label}</h2>
+            <div className="stage24-section-title-row">
+              <PageHelp
+                inline
+                context={currentTab?.label}
+                buttonTitle={`Подсказка по разделу «${currentTab?.label}»`}
+              />
+              <h2 className="stage24-section-title">{currentTab?.label}</h2>
+            </div>
             <p className="stage24-hint">{TAB_HINTS[activeTab]}</p>
-            {renderFields()}
+            {activeTab === "review" ? renderReview() : renderFields()}
           </>
         )}
       </div>

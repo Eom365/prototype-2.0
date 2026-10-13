@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import BottomBar from '../components/BottomBar'
 import Tip from '../components/Tip'
 import PhotoGallery from '../components/PhotoGallery'
+import PageHelp from "../components/PageHelp";
 import { catalogApi, productsApi } from '../api'
 import {
     HANDPIECE_PARENTS,
@@ -1529,12 +1530,19 @@ function Stage2() {
                 <h1 className="title stage2-title">Этап 2 - Создание линейки</h1>
 
                 <div className="stage2-workarea">
+                   
                     <h2 className="stage2-section-title stage2-category-title">Категория продукта</h2>
 
                     <div
                         className={`field--product-type${modalOpen ? ' field--product-type--after-modal' : ''}`}
                     >
+                        <PageHelp
+                            inline
+                            context="Наименование бренда"
+                            buttonTitle="Подсказка по полю «Наименование бренда»"
+                        />
                         <Tip inline text={PRODUCT_TYPE_TIP} />
+                        
                         <label className="field--product-type__label" htmlFor="product-type">
                             Тип продукта
                         </label>
@@ -1644,6 +1652,21 @@ function Stage2() {
                                     ).trim() || '—'}
                                 </span>
                             </p>
+                            {modalOpen && (
+                                <CategoryModal
+                                    key={modalKey}
+                                    catalog={catalog}
+                                    purpose={purpose || 'Стоматология'}
+                                    initialPath={modalStartPath}
+                                    manual={!pathDetermined}
+                                    selectedKindCode={kindCode}
+                                    selectedParentCode={handpieceParent}
+                                    selectedCategoryCode={categoryCode}
+                                    onSelect={handleCategorySelect}
+                                    onClose={handleModalClose}
+                                    onDraftPathChange={handleModalDraftPath}
+                                />
+                            )}
                         </div>
                     )}
 
@@ -1653,6 +1676,11 @@ function Stage2() {
                         <h3 className="stage3-subtitle">Бренд</h3>
 
                         <div className="stage3-row">
+                            <PageHelp
+                                inline
+                                context="Наименование бренда"
+                                buttonTitle="Подсказка по полю «Наименование бренда»"
+                            />
                             <Tip
                                 text={BRAND_TIPS.brand}
                                 images={[
@@ -1690,6 +1718,11 @@ function Stage2() {
                         </div>
 
                         <div className="stage3-row">
+                            <PageHelp
+                                inline
+                                context="Наименование бренда"
+                                buttonTitle="Подсказка по полю «Наименование бренда»"
+                            />
                             <Tip
                                 text={BRAND_TIPS.brandLogo}
                                 image="/images/brand.png"
@@ -1705,6 +1738,11 @@ function Stage2() {
                         </div>
 
                         <div className="stage3-row oon">
+                            <PageHelp
+                                inline
+                                context="Наименование бренда"
+                                buttonTitle="Подсказка по полю «Наименование бренда»"
+                            />
                             <Tip
                                 text={BRAND_TIPS.line}
                                 images={[
@@ -1725,7 +1763,7 @@ function Stage2() {
                         </div>
                     </div>
 
-                    {modalOpen && (
+                    {/* {modalOpen && (
                         <CategoryModal
                             key={modalKey}
                             catalog={catalog}
@@ -1739,7 +1777,7 @@ function Stage2() {
                             onClose={handleModalClose}
                             onDraftPathChange={handleModalDraftPath}
                         />
-                    )}
+                    )} */}
 
                     <div className="stage2-brand-block stage3-page">
                         <h2 className="stage2-section-title">Наименование линейки продукта</h2>
@@ -1747,7 +1785,13 @@ function Stage2() {
                             Наименование линейки продукта формируется из Логотипа + Типа
                             продукта + Бренда + Линейки.
                         </p>
+                        
                         <div className="stage4-name-box">
+                            <PageHelp
+                                inline
+                                context="Наименование бренда"
+                                buttonTitle="Подсказка по полю «Наименование бренда»"
+                            />
                             {logoPreviewUrl && (
                                 <img
                                     className="stage4-name-box__logo"
@@ -1783,6 +1827,11 @@ function Stage2() {
                             Презентационное видео продукта
                         </h2>
                         <div className="video-row" style={{ justifyContent: 'flex-start' }}>
+                            <PageHelp
+                                inline
+                                context="Наименование бренда"
+                                buttonTitle="Подсказка по полю «Наименование бренда»"
+                            />
                             <button
                                 type="button"
                                 className="add-photo-btn"
@@ -1835,6 +1884,11 @@ function Stage2() {
                                 alt="Презентационное изображение смартфонов"
                             />
                         </div>
+                        <PageHelp
+                            inline
+                            context="Наименование бренда"
+                            buttonTitle="Подсказка по полю «Наименование бренда»"
+                        />
 
                         {!productId && (
                             <p className="form-error" style={{ textAlign: 'left' }}>

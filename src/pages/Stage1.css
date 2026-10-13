@@ -223,3 +223,64 @@
   font-weight: 600;
   line-height: 1.1;
 }
+
+.field-row-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.field-row-wrap .field-control {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.field-row-wrap .input {
+  width: 100%;
+}
+
+.help-hint {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid #c0392b;
+  color: #c0392b;
+  background: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: help;
+  user-select: none;
+  transition: background 0.15s, color 0.15s;
+}
+
+.help-hint:hover {
+  background: #c0392b;
+  color: #fff;
+}
+
+/* Строка «Заголовок + значок вопроса» */
+.label-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.label-row .label {
+  margin: 0;
+}
+
+/* Inline-вариант значка — используется рядом с заголовком поля */
+.page-help-btn--inline {
+  position: static;
+  top: auto;
+  right: auto;
+  bottom: auto;
+  left: auto;
+  margin: 0;
+  flex: 0 0 auto;
+}

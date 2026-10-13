@@ -16,6 +16,7 @@ import VariantFlowHeader from "../components/VariantFlowHeader";
 import PhotoGallery from "../components/PhotoGallery";
 import PackTypeHint from "../components/PackTypeHint";
 import { catalogApi, productsApi } from "../api";
+import PageHelp from "../components/PageHelp";
 import {
     axisValueFromVariation,
     blankWarehouse,
@@ -188,26 +189,32 @@ const TIME_UNITS = [
 ];
 
 const TABS = [
-    { key: "main", label: "Технические, физические и функциональные характеристики модели" },
+    {
+        key: "main",
+        label: "Технические, физические и функциональные характеристики модели",
+    },
     { key: "dimensions", label: "Наименование модели" },
     { key: "manufacturer", label: "Фотографии модели" },
     { key: "garant", label: "Упаковка модели" },
     { key: "tech", label: "Стоимость модели и система лояльности" },
     { key: "custom", label: "Доставка модели" },
-    // { key: "review", label: "Просмотр заполненных характеристик" },
 ];
 
-const CHARACTERISTIC_SECTIONS = [
-    { key: "identification", label: "1. Идентификация" },
-    { key: "manufacturer", label: "2. Сведения о производителе" },
-    { key: "warranty", label: "3. Гарантийные обязательства" },
-    { key: "functional", label: "4. Функциональные характеристики" },
-    { key: "technical", label: "5. Технические характеристики" },
-    { key: "material", label: "6. Материал и состав" },
-    { key: "affiliation", label: "7. Принадлежность" },
-    { key: "power", label: "8. Энергопотребление" },
-    { key: "display", label: "9. Дисплей" },
-    { key: "system", label: "10. Системные компоненты" },
+const REQUIRED_CHARACTERISTIC_SECTIONS = [
+    { key: "identification", label: "1. Идентификация >" },
+    { key: "manufacturer", label: "2. Сведения о производителе >" },
+    { key: "warranty", label: "3. Гарантийные обязательства >" },
+    { key: "functional", label: "4. Габаритные размеры и вес >" },
+];
+
+const EXTRA_CHARACTERISTIC_SECTIONS = [
+    { key: "functional", label: "5. Функциональные характеристики >" },
+    { key: "technical", label: "6. Технические характеристики >" },
+    { key: "material", label: "7. Материал и состав >" },
+    { key: "affiliation", label: "8. Принадлежность >" },
+    { key: "power", label: "9. Энергопотребление >" },
+    { key: "display", label: "10. Дисплей >" },
+    { key: "system", label: "11. Системные компоненты >" },
 ];
 
 const REQUIRED_DIM_CODES = ["length", "width", "height"];
@@ -470,16 +477,15 @@ const Add = forwardRef(function Add(_props, ref) {
     const [loaded, setLoaded] = useState(false);
 
     /* ---------- Характеристики ---------- */
+    const [activeSection, setActiveSection] = useState({
+        key: "identification",
+        mode: "required",
+    });
     const [kindCode, setKindCode] = useState("");
     const [nextStage, setNextStage] = useState("/stage24");
     const [specs, setSpecs] = useState({});
     const [customRows, setCustomRows] = useState(() => normalizeCustomRows([]));
 
-    /*
-     * customRowsBySection — общий объект-стейт для блоков «Иное»
-     * во всех разделах (functional, technical, material, affiliation,
-     * power, display, system).
-     */
     const [customRowsBySection, setCustomRowsBySection] = useState(() =>
         EXTRA_SECTION_KEYS.reduce((acc, key) => {
             acc[key] = normalizeCustomRows([]);
@@ -530,7 +536,7 @@ const Add = forwardRef(function Add(_props, ref) {
         height: "",
     });
     const [isFragile, setIsFragile] = useState("");
-    const [weight, setWeight] = useState("");           // ← вернули
+    const [weight, setWeight] = useState("");
     const [weightUnit, setWeightUnit] = useState("gram");
 
     /* ---------- Стоимость и система лояльности ---------- */
@@ -622,7 +628,6 @@ const Add = forwardRef(function Add(_props, ref) {
                     productLine: loadedProduct.productLine || "",
                 });
 
-                // Загрузка данных упаковки
                 setPackType(loadedProduct.packType || "");
                 setPackMaterial(loadedProduct.packMaterial || "");
                 setPackMaterialCustom(loadedProduct.packMaterialCustom || "");
@@ -636,12 +641,10 @@ const Add = forwardRef(function Add(_props, ref) {
                 setWeight(loadedProduct.packWeight || "");
                 setWeightUnit(loadedProduct.packWeightUnit || "gram");
 
-                // Загрузка стоимости и системы лояльности
                 setCurrency(loadedProduct.currency || "RUB");
                 setPrice(loadedProduct.price || "");
                 setDiscounts(discountsFrom(loadedProduct, variationId || null));
 
-                // Загрузка складов / адресов отгрузки
                 setAddresses(pointsFrom(loadedProduct, variationId || null));
 
                 const kind = findKind(catalog, loadedProduct.kindCode);
@@ -858,7 +861,6 @@ const Add = forwardRef(function Add(_props, ref) {
         );
     };
 
-    /* ---------- Обработчики адресов отгрузки ---------- */
     const handleNewAddressChange = (field, value) => {
         setNewAddress((prev) => ({ ...prev, [field]: value }));
     };
@@ -1079,7 +1081,6 @@ const Add = forwardRef(function Add(_props, ref) {
             });
         }
 
-        // Сохранение упаковки
         await productsApi.savePackaging(productId, {
             packType,
             packMaterial,
@@ -1093,7 +1094,6 @@ const Add = forwardRef(function Add(_props, ref) {
             packWeightUnit: weightUnit,
         });
 
-        // Сохранение стоимости и системы лояльности
         await productsApi.savePrice(productId, {
             variationId: variationId || null,
             currency,
@@ -1106,7 +1106,6 @@ const Add = forwardRef(function Add(_props, ref) {
             })),
         });
 
-        // Сохранение складов / адресов отгрузки
         await productsApi.saveShipments(productId, {
             variationId: variationId || null,
             items: pointsPayload(addresses),
@@ -1140,7 +1139,6 @@ const Add = forwardRef(function Add(_props, ref) {
                     String(techCustomUnits[field.code] || field.unit || "").trim() ||
                     null,
             })),
-            // Дополнительные характеристики из блоков «Иное» каждой секции
             ...EXTRA_SECTION_KEYS.flatMap((sectionKey) =>
                 serializeCustomRows(getSectionCustomRows(sectionKey))
                     .filter((row) => !techCodes.has(row.code))
@@ -1302,7 +1300,6 @@ const Add = forwardRef(function Add(_props, ref) {
                 />
             ));
 
-    /* Универсальный блок «Иное» для разделов */
     const renderSectionOther = (sectionKey) => (
         <>
             <h3 className="qw chars-subsection-title">Иное</h3>
@@ -1314,7 +1311,7 @@ const Add = forwardRef(function Add(_props, ref) {
         </>
     );
 
-    const renderSection = (key) => {
+    const renderSection = (key, mode = "required") => {
         // 1. Идентификация
         if (key === "identification") {
             const fromCatalog = mainFieldsOrder(
@@ -1466,12 +1463,22 @@ const Add = forwardRef(function Add(_props, ref) {
 
         // 4. Функциональные характеристики
         if (key === "functional") {
-            const dimFields = (dimensionsGroup?.fields || []).map((f) =>
+            // mode === "required" → только обязательные поля
+            // mode === "extra"    → только необязательные поля
+            const isExtra = mode === "extra";
+
+            const allDimFields = (dimensionsGroup?.fields || []).map((f) =>
                 REQUIRED_DIM_CODES.includes(f.code) ? { ...f, required: true } : f,
             );
+            const dimFields = allDimFields.filter((f) =>
+                isExtra ? !f.required : f.required,
+            );
 
-            const markedWeightFields = weightFields.map((f) =>
+            const allWeightFields = weightFields.map((f) =>
                 REQUIRED_WEIGHT_CODES.includes(f.code) ? { ...f, required: true } : f,
+            );
+            const markedWeightFields = allWeightFields.filter((f) =>
+                isExtra ? !f.required : f.required,
             );
 
             const catalogCodes = new Set([
@@ -1502,12 +1509,18 @@ const Add = forwardRef(function Add(_props, ref) {
             ].filter((f) => !catalogCodes.has(f.code));
 
             const hasRequiredDims = dimFields.some((f) => f.required);
+            const hasAnyDimOrWeight =
+                dimFields.length > 0 ||
+                markedWeightFields.length > 0 ||
+                (isExtra && extraDimFields.length > 0);
 
             return (
                 <>
-                    <h3 className="qw chars-subsection-title">
-                        Габаритные размеры и вес
-                    </h3>
+                    {/* {hasAnyDimOrWeight && (
+                        <h3 className="qw chars-subsection-title">
+                            Габаритные размеры и вес
+                        </h3>
+                    )} */}
 
                     {dimFields.length > 0 && (
                         <div
@@ -1520,11 +1533,14 @@ const Add = forwardRef(function Add(_props, ref) {
                                     key={field.code}
                                     field={{
                                         ...field,
-                                        unitOptions: catalog?.unitGroups?.dimension || [],
+                                        unitOptions:
+                                            catalog?.unitGroups?.dimension || [],
                                     }}
                                     value={specs[field.code]}
                                     unitGroups={catalog?.unitGroups}
-                                    onChange={(patch) => updateSpec(field.code, patch)}
+                                    onChange={(patch) =>
+                                        updateSpec(field.code, patch)
+                                    }
                                     checkbox={{
                                         checked: nameFeatureCodes.includes(field.code),
                                         onChange: () => toggleNameFeature(field.code),
@@ -1534,19 +1550,20 @@ const Add = forwardRef(function Add(_props, ref) {
                         </div>
                     )}
 
-                    {extraDimFields.map((field) => (
-                        <CharacteristicRow
-                            key={field.code}
-                            field={field}
-                            value={specs[field.code]}
-                            unitGroups={catalog?.unitGroups}
-                            onChange={(patch) => updateSpec(field.code, patch)}
-                            checkbox={{
-                                checked: nameFeatureCodes.includes(field.code),
-                                onChange: () => toggleNameFeature(field.code),
-                            }}
-                        />
-                    ))}
+                    {isExtra &&
+                        extraDimFields.map((field) => (
+                            <CharacteristicRow
+                                key={field.code}
+                                field={field}
+                                value={specs[field.code]}
+                                unitGroups={catalog?.unitGroups}
+                                onChange={(patch) => updateSpec(field.code, patch)}
+                                checkbox={{
+                                    checked: nameFeatureCodes.includes(field.code),
+                                    onChange: () => toggleNameFeature(field.code),
+                                }}
+                            />
+                        ))}
 
                     {markedWeightFields.length > 0 && (
                         <>
@@ -1556,12 +1573,17 @@ const Add = forwardRef(function Add(_props, ref) {
                                     field={field}
                                     value={specs[field.code]}
                                     unitGroups={catalog?.unitGroups}
-                                    onChange={(patch) => updateSpec(field.code, patch)}
+                                    onChange={(patch) =>
+                                        updateSpec(field.code, patch)
+                                    }
                                     checkbox={
                                         field.code === "weight"
                                             ? {
-                                                checked: nameFeatureCodes.includes(field.code),
-                                                onChange: () => toggleNameFeature(field.code),
+                                                checked: nameFeatureCodes.includes(
+                                                    field.code,
+                                                ),
+                                                onChange: () =>
+                                                    toggleNameFeature(field.code),
                                             }
                                             : undefined
                                     }
@@ -1570,113 +1592,144 @@ const Add = forwardRef(function Add(_props, ref) {
                         </>
                     )}
 
-                    <h3 className="qw chars-subsection-title">Цвет</h3>
+                    {isExtra && (
+                        <>
+                            <h3 className="qw chars-subsection-title">Цвет</h3>
 
-                    <div className="field-row field-row--options">
-                        <label className="field-checkbox" title="Отобразить в наименовании модели">
-                            <input
-                                type="checkbox"
-                                checked={nameFeatureCodes.includes("color")}
-                                onChange={() => toggleNameFeature("color")}
-                            />
-                        </label>
-                        <span className="info-icon" title="Выберите цвет или введите свой">
-                            ⓘ
-                        </span>
-                        <span className="required-mark-slot" aria-hidden="true" />
-                        <span className="field-name">Цвет</span>
-                        <div className="option-group">
-                            <input
-                                type="text"
-                                className="field-input option-custom-input"
-                                placeholder="Введите значение"
-                                value={specs.color?.value || ""}
-                                onChange={(event) =>
-                                    updateSpec("color", { value: event.target.value, customValue: "" })
-                                }
-                            />
-                            {[
-                                { value: "Белый", label: "Белый" },
-                                { value: "Черный", label: "Черный" },
-                                { value: "Серый", label: "Серый" },
-                                { value: "Серебристый", label: "Серебристый" },
-                                { value: "Синий", label: "Синий" },
-                                { value: "Красный", label: "Красный" },
-                                { value: "Бежевый", label: "Бежевый" },
-                                { value: "Коричневый", label: "Коричневый" },
-                                { value: "Зеленый", label: "Зеленый" },
-                                { value: "Желтый", label: "Желтый" },
-                                { value: "Оранжевый", label: "Оранжевый" },
-                                { value: "Фиолетовый", label: "Фиолетовый" },
-                                { value: "Розовый", label: "Розовый" },
-                                { value: "Голубой", label: "Голубой" },
-                                { value: "Бордовый", label: "Бордовый" },
-                            ].map((option) => (
-                                <button
-                                    type="button"
-                                    key={option.value}
-                                    className={`option-btn ${specs.color?.value === option.value ? "option-btn--active" : ""}`}
-                                    onClick={() =>
-                                        updateSpec("color", { value: option.value, customValue: "" })
-                                    }
+                            <div className="field-row field-row--options">
+                                <label
+                                    className="field-checkbox"
+                                    title="Отобразить в наименовании модели"
                                 >
-                                    {option.label}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
+                                    <input
+                                        type="checkbox"
+                                        checked={nameFeatureCodes.includes("color")}
+                                        onChange={() => toggleNameFeature("color")}
+                                    />
+                                </label>
+                                <span
+                                    className="info-icon"
+                                    title="Выберите цвет или введите свой"
+                                >
+                                    ⓘ
+                                </span>
+                                <span
+                                    className="required-mark-slot"
+                                    aria-hidden="true"
+                                />
+                                <span className="field-name">Цвет</span>
+                                <div className="option-group">
+                                    <input
+                                        type="text"
+                                        className="field-input option-custom-input"
+                                        placeholder="Введите значение"
+                                        value={specs.color?.value || ""}
+                                        onChange={(event) =>
+                                            updateSpec("color", {
+                                                value: event.target.value,
+                                                customValue: "",
+                                            })
+                                        }
+                                    />
+                                    {[
+                                        { value: "Белый", label: "Белый" },
+                                        { value: "Черный", label: "Черный" },
+                                        { value: "Серый", label: "Серый" },
+                                        {
+                                            value: "Серебристый",
+                                            label: "Серебристый",
+                                        },
+                                        { value: "Синий", label: "Синий" },
+                                        { value: "Красный", label: "Красный" },
+                                        { value: "Бежевый", label: "Бежевый" },
+                                        {
+                                            value: "Коричневый",
+                                            label: "Коричневый",
+                                        },
+                                        { value: "Зеленый", label: "Зеленый" },
+                                        { value: "Желтый", label: "Желтый" },
+                                        { value: "Оранжевый", label: "Оранжевый" },
+                                        {
+                                            value: "Фиолетовый",
+                                            label: "Фиолетовый",
+                                        },
+                                        { value: "Розовый", label: "Розовый" },
+                                        { value: "Голубой", label: "Голубой" },
+                                        { value: "Бордовый", label: "Бордовый" },
+                                    ].map((option) => (
+                                        <button
+                                            type="button"
+                                            key={option.value}
+                                            className={`option-btn ${specs.color?.value === option.value ? "option-btn--active" : ""}`}
+                                            onClick={() =>
+                                                updateSpec("color", {
+                                                    value: option.value,
+                                                    customValue: "",
+                                                })
+                                            }
+                                        >
+                                            {option.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
 
-                    <h3 className="qw chars-subsection-title">Нагрузка</h3>
+                            <h3 className="qw chars-subsection-title">Нагрузка</h3>
 
-                    <CharacteristicRow
-                        field={{
-                            code: "maxLoad",
-                            name: "Максимальная нагрузка на продукт",
-                            inputType: "text",
-                            unitOptions: [
-                                { value: "kg", label: "Килограмм" },
-                                { value: "gr", label: "Грамм" },
-                            ],
-                        }}
-                        value={specs.maxLoad}
-                        unitGroups={catalog?.unitGroups}
-                        onChange={(patch) => updateSpec("maxLoad", patch)}
-                        checkbox={{
-                            checked: nameFeatureCodes.includes("maxLoad"),
-                            onChange: () => toggleNameFeature("maxLoad"),
-                        }}
-                    />
+                            <CharacteristicRow
+                                field={{
+                                    code: "maxLoad",
+                                    name: "Максимальная нагрузка на продукт",
+                                    inputType: "text",
+                                    unitOptions: [
+                                        { value: "kg", label: "Килограмм" },
+                                        { value: "gr", label: "Грамм" },
+                                    ],
+                                }}
+                                value={specs.maxLoad}
+                                unitGroups={catalog?.unitGroups}
+                                onChange={(patch) => updateSpec("maxLoad", patch)}
+                                checkbox={{
+                                    checked: nameFeatureCodes.includes("maxLoad"),
+                                    onChange: () => toggleNameFeature("maxLoad"),
+                                }}
+                            />
 
-                    <h3 className="qw chars-subsection-title">
-                        Класс энергоэффективности
-                    </h3>
-                    <CharacteristicRow
-                        field={{
-                            code: "energyClass",
-                            name: "Класс энергоэффективности",
-                            inputType: "choice",
-                            options: [
-                                { value: "A++", label: "A++" },
-                                { value: "A+", label: "A+" },
-                                { value: "A", label: "A" },
-                                { value: "B", label: "B" },
-                                { value: "C", label: "C" },
-                                { value: "D", label: "D" },
-                                { value: "E", label: "E" },
-                                { value: "F", label: "F" },
-                                { value: "G", label: "G" },
-                            ],
-                        }}
-                        value={specs.energyClass}
-                        unitGroups={catalog?.unitGroups}
-                        onChange={(patch) => updateSpec("energyClass", patch)}
-                        checkbox={{
-                            checked: nameFeatureCodes.includes("energyClass"),
-                            onChange: () => toggleNameFeature("energyClass"),
-                        }}
-                    />
+                            <h3 className="qw chars-subsection-title">
+                                Класс энергоэффективности
+                            </h3>
+                            <CharacteristicRow
+                                field={{
+                                    code: "energyClass",
+                                    name: "Класс энергоэффективности",
+                                    inputType: "choice",
+                                    options: [
+                                        { value: "A++", label: "A++" },
+                                        { value: "A+", label: "A+" },
+                                        { value: "A", label: "A" },
+                                        { value: "B", label: "B" },
+                                        { value: "C", label: "C" },
+                                        { value: "D", label: "D" },
+                                        { value: "E", label: "E" },
+                                        { value: "F", label: "F" },
+                                        { value: "G", label: "G" },
+                                    ],
+                                }}
+                                value={specs.energyClass}
+                                unitGroups={catalog?.unitGroups}
+                                onChange={(patch) =>
+                                    updateSpec("energyClass", patch)
+                                }
+                                checkbox={{
+                                    checked: nameFeatureCodes.includes("energyClass"),
+                                    onChange: () =>
+                                        toggleNameFeature("energyClass"),
+                                }}
+                            />
 
-                    {renderSectionOther("functional")}
+                            {renderSectionOther("functional")}
+                        </>
+                    )}
                 </>
             );
         }
@@ -2579,7 +2632,7 @@ const Add = forwardRef(function Add(_props, ref) {
             );
         }
 
-        // Fallback — разделы, у которых нет явного обработчика (6. Материал и состав)
+        // Fallback — «Материал и состав»
         const fallback = FALLBACK_SECTIONS[key];
         if (fallback) {
             return (
@@ -2625,6 +2678,7 @@ const Add = forwardRef(function Add(_props, ref) {
     const uploadedOptionalDocs = optionalDocFields
         .map(([name, label]) => ({ name, label, file: docs[name] }))
         .filter((item) => item.file);
+
     const renderDocField = ([name, label, placeholder]) => (
         <div className="field" key={name}>
             <label className="label">{label}</label>
@@ -2678,6 +2732,15 @@ const Add = forwardRef(function Add(_props, ref) {
         </div>
     );
 
+    const activeSectionLabel =
+        REQUIRED_CHARACTERISTIC_SECTIONS.find(
+            (s) => s.key === activeSection.key && activeSection.mode === "required",
+        )?.label ||
+        EXTRA_CHARACTERISTIC_SECTIONS.find(
+            (s) => s.key === activeSection.key && activeSection.mode === "extra",
+        )?.label ||
+        "";
+
     return (
         <>
             <div
@@ -2694,8 +2757,12 @@ const Add = forwardRef(function Add(_props, ref) {
                 )}
                 {error && <p className="form-error">{error}</p>}
 
-                <h2 className="subtitle">Документы модели</h2>
-
+                <h2 className="stage2-section-title">Документы модели</h2>
+                <PageHelp
+                    inline
+                    context="Наименование бренда"
+                    buttonTitle="Подсказка по полю «Наименование бренда»"
+                />
                 <div className="docs-tabs" role="tablist">
                     {requiredDocFields.length > 0 && (
                         <button
@@ -2796,8 +2863,11 @@ const Add = forwardRef(function Add(_props, ref) {
                     </div>
                 )}
 
-                {/* <div className="matches-divider stage23-bundle-divider" /> */}
-
+                <div className="ttr">
+                    <button className="utt">
+                        Загрузить Характеристики и Описание через файл Excel
+                    </button>
+                </div>
                 <h2 className="stage2-section-title">
                     Характеристики модели (параметра)
                 </h2>
@@ -2848,33 +2918,106 @@ const Add = forwardRef(function Add(_props, ref) {
                                 <h2 className="stage24-section-title">
                                     Технические, физические и функциональные характеристики модели
                                 </h2>
-                                <p className="stage23-subtitle-line">
-                                    Заполните значения характеристик, которые
-                                    соответствуют модели (параметру).<br />
-                                    
-                                </p>
 
                                 <p className="stage23-subtitle-line">
-                                    Пример наименования модели (параметра):<br />
-                                    Наименование линейки (Логотип + Тип продукта + Бренд + Линейка) + Модель
-                                    + 1-я характеристика + 2-я характеристика.
-                                </p>
-
-                                <p className="stage23-subtitle-line stage23-namehint">
                                     <span className="field-checkbox field-checkbox--hint" aria-hidden="true">
                                         <input type="checkbox" checked readOnly tabIndex={-1} />
                                     </span>
-                                    Отметьте галочкой характеристики, которые будут отображаться в наименовании модели (параметра).
+                                    Заполните характеристики, которые будут соответствовать модели (параметру).<br />
+                                    Отметьте галочкой характеристики, которые будут отображаться
+                                    в наименовании модели (параметра).
                                 </p>
 
-                                {CHARACTERISTIC_SECTIONS.map((section) => (
-                                    <section className="chars-section" key={section.key}>
-                                        <h3 className="chars-section__title">{section.label}</h3>
-                                        <div className="chars-section__body">
-                                            {renderSection(section.key)}
-                                        </div>
-                                    </section>
-                                ))}
+                                <div className="chars-layout">
+                                    <aside className="chars-sidebar">
+                                        <div className="chars-sidebar__group">Обязательные</div>
+                                        {REQUIRED_CHARACTERISTIC_SECTIONS.map((section) => {
+                                            const active =
+                                                activeSection.mode === "required" &&
+                                                activeSection.key === section.key;
+                                            return (
+                                                <button
+                                                    key={`req-${section.key}`}
+                                                    type="button"
+                                                    className={`chars-sidebar__item ${active ? "chars-sidebar__item--active" : ""}`}
+                                                    onClick={() =>
+                                                        setActiveSection({
+                                                            key: section.key,
+                                                            mode: "required",
+                                                        })
+                                                    }
+                                                >
+                                                    {section.label}
+                                                </button>
+                                            );
+                                        })}
+
+                                        <div className="chars-sidebar__group">Дополнительные</div>
+                                        {EXTRA_CHARACTERISTIC_SECTIONS.map((section) => {
+                                            const active =
+                                                activeSection.mode === "extra" &&
+                                                activeSection.key === section.key;
+                                            return (
+                                                <button
+                                                    key={`ext-${section.key}`}
+                                                    type="button"
+                                                    className={`chars-sidebar__item ${active ? "chars-sidebar__item--active" : ""}`}
+                                                    onClick={() =>
+                                                        setActiveSection({
+                                                            key: section.key,
+                                                            mode: "extra",
+                                                        })
+                                                    }
+                                                >
+                                                    {section.label}
+                                                </button>
+                                            );
+                                        })}
+                                    </aside>
+
+                                    <main className="chars-content">
+                                        {activeSection.mode === "required" ? (
+                                            /* === Обязательные: все 4 секции сразу === */
+                                            REQUIRED_CHARACTERISTIC_SECTIONS.map((section) => (
+                                                <section
+                                                    className="chars-section"
+                                                    key={`req-content-${section.key}`}
+                                                >
+                                                    <div className="chars-section__title-row">
+                                                        <PageHelp
+                                                            inline
+                                                            context={section.label}
+                                                            buttonTitle={`Подсказка по разделу «${section.label}»`}
+                                                        />
+                                                        <h3 className="chars-section__title">
+                                                            {section.label}
+                                                        </h3>
+                                                    </div>
+                                                    <div className="chars-section__body">
+                                                        {renderSection(section.key, "required")}
+                                                    </div>
+                                                </section>
+                                            ))
+                                        ) : (
+                                            /* === Дополнительные: только выбранная === */
+                                            <section className="chars-section">
+                                                <div className="chars-section__title-row">
+                                                    <PageHelp
+                                                        inline
+                                                        context={activeSectionLabel}
+                                                        buttonTitle="Подсказка"
+                                                    />
+                                                    <h3 className="chars-section__title">
+                                                        {activeSectionLabel}
+                                                    </h3>
+                                                </div>
+                                                <div className="chars-section__body">
+                                                    {renderSection(activeSection.key, "extra")}
+                                                </div>
+                                            </section>
+                                        )}
+                                    </main>
+                                </div>
                             </div>
                         )}
 
@@ -2884,7 +3027,11 @@ const Add = forwardRef(function Add(_props, ref) {
                                 <p className="stage23-subtitle-line">
                                     Посмотрите наименование модели (параметра).
                                 </p>
-
+                                <PageHelp
+                                    inline
+                                    context="Наименование бренда"
+                                    buttonTitle="Подсказка по полю «Наименование бренда»"
+                                />
                                 <div className="field-row">
                                     <span className="info-icon" title="Наименование модели">
                                         ⓘ
@@ -2897,11 +3044,16 @@ const Add = forwardRef(function Add(_props, ref) {
                                 </div>
 
                                 <p className="uui">
-                                    Удалите выбранные характеристики или выберите другие в разделе
+                                    Вы можете удалить характеристики из наименования и выбрать другие в разделе
                                     "Технические, физические и функциональные характеристики модели"
                                 </p>
 
                                 <div className="field-row">
+                                    <PageHelp
+                                        inline
+                                        context="Наименование бренда"
+                                        buttonTitle="Подсказка по полю «Наименование бренда»"
+                                    />
                                     <button
                                         type="button"
                                         title="Удалить"
@@ -2909,6 +3061,7 @@ const Add = forwardRef(function Add(_props, ref) {
                                     >
                                         ✕
                                     </button>
+
                                     <span className="required-mark-slot" aria-hidden="true" />
                                     <span className="field-name">1 характеристика</span>
                                     <span className="field-text">
@@ -2917,6 +3070,11 @@ const Add = forwardRef(function Add(_props, ref) {
                                 </div>
 
                                 <div className="field-row">
+                                    <PageHelp
+                                        inline
+                                        context="Наименование бренда"
+                                        buttonTitle="Подсказка по полю «Наименование бренда»"
+                                    />
                                     <button
                                         type="button"
                                         title="Удалить"
@@ -2977,6 +3135,11 @@ const Add = forwardRef(function Add(_props, ref) {
                                         >
                                             Фотографии текущего варианта
                                         </h2>
+                                        <PageHelp
+                                            inline
+                                            context="Наименование бренда"
+                                            buttonTitle="Подсказка по полю «Наименование бренда»"
+                                        />
                                         <div className="stage14-gallery">
                                             <PhotoGallery
                                                 key={variationId}
@@ -3002,6 +3165,11 @@ const Add = forwardRef(function Add(_props, ref) {
 
                                 <div className="section">
                                     <h3 className="chars-subsection-title">
+                                        <PageHelp
+                                            inline
+                                            context="Наименование бренда"
+                                            buttonTitle="Подсказка по полю «Наименование бренда»"
+                                        />
                                         Укажите вид упаковки:
                                     </h3>
 
@@ -3059,6 +3227,11 @@ const Add = forwardRef(function Add(_props, ref) {
 
                                 <div className="section">
                                     <h3 className="chars-subsection-title">
+                                        <PageHelp
+                                            inline
+                                            context="Наименование бренда"
+                                            buttonTitle="Подсказка по полю «Наименование бренда»"
+                                        />
                                         Укажите материал упаковки:
                                     </h3>
                                     {!packType && (
@@ -3194,7 +3367,14 @@ const Add = forwardRef(function Add(_props, ref) {
                                 </div>
 
                                 <div>
-                                    <h3>Хрупкий продукт</h3>
+                                    <h3>
+                                        <PageHelp
+                                            inline
+                                            context="Наименование бренда"
+                                            buttonTitle="Подсказка по полю «Наименование бренда»"
+                                        />
+                                        Хрупкий продукт
+                                    </h3>
                                     <div className="radio-group">
                                         <label className="radio-label">
                                             <input
@@ -3220,7 +3400,14 @@ const Add = forwardRef(function Add(_props, ref) {
                                 </div>
 
                                 <div>
-                                    <h3>Вес продукта в упаковке</h3>
+                                    <h3>
+                                        <PageHelp
+                                            inline
+                                            context="Наименование бренда"
+                                            buttonTitle="Подсказка по полю «Наименование бренда»"
+                                        />
+                                        Вес продукта в упаковке
+                                    </h3>
                                     <div className="weight-row">
                                         <input
                                             type="text"
@@ -3240,41 +3427,13 @@ const Add = forwardRef(function Add(_props, ref) {
                                     </div>
                                 </div>
 
-                                {/* <div className="section">
-                                    <h3 className="chars-subsection-title">
-                                        Укажите внешние размеры упаковки (длина x ширина x высота):
-                                    </h3>
-                                    {["length", "width", "height"].map((name) => (
-                                        <div className="dimension-row" key={name}>
-                                            <label className="dimension-label">
-                                                {name === "length"
-                                                    ? "Длина"
-                                                    : name === "width"
-                                                        ? "Ширина"
-                                                        : "Высота"}
-                                            </label>
-                                            <input
-                                                type="text"
-                                                className="dimension-input"
-                                                value={packSizes[name]}
-                                                onChange={(event) =>
-                                                    setPackSizes((prev) => ({
-                                                        ...prev,
-                                                        [name]: event.target.value,
-                                                    }))
-                                                }
-                                            />
-                                            <span className="dimension-unit">
-                                                {packSizeUnit === "sm"
-                                                    ? "сантиметров"
-                                                    : "миллиметров"}
-                                            </span>
-                                        </div>
-                                    ))}
-                                </div> */}
-
                                 <div className="section">
                                     <h3 className="chars-subsection-title">
+                                        <PageHelp
+                                            inline
+                                            context="Наименование бренда"
+                                            buttonTitle="Подсказка по полю «Наименование бренда»"
+                                        />
                                         Укажите внешние размеры упаковки (длина x ширина x высота):
                                     </h3>
                                     {["length", "width", "height"].map((name) => (
@@ -3313,6 +3472,11 @@ const Add = forwardRef(function Add(_props, ref) {
                                     <h3 className="chars-subsection-title">
                                         Добавьте фотографии упаковки продукта:
                                     </h3>
+                                    <PageHelp
+                                        inline
+                                        context="Наименование бренда"
+                                        buttonTitle="Подсказка по полю «Наименование бренда»"
+                                    />
                                     {productId && (
                                         <PhotoGallery
                                             productId={productId}
@@ -3333,9 +3497,13 @@ const Add = forwardRef(function Add(_props, ref) {
                                     Укажите стоимость модели и выберите систему лояльности
                                 </p>
 
-                                {/* ===== Стоимость товара ===== */}
                                 <div className="section">
                                     <h3 className="chars-subsection-title">
+                                        <PageHelp
+                                            inline
+                                            context="Наименование бренда"
+                                            buttonTitle="Подсказка по полю «Наименование бренда»"
+                                        />
                                         Стоимость модели
                                     </h3>
 
@@ -3383,12 +3551,13 @@ const Add = forwardRef(function Add(_props, ref) {
                                     </div>
                                 </div>
 
-                                {/* ===== Система лояльности ===== */}
                                 <div className="section">
                                     <h3 className="chars-subsection-title">
-                                        <span className="info-icon" title="Подсказка">
-                                            ⓘ
-                                        </span>
+                                        <PageHelp
+                                            inline
+                                            context="Наименование бренда"
+                                            buttonTitle="Подсказка по полю «Наименование бренда»"
+                                        />
                                         Система лояльности
                                     </h3>
 
@@ -3494,7 +3663,6 @@ const Add = forwardRef(function Add(_props, ref) {
                                     </span>
                                 </button>
 
-                                {/* Форма добавления нового адреса */}
                                 {showForm && (
                                     <div className="address-form">
                                         <input
@@ -3582,7 +3750,6 @@ const Add = forwardRef(function Add(_props, ref) {
                                     </div>
                                 )}
 
-                                {/* Список адресов */}
                                 <div className="address-list">
                                     {addresses.map((item) => (
                                         <div className="address-item" key={item.id}>
@@ -3621,6 +3788,11 @@ const Add = forwardRef(function Add(_props, ref) {
                                             {item.active && (
                                                 <div className="address-quantity">
                                                     <span className="address-quantity__label">
+                                                        <PageHelp
+                                                            inline
+                                                            context="Наименование бренда"
+                                                            buttonTitle="Подсказка по полю «Наименование бренда»"
+                                                        />
                                                         Количество товаров на складе:
                                                     </span>
                                                     <input
@@ -3777,7 +3949,6 @@ const Add = forwardRef(function Add(_props, ref) {
 
                 {showCustomVariantSetup && categorySnapshot?.kindCode && categorySnapshot.kindCode !== "other" && (
                     <>
-                        {/* <div className="matches-divider stage23-bundle-divider" /> */}
                         <Stage25
                             ref={axisRef}
                             embedded
@@ -3785,12 +3956,10 @@ const Add = forwardRef(function Add(_props, ref) {
                             onSelectionChange={handleAxisSelectionChange}
                             onNameOptionsChange={handleNameOptionsChange}
                         />
-                        {/* <div className="matches-divider stage23-bundle-divider" /> */}
                         <Stage26 ref={nameRef} embedded previewOptions={nameOptions} />
                     </>
                 )}
 
-                {/* <div className="matches-divider stage23-bundle-divider" /> */}
                 <Stage24
                     ref={descriptionRef}
                     embedded
@@ -3800,37 +3969,35 @@ const Add = forwardRef(function Add(_props, ref) {
                     onDescriptionInteract={closeCharacteristicsForDescription}
                 />
             </div>
-                        <BottomBar
-                            current={4}
-                            total={4}
-                            prevPath="/stage22"
-                            nextPath="/stage22"
-                            onSave={async () => {
-                                await persist();
-                                setCharsRefreshKey((prev) => prev + 1);
-                                let savedVariationId = variationId;
-                                if (showCustomVariantSetup && axisPreview.length > 0) {
-                                    savedVariationId =
-                                        (await axisRef.current?.save?.()) || savedVariationId;
-                                    if (savedVariationId && productId) {
-                                        const next = new URLSearchParams(location.search);
-                                        next.set("id", productId);
-                                        next.set("variationId", savedVariationId);
-                                        navigate(
-                                            { pathname: location.pathname, search: `?${next.toString()}` },
-                                            { replace: true },
-                                        );
-                                    }
-                                    await nameRef.current?.save?.(savedVariationId);
-                                }
-                                await descriptionRef.current?.save?.();
-                            }}
-                            // previewPath="/stage22"
-                            // managePath="/products"
-                            homeIconSrc="../images/Home.png"
-                        />
-                    </>
-                );
-            });
+            <BottomBar
+                current={4}
+                total={4}
+                prevPath="/stage22"
+                nextPath="/stage22"
+                onSave={async () => {
+                    await persist();
+                    setCharsRefreshKey((prev) => prev + 1);
+                    let savedVariationId = variationId;
+                    if (showCustomVariantSetup && axisPreview.length > 0) {
+                        savedVariationId =
+                            (await axisRef.current?.save?.()) || savedVariationId;
+                        if (savedVariationId && productId) {
+                            const next = new URLSearchParams(location.search);
+                            next.set("id", productId);
+                            next.set("variationId", savedVariationId);
+                            navigate(
+                                { pathname: location.pathname, search: `?${next.toString()}` },
+                                { replace: true },
+                            );
+                        }
+                        await nameRef.current?.save?.(savedVariationId);
+                    }
+                    await descriptionRef.current?.save?.();
+                }}
+                homeIconSrc="../images/Home.png"
+            />
+        </>
+    );
+});
 
 export default Add;

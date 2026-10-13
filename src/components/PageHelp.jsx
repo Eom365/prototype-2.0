@@ -6,7 +6,12 @@ import {
 } from '../pageQuestions'
 import './PageHelp.css'
 
-function PageHelp() {
+function PageHelp({
+  context = '',
+  inline = false,
+  buttonTitle = 'Задать вопрос по странице',
+  modalTitle = 'Вопрос по заполнению',
+}) {
   const location = useLocation()
   const [params] = useSearchParams()
   const [open, setOpen] = useState(false)
@@ -16,7 +21,8 @@ function PageHelp() {
 
   const pathname = location.pathname
   const productId = params.get('id')
-  const hidden = pathname === '/' || pathname === '' || pathname === '/questions'
+  const hidden =
+    pathname === '/' || pathname === '' || pathname === '/questions'
 
   useEffect(() => {
     setOpen(false)
@@ -27,7 +33,7 @@ function PageHelp() {
 
   if (hidden) return null
 
-  const pageLabel = pageLabelForPath(pathname)
+  const pageLabel = context || pageLabelForPath(pathname)
 
   const handleSubmit = () => {
     const value = text.trim()
@@ -61,9 +67,9 @@ function PageHelp() {
     <>
       <button
         type="button"
-        className="page-help-btn"
-        title="Задать вопрос по странице"
-        aria-label="Задать вопрос по странице"
+        className={`page-help-btn${inline ? ' page-help-btn--inline' : ''}`}
+        title={buttonTitle}
+        aria-label={buttonTitle}
         onClick={() => {
           setOpen(true)
           setError('')
@@ -87,7 +93,7 @@ function PageHelp() {
             onClick={(event) => event.stopPropagation()}
           >
             <h2 className="page-help-modal__title" id="page-help-title">
-              Вопрос по заполнению
+              {modalTitle}
             </h2>
             <p className="page-help-modal__page">{pageLabel}</p>
             <label className="page-help-modal__label" htmlFor="page-help-text">
