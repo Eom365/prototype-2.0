@@ -146,7 +146,7 @@ function PreviewBar({
                     </button>
                 )}
 
-                {showNext && (
+                {/* {showNext && (
                     <button
                         type="button"
                         className="preview-bar__next"
@@ -155,7 +155,7 @@ function PreviewBar({
                     >
                         {busy ? 'Сохранение…' : `${nextLabel} →`}
                     </button>
-                )}
+                )} */}
             </div>
         </div>
     )

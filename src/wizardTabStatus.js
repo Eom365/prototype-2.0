@@ -81,6 +81,10 @@ export function isCharacteristicsTabFilled(key, ctx) {
     techGroups = [],
     customRows = [],
     productLine = '',
+    product = null,
+    packType = '',
+    photosCount = 0,
+    packagePhotosCount = 0,
   } = ctx || {}
 
   if (key === 'review') return false
@@ -95,21 +99,20 @@ export function isCharacteristicsTabFilled(key, ctx) {
     return checks.every(Boolean)
   }
   if (key === 'dimensions') {
-    const dimensionCodes = ['length', 'width', 'height']
-    const weightCodes = weightFields.map((field) => field.code)
-    const codes = weightCodes.length
-      ? [...dimensionCodes, ...weightCodes]
-      : [...dimensionCodes, 'weight', 'weightTolerance']
-    return codes.every((code) => specFilled(specs[code]))
+    // «Наименование модели» — считаем заполненным,
+    // если на Этапе 2 сохранено итоговое имя линейки
+    return Boolean(
+      (product?.fullName || '').trim() ||
+      (product?.productName || '').trim(),
+    )
   }
   if (key === 'manufacturer') {
-    if (!manufacturerFields.length) return false
-    return manufacturerFields.every((field) => specFilled(specs[field.code]))
+    // «Фотографии модели» — есть ли хоть одно фото продукта
+    return photosCount > 0
   }
   if (key === 'garant') {
-    return (
-      specFilled(specs.warrantyPeriod) && specFilled(specs.serviceLife)
-    )
+    // «Упаковка модели» — выбран тип упаковки или загружены фото упаковки
+    return Boolean(packType) || packagePhotosCount > 0
   }
   if (key === 'tech') {
     const fields = (techGroups || []).flatMap((group) => group.fields || [])

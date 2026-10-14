@@ -1527,7 +1527,7 @@ function Stage2() {
         <>
             <div className="container stage2-page">
                 {/* <InformationAboutProductLine productId={productId} /> */}
-                <h1 className="title stage2-title">Этап 2 - Создание линейки</h1>
+                <h1 className="title stage2-title">Этап 2 - Создание линейки продукта</h1>
 
                 <div className="stage2-workarea">
                    

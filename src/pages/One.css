@@ -1,0 +1,3664 @@
+/* =========================================================
+   One.css — стили страницы «Этап 4. Создание модели»
+   Опирается на палитру и геометрию Add.css:
+   акцент #6b63c7, светлый синий #A6CAF0, границы #d9d9d9/#ccc
+   ========================================================= */
+
+.one-page {
+    padding-bottom: 120px;
+}
+
+/* --- Заголовок этапа --- */
+.one-page .title {
+    font-size: 28px;
+    font-weight: 700;
+    margin: 0 0 16px;
+    color: #1a1a1a;
+}
+
+/* --- Подзаголовок «Наименование конкретной модели» --- */
+.one-page .one-section-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 8px 0 12px;
+    color: #1a1a1a;
+    text-align: left;
+}
+
+/* =========================================================
+   Плашка предпросмотра наименования
+   (расширяем .stage4-name-box из Add.css)
+   ========================================================= */
+.one-page .stage4-name-box {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border: 1px solid #d0d0d0;
+    border-radius: 6px;
+    padding: 12px 16px;
+    background: #fff;
+    width: 100%;
+    margin-bottom: 20px;
+    min-height: 56px;
+    box-sizing: border-box;
+}
+
+/* Круглая кнопка с «?» в стиле PageHelp из Add */
+.one-page .stage4-name-box__help {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1px solid #c9cfd6;
+    background: #fff;
+    color: #5b6470;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s ease, border-color 0.15s ease;
+    font-family: inherit;
+}
+
+.one-page .stage4-name-box__help:hover {
+    background: #eef1f5;
+    border-color: #a9b2bd;
+}
+
+.one-page .stage4-name-box__text {
+    flex: 1;
+    min-width: 0;
+    font-size: 16px;
+    line-height: 1.35;
+    color: #1f2937;
+    font-family: inherit;
+    white-space: normal;
+    word-break: break-word;
+}
+
+//* =========================================================
+   Таб-панель — 6 разделов в одну строку
+   ========================================================= */
+.one-page .one-tabs {
+    display: flex;
+    flex-wrap: nowrap;
+    /* ← запрещаем перенос */
+    gap: 8px;
+    margin: 0 0 20px;
+    width: 100%;
+}
+
+.one-page .one-tab {
+    flex: 1 1 0;
+    /* ← все табы делят ширину поровну */
+    min-width: 0;
+    /* ← разрешаем сжиматься */
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 10px;
+    font-family: inherit;
+    font-size: 13px;
+    line-height: 1.25;
+    color: #444;
+    background: #f7f7f7;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    cursor: pointer;
+    text-align: center;
+    white-space: normal;
+    /* ← текст переносится внутри таба */
+    word-break: break-word;
+    transition: background 0.15s ease, border-color 0.15s ease,
+        box-shadow 0.15s ease;
+}
+
+.one-page .one-tab:hover {
+    background: #efefef;
+}
+
+/* Активный — как .docs-tab--active в Add.css */
+.one-page .one-tab--active {
+    background: #fff;
+    color: #222;
+    font-weight: 600;
+    border-color: #6b63c7;
+    box-shadow: inset 0 -3px 0 #6b63c7;
+}
+
+.one-page .one-tab--active:hover {
+    background: #fff;
+}
+
+/* =========================================================
+   Область содержимого активного раздела
+   ========================================================= */
+.one-page .one-panel {
+    padding: 20px;
+    background: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    min-height: 200px;
+    box-sizing: border-box;
+}
+
+.one-page .one-panel__placeholder {
+    color: #7a838f;
+    font-size: 14px;
+    margin: 0;
+    text-align: left;
+}
+
+/* =========================================================
+   Таб-панель — «сросшийся» бар в один ряд
+   (по образцу .docs-tabs из Add.css)
+   ========================================================= */
+.one-page .one-tabs {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 0;
+    /* ← без зазоров между табами */
+    width: 100%;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    overflow: hidden;
+    /* ← скругления обрезают крайние табы */
+    background: #f7f7f7;
+    margin: 0 0 20px;
+    box-sizing: border-box;
+}
+
+.one-page .one-tab {
+    position: relative;
+    flex: 1 1 0;
+    /* ← все табы равной ширины */
+    min-width: 0;
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 16px 9px 13px;
+    font-family: inherit;
+    font-size: 12px;
+    line-height: 1.32;
+    color: #444;
+    background: #f7f7f7;
+    border: none;
+    border-right: 1px solid #ccc;
+    /* ← разделитель между табами */
+    cursor: pointer;
+    text-align: center;
+    min-height: 64px;
+    white-space: normal;
+    /* ← длинный текст переносится */
+    word-break: break-word;
+    transition: background 0.15s ease;
+}
+
+.one-page .one-tab:last-child {
+    border-right: none;
+    /* у последнего правую линию убираем */
+}
+
+.one-page .one-tab:hover {
+    background: #efefef;
+}
+
+/* ===== Активный — как .docs-tab--filled: зелёный + галочка ===== */
+.one-page .one-tab--active {
+    background: #ddf0d3;
+    color: #1f4d1a;
+    font-weight: 600;
+    box-shadow: inset 0 -3px 0 #4caf50;
+}
+
+.one-page .one-tab--active:hover {
+    background: #ddf0d3;
+}
+
+/* Кружок с галочкой слева от текста активного таба */
+.one-page .one-tab__check {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #4caf50;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.one-page .one-tab__label {
+    display: inline-block;
+    max-width: 100%;
+}
+
+/* =========================================================
+   ПОДНАВИГАЦИЯ ПО РАЗДЕЛАМ «ИДЕНТИФИКАЦИИ»
+   ========================================================= */
+.one-page .one-subnav {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 8px 0 24px;
+    align-items: flex-start;
+}
+
+.one-page .one-subnav__item {
+    padding: 0;
+    background: none;
+    border: none;
+    font-family: inherit;
+    font-size: 15px;
+    color: #1f2937;
+    cursor: pointer;
+    text-align: left;
+    text-decoration: none;
+}
+
+.one-page .one-subnav__item:hover {
+    color: #2563eb;
+    text-decoration: underline;
+}
+
+/* =========================================================
+   БЛОК-СЕКЦИЯ (общая рамка + заголовок в рамке)
+   ========================================================= */
+.one-page .one-block {
+    margin-bottom: 32px;
+    scroll-margin-top: 16px;
+}
+
+.one-page .one-block-title {
+    display: block;
+    padding: 10px 18px;
+    /* border: 1.5px solid #1a1a1a; */
+    background: #fff;
+    font-size: 17px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 18px;
+    text-align: left;
+}
+
+/* =========================================================
+   ПОЛЕ-СТРОКА (требует заполнения / ⓘ / ✱ / label / input)
+   ========================================================= */
+.one-page .one-field {
+    display: grid;
+    grid-template-columns: 150px 28px 20px minmax(220px, 1fr) minmax(220px, 320px);
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid #e6e6e6;
+}
+
+.one-page .one-field--pair {
+    grid-template-columns: 150px 28px 20px minmax(220px, 1fr) auto;
+}
+
+.one-page .one-field__req {
+    color: #9b1c1c;
+    font-size: 13px;
+    line-height: 1.2;
+}
+
+.one-page .one-field__req--hidden {
+    visibility: hidden;
+}
+
+.one-page .one-field__help {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 1px solid #b9bec6;
+    background: #fff;
+    color: #6a7280;
+    font-size: 12px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    font-family: inherit;
+}
+
+.one-page .one-field__help:hover {
+    background: #eef1f5;
+}
+
+/* Слот под иконку ⓘ, когда её нет (для ровной сетки) */
+.one-page .one-field__help-slot {
+    width: 24px;
+    height: 24px;
+}
+
+.one-page .one-field__star {
+    color: #c0392b;
+    font-size: 15px;
+    font-weight: 700;
+    text-align: center;
+}
+
+.one-page .one-field__label {
+    font-size: 14px;
+    line-height: 1.3;
+    color: #1f2937;
+}
+
+.one-page .one-field__input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 8px 12px;
+    font-family: inherit;
+    font-size: 14px;
+    border: 1px solid #c9cfd6;
+    border-radius: 6px;
+    background: #fff;
+    color: #1f2937;
+    outline: none;
+}
+
+.one-page .one-field__input:focus {
+    border-color: #6b63c7;
+}
+
+/* =========================================================
+   Пары кнопок (Не допускается / Допускается)
+   ========================================================= */
+.one-page .one-field__pairs {
+    display: flex;
+    gap: 8px;
+}
+
+.one-page .one-chip {
+    padding: 8px 14px;
+    font-family: inherit;
+    font-size: 13px;
+    color: #1f2937;
+    background: #fff;
+    border: 1px solid #c9cfd6;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.one-page .one-chip:hover {
+    background: #f1f4f8;
+}
+
+.one-page .one-chip--active {
+    background: #dfe9fb;
+    border-color: #6b63c7;
+    font-weight: 600;
+}
+
+/* =========================================================
+   СЕКЦИЯ ФОТОГРАФИЙ
+   ========================================================= */
+.one-page .one-photos {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 20px;
+}
+
+.one-page .one-photos__label {
+    margin: 0 0 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #1f2937;
+}
+
+.one-page .one-photos__req {
+    border: 1.5px solid #e25c5c;
+    border-radius: 4px;
+    padding: 12px 16px;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #1f2937;
+    background: #fff;
+}
+
+.one-page .one-photos__req p {
+    margin: 0 0 6px;
+}
+
+.one-page .one-photos__req p:last-child {
+    margin-bottom: 0;
+}
+
+.one-page .one-photos__examples {
+    display: flex;
+    gap: 12px;
+}
+
+.one-page .one-photos__examples img {
+    width: 110px;
+    height: 110px;
+    object-fit: contain;
+    border: 1px solid #e6e6e6;
+    border-radius: 8px;
+    background: #fafbfc;
+    padding: 6px;
+}
+
+.one-page .one-photos__add {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 18px;
+    margin-bottom: 16px;
+    font-family: inherit;
+    font-size: 14px;
+    color: #1f2937;
+    background: #f4efe6;
+    border: 1px solid #d8cfc0;
+    border-radius: 22px;
+    cursor: pointer;
+}
+
+.one-page .one-photos__add-plus {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #c9b790;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.one-page .one-photos__grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 14px;
+}
+
+.one-page .one-photos__slot {
+    aspect-ratio: 1 / 1;
+    border: 1.5px dashed #c9cfd6;
+    border-radius: 10px;
+    background: #fafbfc;
+    cursor: pointer;
+}
+
+.one-page .one-photos__slot--first {
+    border: 2px solid #4caf50;
+    border-style: solid;
+}
+
+/* =========================================================
+   ПОДЗАГОЛОВКИ И ПОДБЛОКИ В «ОПИСАНИИ»
+   ========================================================= */
+.one-page .one-subtitle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin: 20px 0 6px;
+}
+
+.one-page .one-subtitle__help {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 1px solid #b9bec6;
+    background: #fff;
+    color: #6a7280;
+    font-size: 12px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.one-page .one-subtitle__hint {
+    margin: 0 0 12px;
+    font-size: 13px;
+    color: #6a7280;
+    line-height: 1.4;
+}
+
+.one-page .one-subblock {
+    margin: 12px 0 20px;
+}
+
+.one-page .one-subblock__title {
+    margin: 0 0 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #1f2937;
+}
+
+/* =========================================================
+   RANGE-СТРОКА (От... До...)
+   ========================================================= */
+.one-page .one-range {
+    margin-bottom: 10px;
+}
+
+.one-page .one-range__label {
+    display: block;
+    font-size: 13px;
+    color: #1f2937;
+    margin-bottom: 4px;
+}
+
+.one-page .one-range__row {
+    display: grid;
+    grid-template-columns: 150px 28px 20px auto minmax(120px, 1fr) auto minmax(120px, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+}
+
+.one-page .one-range__cap {
+    font-size: 13px;
+    color: #6a7280;
+}
+
+.one-page .one-range__input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 8px 12px;
+    font-family: inherit;
+    font-size: 14px;
+    border: 1px solid #c9cfd6;
+    border-radius: 6px;
+    background: #fff;
+    color: #1f2937;
+    outline: none;
+}
+
+.one-page .one-range__input:focus {
+    border-color: #6b63c7;
+}
+
+.one-page .one-range__unit {
+    font-size: 13px;
+    color: #6a7280;
+    min-width: 24px;
+}
+
+/* =========================================================
+   КЛАСС ОПАСНОСТИ (числовой выбор)
+   ========================================================= */
+.one-page .one-hazard {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.one-page .one-hazard__item {
+    width: 40px;
+    height: 40px;
+    font-family: inherit;
+    font-size: 14px;
+    color: #1f2937;
+    background: #fff;
+    border: 1px solid #c9cfd6;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.one-page .one-hazard__item:hover {
+    background: #f1f4f8;
+}
+
+.one-page .one-hazard__item--active {
+    background: #dfe9fb;
+    border-color: #6b63c7;
+    font-weight: 700;
+}
+
+/* =========================================================
+   СЕКЦИЯ «ДОКУМЕНТЫ»
+   ========================================================= */
+.one-page .one-docs {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    margin-top: 4px;
+}
+
+.one-page .one-docs__field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.one-page .one-docs__label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #1f2937;
+    margin-left: 0;
+}
+
+.one-page .one-docs__row {
+    display: grid;
+    grid-template-columns: 180px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 12px;
+}
+
+/* Левая колонка «требует заполнения ✱» */
+.one-page .one-docs__req-slot {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    justify-content: flex-start;
+}
+
+.one-page .one-docs__req-text {
+    font-size: 13px;
+    color: #9b1c1c;
+    font-weight: 500;
+}
+
+.one-page .one-docs__req-star {
+    color: #1a1a1a;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.one-page .one-docs__req-space {
+    display: inline-block;
+    width: 100%;
+    height: 1px;
+}
+
+/* Поле с иконкой-скрепкой */
+.one-page .one-docs__input-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.one-page .one-docs__input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px 44px 10px 14px;
+    font-family: inherit;
+    font-size: 14px;
+    color: #1f2937;
+    background: #fff;
+    border: 1px solid #c9cfd6;
+    border-radius: 6px;
+    outline: none;
+}
+
+.one-page .one-docs__input::placeholder {
+    color: #9aa2ad;
+}
+
+.one-page .one-docs__input:focus {
+    border-color: #6b63c7;
+}
+
+/* Иконка-скрепка справа внутри поля */
+.one-page .one-docs__clip {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 26px;
+    height: 26px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    color: #4b5563;
+    cursor: pointer;
+    border-radius: 50%;
+    transition: background 0.15s ease;
+}
+
+.one-page .one-docs__clip:hover {
+    background: #eef1f5;
+}
+
+/* Кнопка удаления файла */
+.one-page .one-docs__clear {
+    position: absolute;
+    right: 40px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 22px;
+    height: 22px;
+    border: none;
+    background: transparent;
+    color: #9aa2ad;
+    font-size: 14px;
+    cursor: pointer;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.one-page .one-docs__clear:hover {
+    color: #d33;
+    background: #f5f5f5;
+}
+
+/* Кнопка «Шаблон» */
+.one-page .one-docs__template {
+    padding: 8px 16px;
+    font-family: inherit;
+    font-size: 13px;
+    color: #1f2937;
+    background: #fff;
+    border: 1px solid #c9cfd6;
+    border-radius: 6px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.one-page .one-docs__template:hover {
+    background: #f1f4f8;
+    border-color: #a9b2bd;
+}
+
+
+
+/* =========================================================
+   СЕКЦИЯ «УПАКОВКА»
+   ========================================================= */
+.one-page .one-pack__intro {
+    font-size: 14px;
+    color: #6a7280;
+    margin: 0 0 22px;
+    line-height: 1.45;
+}
+
+.one-page .one-pack__group {
+    margin-bottom: 28px;
+}
+
+.one-page .one-pack__title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 15px;
+    font-weight: 500;
+    color: #1a1a1a;
+    margin: 0 0 12px;
+}
+
+.one-page .one-pack__title--strong {
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.one-page .one-pack__req {
+    color: #9b1c1c;
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.one-page .one-pack__help {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 1px solid #b9bec6;
+    background: #fff;
+    color: #6a7280;
+    font-size: 12px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.one-page .one-pack__hint {
+    font-size: 13px;
+    color: #6a7280;
+    margin: 0 0 12px;
+    line-height: 1.45;
+}
+
+/* --- Радио-опции --- */
+.one-page .one-pack__radios {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-left: 170px;
+}
+
+.one-page .one-radio {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: #1f2937;
+    cursor: pointer;
+}
+
+.one-page .one-radio input[type="radio"] {
+    width: 16px;
+    height: 16px;
+    accent-color: #4caf50;
+    cursor: pointer;
+    margin: 0;
+}
+
+/* --- Чипы материала упаковки --- */
+.one-page .one-pack__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-left: 170px;
+}
+
+.one-page .one-pack__custom {
+    margin-left: 170px;
+    margin-top: 10px;
+    max-width: 420px;
+}
+
+/* --- Вес продукта --- */
+.one-page .one-pack__weight {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-left: 170px;
+}
+
+.one-page .one-pack__weight .one-field__input {
+    max-width: 240px;
+}
+
+/* --- Селект единиц --- */
+.one-page .one-pack__select {
+    padding: 8px 12px;
+    font-family: inherit;
+    font-size: 14px;
+    color: #1f2937;
+    background: #fff;
+    border: 1px solid #c9cfd6;
+    border-radius: 6px;
+    cursor: pointer;
+    outline: none;
+    min-width: 150px;
+}
+
+.one-page .one-pack__select:focus {
+    border-color: #6b63c7;
+}
+
+/* --- Размеры упаковки --- */
+.one-page .one-pack__dim {
+    display: grid;
+    grid-template-columns: 150px 90px minmax(180px, 260px) 150px;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 0;
+}
+
+.one-page .one-pack__dim-label {
+    font-size: 14px;
+    color: #1f2937;
+}
+
+/* =========================================================
+   СЕКЦИЯ «КОМПЛЕКТАЦИЯ»
+   ========================================================= */
+.one-page .one-kit__title {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-size: 18px;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin: 0 0 14px;
+    line-height: 1.2;
+}
+
+/* Круглая ? — как в PageHelp из Add.jsx */
+.one-page .one-kit__help {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: 1.5px solid #1a1a1a;
+    background: #fff;
+    color: #1a1a1a;
+    font-size: 13px;
+    font-weight: 600;
+    flex-shrink: 0;
+    line-height: 1;
+}
+
+.one-page .one-kit__help--lg {
+    width: 32px;
+    height: 32px;
+    font-size: 15px;
+}
+
+.one-page .one-kit__intro {
+    font-size: 14px;
+    color: #6a7280;
+    line-height: 1.55;
+    margin: 0 0 28px;
+    max-width: 860px;
+}
+
+/* Список строк */
+.one-page .one-kit__list {
+    display: flex;
+    flex-direction: column;
+    gap: 26px;
+}
+
+/* Одна строка комплектации */
+.one-page .one-kit__row {
+    display: grid;
+    grid-template-columns: 26px 24px minmax(0, 1fr) 24px 140px 44px 96px;
+    align-items: center;
+    gap: 14px;
+}
+
+.one-page .one-kit__num {
+    font-size: 15px;
+    color: #1a1a1a;
+    text-align: right;
+    line-height: 1;
+}
+
+/* Поле «Наименование» */
+.one-page .one-kit__name {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 12px 16px;
+    font-family: inherit;
+    font-size: 14px;
+    color: #1f2937;
+    background: #fff;
+    border: 1px solid #dcdfe4;
+    border-radius: 6px;
+    outline: none;
+}
+
+.one-page .one-kit__name::placeholder {
+    color: #b3b9c2;
+    font-style: italic;
+}
+
+.one-page .one-kit__name:focus {
+    border-color: #6b63c7;
+}
+
+/* Тире между наименованием и количеством */
+.one-page .one-kit__dash {
+    color: #b9bec6;
+    text-align: center;
+    font-size: 15px;
+    line-height: 1;
+}
+
+/* Поле «Количество» */
+.one-page .one-kit__qty {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 12px 14px;
+    font-family: inherit;
+    font-size: 14px;
+    color: #1f2937;
+    background: #fff;
+    border: 1px solid #dcdfe4;
+    border-radius: 6px;
+    outline: none;
+    text-align: left;
+}
+
+.one-page .one-kit__qty::placeholder {
+    color: #b3b9c2;
+    font-style: italic;
+}
+
+.one-page .one-kit__qty:focus {
+    border-color: #6b63c7;
+}
+
+/* Подпись «штук» */
+.one-page .one-kit__unit {
+    font-size: 13px;
+    color: #6a7280;
+    white-space: nowrap;
+}
+
+/* Кнопка «＋ Добавить фото» — квадрат со скруглением */
+.one-page .one-kit__photo {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 96px;
+    height: 96px;
+    font-family: inherit;
+    font-size: 11px;
+    color: #1a1a1a;
+    background: #fff;
+    border: 1.5px solid #1a1a1a;
+    border-radius: 20px;
+    cursor: pointer;
+    overflow: hidden;
+    transition: background 0.15s ease;
+    text-align: center;
+    padding: 6px;
+    box-sizing: border-box;
+}
+
+.one-page .one-kit__photo:hover {
+    background: #f7f8fa;
+}
+
+.one-page .one-kit__photo-plus {
+    font-size: 22px;
+    font-weight: 400;
+    line-height: 1;
+    color: #1a1a1a;
+}
+
+.one-page .one-kit__photo-text {
+    font-size: 10px;
+    line-height: 1.15;
+    color: #1a1a1a;
+    text-align: center;
+}
+
+.one-page .one-kit__photo-preview {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 12px;
+}
+
+/* Кнопка «Добавить строку» */
+.one-page .one-kit__add-row {
+    margin-top: 22px;
+    padding: 10px 20px;
+    font-family: inherit;
+    font-size: 13px;
+    color: #1a1a1a;
+    background: #fff;
+    border: 1.5px dashed #b9bec6;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.one-page .one-kit__add-row:hover {
+    background: #f5f7fa;
+    border-color: #6b63c7;
+}
+
+/* =========================================================
+   СЕКЦИЯ «ЦЕНООБРАЗОВАНИЕ»
+   ========================================================= */
+.one-page .one-price__lead {
+    font-size: 15px;
+    color: #6a7280;
+    margin: 0 0 10px;
+}
+
+.one-page .one-price__title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 17px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin: 0 0 20px;
+}
+
+/* Круглая ? как в PageHelp */
+.one-page .one-price__help {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1.5px solid #1a1a1a;
+    background: #fff;
+    color: #1a1a1a;
+    font-size: 15px;
+    font-weight: 600;
+    flex-shrink: 0;
+    line-height: 1;
+}
+
+.one-page .one-price__subtitle {
+    font-size: 15px;
+    color: #1a1a1a;
+    margin: 0 0 22px;
+}
+
+.one-page .one-price__row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 18px;
+}
+
+.one-page .one-price__label {
+    font-size: 14px;
+    color: #1f2937;
+    min-width: 130px;
+}
+
+.one-page .one-price__label--wide {
+    min-width: 200px;
+}
+
+/* Кнопки валют — как на скрине */
+.one-page .one-price__currencies {
+    display: flex;
+    gap: 10px;
+}
+
+.one-page .one-price__currency {
+    padding: 8px 18px;
+    font-family: inherit;
+    font-size: 14px;
+    color: #1f2937;
+    background: #fff;
+    border: 1px solid #dcdfe4;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.one-page .one-price__currency:hover {
+    background: #f5f7fa;
+}
+
+.one-page .one-price__currency--active {
+    background: #e3f2df;
+    border-color: #4caf50;
+    color: #1f4d1a;
+    font-weight: 600;
+}
+
+.one-page .one-price__symbol {
+    font-size: 15px;
+    color: #d33;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.one-page .one-price__input {
+    width: 200px;
+    box-sizing: border-box;
+    padding: 10px 14px;
+    font-family: inherit;
+    font-size: 14px;
+    color: #1f2937;
+    background: #fff;
+    border: 1px solid #dcdfe4;
+    border-radius: 6px;
+    outline: none;
+}
+
+.one-page .one-price__input:focus {
+    border-color: #6b63c7;
+}
+
+/* =========================================================
+   СИСТЕМА ЛОЯЛЬНОСТИ
+   ========================================================= */
+.one-page .one-loyalty__list {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+}
+
+.one-page .one-loyalty__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    color: #1f2937;
+}
+
+.one-page .one-loyalty__text {
+    white-space: nowrap;
+}
+
+/* Тумблер */
+.one-page .one-toggle {
+    position: relative;
+    width: 52px;
+    height: 26px;
+    border-radius: 13px;
+    border: none;
+    background: #d8d8d8;
+    cursor: pointer;
+    padding: 0;
+    transition: background 0.15s ease;
+    flex-shrink: 0;
+}
+
+.one-page .one-toggle--on {
+    background: #4caf50;
+}
+
+.one-page .one-toggle__knob {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #fff;
+    transition: transform 0.15s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.one-page .one-toggle--on .one-toggle__knob {
+    transform: translateX(26px);
+}
+
+/* Поля внутри ступеньки */
+.one-page .one-loyalty__input {
+    width: 90px;
+    box-sizing: border-box;
+    padding: 8px 12px;
+    font-family: inherit;
+    font-size: 14px;
+    color: #1f2937;
+    background: #fff;
+    border: 1px solid #dcdfe4;
+    border-radius: 6px;
+    outline: none;
+}
+
+.one-page .one-loyalty__input:focus {
+    border-color: #6b63c7;
+}
+
+.one-page .one-loyalty__input:disabled {
+    background: #f8f9fb;
+    color: #b3b9c2;
+    cursor: not-allowed;
+}
+
+.one-page .one-loyalty__input--price {
+    width: 140px;
+}
+
+/* Иконка ⓘ справа от ступеньки */
+.one-page .one-loyalty__info {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 1px solid #b9bec6;
+    background: #fff;
+    color: #6a7280;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: help;
+    flex-shrink: 0;
+}
+
+.one-page .one-loyalty__star {
+    color: #c0392b;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+
+/* =========================================================
+   СЕКЦИЯ «ДОСТАВКА»
+   ========================================================= */
+.one-page .one-delivery__intro {
+    font-size: 15px;
+    color: #6a7280;
+    margin: 0 0 18px;
+}
+
+/* Кнопка «＋ Добавить адрес отгрузки» */
+.one-page .one-delivery__add {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 18px 8px 10px;
+    margin-bottom: 22px;
+    font-family: inherit;
+    font-size: 14px;
+    color: #1f2937;
+    background: #fbf7f0;
+    border: 1px solid #ecdcc4;
+    border-radius: 24px;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.one-page .one-delivery__add:hover {
+    background: #f4ecdd;
+    border-color: #d8c8ad;
+}
+
+.one-page .one-delivery__add-plus {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: #f0e2cb;
+    color: #8a6a34;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.one-page .one-delivery__add-text {
+    font-size: 14px;
+    color: #1f2937;
+}
+
+/* ========== ФОРМА СКЛАДА ========== */
+.one-page .one-delivery__form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 22px;
+    margin-bottom: 26px;
+    background: #fafbfc;
+    border: 1px solid #eceef1;
+    border-radius: 12px;
+}
+
+.one-page .one-delivery__form-input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 12px 16px;
+    font-family: inherit;
+    font-size: 14px;
+    color: #1f2937;
+    background: #fff;
+    border: 1px solid #dcdfe4;
+    border-radius: 8px;
+    outline: none;
+    transition: border-color 0.15s ease;
+}
+
+.one-page .one-delivery__form-input::placeholder {
+    color: #9aa2ad;
+}
+
+.one-page .one-delivery__form-input:focus {
+    border-color: #6b63c7;
+}
+
+/* Кнопки формы — оранжевая ✕ и зелёная ✓ встык */
+.one-page .one-delivery__form-actions {
+    display: flex;
+    margin-top: 8px;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.one-page .one-delivery__form-btn {
+    flex: 1;
+    height: 52px;
+    font-family: inherit;
+    font-size: 22px;
+    font-weight: 700;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    transition: filter 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.one-page .one-delivery__form-btn:hover {
+    filter: brightness(1.05);
+}
+
+.one-page .one-delivery__form-btn--cancel {
+    background: #f0a300;
+}
+
+.one-page .one-delivery__form-btn--save {
+    background: #34c759;
+}
+
+/* ========== СПИСОК СКЛАДОВ ========== */
+.one-page .one-delivery__list {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+}
+
+.one-page .one-delivery__item {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.one-page .one-delivery__head {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.one-page .one-delivery__body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.one-page .one-delivery__address {
+    font-size: 14px;
+    color: #1f2937;
+    line-height: 1.35;
+    word-break: break-word;
+}
+
+.one-page .one-delivery__status {
+    font-size: 13px;
+    color: #8a9099;
+}
+
+/* Кнопка редактирования — синяя иконка-карандаш в круге */
+.one-page .one-delivery__edit {
+    flex-shrink: 0;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 1.5px solid #2563eb;
+    background: #fff;
+    color: #2563eb;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.one-page .one-delivery__edit:hover {
+    background: #eff4ff;
+}
+
+/* Строка «Количество товаров на складе» */
+.one-page .one-delivery__qty {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-left: 66px;
+}
+
+.one-page .one-delivery__help {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: 1.5px solid #1a1a1a;
+    background: #fff;
+    color: #1a1a1a;
+    font-size: 13px;
+    font-weight: 600;
+    flex-shrink: 0;
+    line-height: 1;
+}
+
+.one-page .one-delivery__qty-label {
+    font-size: 14px;
+    color: #1f2937;
+}
+
+.one-page .one-delivery__qty-input {
+    width: 140px;
+    box-sizing: border-box;
+    padding: 8px 12px;
+    font-family: inherit;
+    font-size: 14px;
+    color: #1f2937;
+    background: #fff;
+    border: 1px solid #dcdfe4;
+    border-radius: 6px;
+    outline: none;
+}
+
+.one-page .one-delivery__qty-input:focus {
+    border-color: #6b63c7;
+}
+
+.one-page .one-delivery__qty-unit {
+    font-size: 13px;
+    color: #6a7280;
+}
+
+/* =========================================================
+   СЕКЦИЯ «ХАРАКТЕРИСТИКИ» (таб 6)
+   ========================================================= */
+.one-page .one-char__heading {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin: 0 0 12px;
+}
+
+.one-page .one-char__hint {
+    font-size: 14px;
+    color: #6a7280;
+    line-height: 1.5;
+    margin: 0 0 20px;
+}
+
+.one-page .one-char__layout {
+    display: grid;
+    grid-template-columns: 220px minmax(0, 1fr);
+    gap: 28px;
+    align-items: flex-start;
+}
+
+/* Левое меню */
+.one-page .one-char__sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    position: sticky;
+    top: 16px;
+}
+
+.one-page .one-char__side {
+    padding: 14px 16px;
+    font-family: inherit;
+    font-size: 14px;
+    text-align: left;
+    color: #1f2937;
+    background: #fff;
+    border: 1px solid #dcdfe4;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+    line-height: 1.3;
+}
+
+.one-page .one-char__side:hover {
+    background: #f5f7fa;
+}
+
+.one-page .one-char__side--active {
+    background: #eef1f6;
+    border-color: #1a1a1a;
+    font-weight: 600;
+}
+
+/* Правая часть */
+.one-page .one-char__content {
+    min-width: 0;
+}
+
+.one-page .one-char__section-title {
+    font-size: 17px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin: 26px 0 12px;
+}
+
+.one-page .one-char__section-title:first-child {
+    margin-top: 0;
+}
+
+.one-page .one-char__group-title {
+    font-size: 14px;
+    color: #6a7280;
+    margin: 18px 0 8px;
+}
+
+.one-page .one-char__minihead {
+    font-size: 13px;
+    color: #8a9099;
+    margin: 12px 0 6px;
+}
+
+/* Строка характеристики */
+.one-page .one-char__row {
+    display: grid;
+    grid-template-columns: 28px 24px 20px minmax(180px, 1fr) minmax(220px, 2fr);
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid #eef0f3;
+}
+
+.one-page .one-char__check {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border: 2px solid #7cbf3f;
+    border-radius: 4px;
+    background: #fff;
+    cursor: pointer;
+}
+
+.one-page .one-char__check input {
+    width: 14px;
+    height: 14px;
+    accent-color: #7cbf3f;
+    margin: 0;
+    cursor: pointer;
+}
+
+.one-page .one-char__info {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 1px solid #b9bec6;
+    background: #fff;
+    color: #6a7280;
+    font-size: 12px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.one-page .one-char__star {
+    color: #c0392b;
+    font-size: 14px;
+    font-weight: 700;
+    text-align: center;
+}
+
+.one-page .one-char__label {
+    font-size: 14px;
+    color: #1f2937;
+    line-height: 1.35;
+}
+
+.one-page .one-char__control {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+/* Поле-текст */
+.one-page .one-char__input-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+}
+
+.one-page .one-char__input {
+    flex: 1;
+    min-width: 120px;
+    box-sizing: border-box;
+    padding: 8px 12px;
+    font-family: inherit;
+    font-size: 14px;
+    color: #1f2937;
+    background: #fff;
+    border: 1px solid #dcdfe4;
+    border-radius: 6px;
+    outline: none;
+}
+
+.one-page .one-char__input--sm {
+    max-width: 180px;
+}
+
+.one-page .one-char__input::placeholder {
+    color: #9aa2ad;
+}
+
+.one-page .one-char__input:focus {
+    border-color: #6b63c7;
+}
+
+.one-page .one-char__unit {
+    padding: 8px 12px;
+    font-family: inherit;
+    font-size: 14px;
+    color: #1f2937;
+    background: #fff;
+    border: 1px solid #dcdfe4;
+    border-radius: 6px;
+    cursor: pointer;
+    outline: none;
+    min-width: 110px;
+}
+
+.one-page .one-char__unit:focus {
+    border-color: #6b63c7;
+}
+
+.one-page .one-char__unit-label {
+    font-size: 13px;
+    color: #6a7280;
+    white-space: nowrap;
+}
+
+/* Группа кнопок */
+.one-page .one-char__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.one-page .one-char__chips .one-chip {
+    padding: 7px 14px;
+    font-size: 13px;
+}
+
+/* Вертикальный стек: input + chips */
+.one-page .one-char__stack {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+}
+
+/* «Иное» */
+.one-page .one-char__custom {
+    display: grid;
+    grid-template-columns: 24px minmax(180px, 1fr) minmax(180px, 1fr) 180px;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+}
+
+.one-page .one-char__custom-name,
+.one-page .one-char__custom-value,
+.one-page .one-char__custom-unit {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 8px 12px;
+    font-family: inherit;
+    font-size: 14px;
+    color: #1f2937;
+    background: #fff;
+    border: 1px solid #dcdfe4;
+    border-radius: 6px;
+    outline: none;
+}
+
+.one-page .one-char__custom-name:focus,
+.one-page .one-char__custom-value:focus,
+.one-page .one-char__custom-unit:focus {
+    border-color: #6b63c7;
+}
+
+.one-page .one-char__placeholder {
+    font-size: 14px;
+    color: #8a9099;
+    margin: 0;
+}
+
+/* =========================================================
+   One.css — стили страницы «Этап 4. Создание модели»
+   Опирается на палитру и геометрию Add.css:
+   акцент #6b63c7, светлый синий #A6CAF0, границы #d9d9d9/#ccc
+   ========================================================= */
+
+.one-page {
+    padding-bottom: 120px;
+}
+
+/* =========================================================
+   ЗАГОЛОВКИ
+   ========================================================= */
+.one-page .title {
+    font-size: 28px;
+    font-weight: 700;
+    margin: 0 0 16px;
+    color: #1a1a1a;
+}
+
+.one-page .one-section-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 8px 0 12px;
+    color: #1a1a1a;
+    text-align: left;
+}
+
+/* =========================================================
+   ПЛАШКА ПРЕДПРОСМОТРА НАИМЕНОВАНИЯ
+   ========================================================= */
+.one-page .stage4-name-box {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border: 1px solid #d0d0d0;
+    border-radius: 6px;
+    padding: 12px 16px;
+    background: #fff;
+    width: 100%;
+    margin-bottom: 20px;
+    min-height: 56px;
+    box-sizing: border-box;
+}
+
+.one-page .stage4-name-box__help {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1px solid #c9cfd6;
+    background: #fff;
+    color: #5b6470;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s ease, border-color 0.15s ease;
+    font-family: inherit;
+}
+
+.one-page .stage4-name-box__help:hover {
+    background: #eef1f5;
+    border-color: #a9b2bd;
+}
+
+.one-page .stage4-name-box__text {
+    flex: 1;
+    min-width: 0;
+    font-size: 16px;
+    line-height: 1.35;
+    color: #1f2937;
+    font-family: inherit;
+    white-space: normal;
+    word-break: break-word;
+}
+
+/* =========================================================
+   ВЕРХНИЕ 6 ТАБОВ — «сросшийся» бар в один ряд
+   ========================================================= */
+.one-page .one-tabs {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 0;
+    width: 100%;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    overflow: hidden;
+    background: #f7f7f7;
+    margin: 0 0 20px;
+    box-sizing: border-box;
+}
+
+.one-page .one-tab {
+    position: relative;
+    flex: 1 1 0;
+    min-width: 0;
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 16px 9px 13px;
+    font-family: inherit;
+    font-size: 12px;
+    line-height: 1.32;
+    color: #444;
+    background: #f7f7f7;
+    border: none;
+    border-right: 1px solid #ccc;
+    cursor: pointer;
+    text-align: center;
+    min-height: 64px;
+    white-space: normal;
+    word-break: break-word;
+    transition: background 0.15s ease;
+}
+
+.one-page .one-tab:last-child {
+    border-right: none;
+}
+
+.one-page .one-tab:hover {
+    background: #efefef;
+}
+
+.one-page .one-tab--active {
+    background: #ddf0d3;
+    color: #1f4d1a;
+    font-weight: 600;
+    box-shadow: inset 0 -3px 0 #4caf50;
+}
+
+.one-page .one-tab--active:hover {
+    background: #ddf0d3;
+}
+
+.one-page .one-tab__label {
+    display: inline-block;
+    max-width: 100%;
+}
+
+/* =========================================================
+   ПОДНАВИГАЦИЯ ПО РАЗДЕЛАМ ТАБА
+   ========================================================= */
+.one-page .one-subnav {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 8px 0 24px;
+    align-items: flex-start;
+}
+
+.one-page .one-subnav__item {
+    padding: 0;
+    background: none;
+    border: none;
+    font-family: inherit;
+    font-size: 15px;
+    color: #1f2937;
+    cursor: pointer;
+    text-align: left;
+    text-decoration: none;
+}
+
+.one-page .one-subnav__item:hover {
+    color: #2563eb;
+    text-decoration: underline;
+}
+
+/* =========================================================
+   БЛОК-СЕКЦИЯ
+   ========================================================= */
+.one-page .one-block {
+    margin-bottom: 32px;
+    scroll-margin-top: 16px;
+}
+
+.one-page .one-block-title {
+    display: inline-block;
+    padding: 10px 18px;
+    border: 1.5px solid #1a1a1a;
+    background: #fff;
+    font-size: 17px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 18px;
+}
+
+/* =========================================================
+   ПОЛЕ-СТРОКА (FieldRow)
+   ========================================================= */
+.one-page .one-field {
+    display: grid;
+    grid-template-columns: 150px 28px 20px minmax(220px, 1fr) minmax(220px, 320px);
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid #e6e6e6;
+}
+
+.one-page .one-field--pair {
+    grid-template-columns: 150px 28px 20px minmax(220px, 1fr) auto;
+}
+
+.one-page .one-field__req {
+    color: #9b1c1c;
+    font-size: 13px;
+    line-height: 1.2;
+}
+
+.one-page .one-field__req--hidden {
+    visibility: hidden;
+}
+
+.one-page .one-field__help {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 1px solid #b9bec6;
+    background: #fff;
+    color: #6a7280;
+    font-size: 12px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    font-family: inherit;
+}
+
+.one-page .one-field__help:hover {
+    background: #eef1f5;
+}
+
+.one-page .one-field__help-slot {
+    width: 24px;
+    height: 24px;
+}
+
+.one-page .one-field__star {
+    color: #c0392b;
+    font-size: 15px;
+    font-weight: 700;
+    text-align: center;
+}
+
+.one-page .one-field__label {
+    font-size: 14px;
+    line-height: 1.3;
+    color: #1f2937;
+}
+
+.one-page .one-field__input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 8px 12px;
+    font-family: inherit;
+    font-size: 14px;
+    border: 1px solid #c9cfd6;
+    border-radius: 6px;
+    background: #fff;
+    color: #1f2937;
+    outline: none;
+}
+
+.one-page .one-field__input:focus {
+    border-color: #6b63c7;
+}
+
+.one-page .one-field__pairs {
+    display: flex;
+    gap: 8px;
+}
+
+/* Общий чип (используется в выборах и как кнопка-опция) */
+.one-page .one-chip {
+    padding: 8px 14px;
+    font-family: inherit;
+    font-size: 13px;
+    color: #1f2937;
+    background: #fff;
+    border: 1px solid #c9cfd6;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.one-page .one-chip:hover {
+    background: #f1f4f8;
+}
+
+.one-page .one-chip--active {
+    background: #dfe9fb;
+    border-color: #6b63c7;
+    font-weight: 600;
+}
+
+/* =========================================================
+   СЕКЦИЯ «ДОКУМЕНТЫ»
+   ========================================================= */
+.one-page .one-docs {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    margin-top: 4px;
+}
+
+.one-page .one-docs__field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.one-page .one-docs__label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #1f2937;
+}
+
+.one-page .one-docs__row {
+    display: grid;
+    grid-template-columns: 180px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 12px;
+}
+
+.one-page .one-docs__req-slot {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    justify-content: flex-start;
+}
+
+.one-page .one-docs__req-text {
+    font-size: 13px;
+    color: #1a1a1a;
+    font-weight: 500;
+}
+
+.one-page .one-docs__req-star {
+    color: #1a1a1a;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.one-page .one-docs__req-space {
+    display: inline-block;
+    width: 100%;
+    height: 1px;
+}
+
+.one-page .one-docs__input-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.one-page .one-docs__input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px 44px 10px 14px;
+    font-family: inherit;
+    font-size: 14px;
+    color: #1f2937;
+    background: #fff;
+    border: 1px solid #c9cfd6;
+    border-radius: 6px;
+    outline: none;
+}
+
+.one-page .one-docs__input::placeholder {
+    color: #9aa2ad;
+}
+
+.one-page .one-docs__input:focus {
+    border-color: #6b63c7;
+}
+
+.one-page .one-docs__clip {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 26px;
+    height: 26px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    color: #4b5563;
+    cursor: pointer;
+    border-radius: 50%;
+    transition: background 0.15s ease;
+}
+
+.one-page .one-docs__clip:hover {
+    background: #eef1f5;
+}
+
+.one-page .one-docs__clear {
+    position: absolute;
+    right: 40px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 22px;
+    height: 22px;
+    border: none;
+    background: transparent;
+    color: #9aa2ad;
+    font-size: 14px;
+    cursor: pointer;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.one-page .one-docs__clear:hover {
+    color: #d33;
+    background: #f5f5f5;
+}
+
+.one-page .one-docs__template {
+    padding: 8px 16px;
+    font-family: inherit;
+    font-size: 13px;
+    color: #1f2937;
+    background: #fff;
+    border: 1px solid #c9cfd6;
+    border-radius: 6px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.one-page .one-docs__template:hover {
+    background: #f1f4f8;
+    border-color: #a9b2bd;
+}
+
+/* =========================================================
+   СЕКЦИЯ «ФОТОГРАФИИ»
+   ========================================================= */
+.one-page .one-photos {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 20px;
+}
+
+.one-page .one-photos__label {
+    margin: 0 0 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #1f2937;
+}
+
+.one-page .one-photos__req {
+    border: 1.5px solid #e25c5c;
+    border-radius: 4px;
+    padding: 12px 16px;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #1f2937;
+    background: #fff;
+}
+
+.one-page .one-photos__req p {
+    margin: 0 0 6px;
+}
+
+.one-page .one-photos__req p:last-child {
+    margin-bottom: 0;
+}
+
+.one-page .one-photos__examples {
+    display: flex;
+    gap: 12px;
+}
+
+.one-page .one-photos__examples img {
+    width: 110px;
+    height: 110px;
+    object-fit: contain;
+    border: 1px solid #e6e6e6;
+    border-radius: 8px;
+    background: #fafbfc;
+    padding: 6px;
+}
+
+.one-page .one-photos__add {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 18px;
+    margin-bottom: 16px;
+    font-family: inherit;
+    font-size: 14px;
+    color: #1f2937;
+    background: #f4efe6;
+    border: 1px solid #d8cfc0;
+    border-radius: 22px;
+    cursor: pointer;
+}
+
+.one-page .one-photos__add-plus {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #c9b790;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.one-page .one-photos__grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 14px;
+}
+
+.one-page .one-photos__slot {
+    aspect-ratio: 1 / 1;
+    border: 1.5px dashed #c9cfd6;
+    border-radius: 10px;
+    background: #fafbfc;
+    cursor: pointer;
+}
+
+.one-page .one-photos__slot--first {
+    border: 2px solid #4caf50;
+    border-style: solid;
+}
+
+/* =========================================================
+   СЕКЦИЯ «УПАКОВКА»
+   ========================================================= */
+.one-page .one-pack__intro {
+    font-size: 14px;
+    color: #6a7280;
+    margin: 0 0 22px;
+    line-height: 1.45;
+}
+
+.one-page .one-pack__group {
+    margin-bottom: 28px;
+}
+
+.one-page .one-pack__title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 15px;
+    font-weight: 500;
+    color: #1a1a1a;
+    margin: 0 0 12px;
+}
+
+.one-page .one-pack__title--strong {
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.one-page .one-pack__req {
+    color: #1a1a1a;
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.one-page .one-pack__help {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 1px solid #b9bec6;
+    background: #fff;
+    color: #6a7280;
+    font-size: 12px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.one-page .one-pack__hint {
+    font-size: 13px;
+    color: #6a7280;
+    margin: 0 0 12px;
+    line-height: 1.45;
+}
+
+.one-page .one-pack__radios {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-left: 170px;
+}
+
+.one-page .one-radio {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: #1f2937;
+    cursor: pointer;
+}
+
+.one-page .one-radio input[type="radio"] {
+    width: 16px;
+    height: 16px;
+    accent-color: #4caf50;
+    cursor: pointer;
+    margin: 0;
+}
+
+.one-page .one-pack__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-left: 170px;
+}
+
+.one-page .one-pack__custom {
+    margin-left: 170px;
+    margin-top: 10px;
+    max-width: 420px;
+}
+
+.one-page .one-pack__weight {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-left: 170px;
+}
+
+.one-page .one-pack__weight .one-field__input {
+    max-width: 240px;
+}
+
+.one-page .one-pack__select {
+    padding: 8px 12px;
+    font-family: inherit;
+    font-size: 14px;
+    color: #1f2937;
+    background: #fff;
+    border: 1px solid #c9cfd6;
+    border-radius: 6px;
+    cursor: pointer;
+    outline: none;
+    min-width: 150px;
+}
+
+.one-page .one-pack__select:focus {
+    border-color: #6b63c7;
+}
+
+.one-page .one-pack__dim {
+    display: grid;
+    grid-template-columns: 150px 90px minmax(180px, 260px) 150px;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 0;
+}
+
+.one-page .one-pack__dim-label {
+    font-size: 14px;
+    color: #1f2937;
+}
+
+/* =========================================================
+   СЕКЦИЯ «КОМПЛЕКТАЦИЯ»
+   ========================================================= */
+.one-page .one-kit__title {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-size: 18px;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin: 0 0 14px;
+    line-height: 1.2;
+}
+
+.one-page .one-kit__help {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: 1.5px solid #1a1a1a;
+    background: #fff;
+    color: #1a1a1a;
+    font-size: 13px;
+    font-weight: 600;
+    flex-shrink: 0;
+    line-height: 1;
+}
+
+.one-page .one-kit__help--lg {
+    width: 32px;
+    height: 32px;
+    font-size: 15px;
+}
+
+.one-page .one-kit__intro {
+    font-size: 14px;
+    color: #6a7280;
+    line-height: 1.55;
+    margin: 0 0 28px;
+    max-width: 860px;
+}
+
+.one-page .one-kit__list {
+    display: flex;
+    flex-direction: column;
+    gap: 26px;
+}
+
+.one-page .one-kit__row {
+    display: grid;
+    grid-template-columns: 26px 24px minmax(0, 1fr) 24px 140px 44px 96px;
+    align-items: center;
+    gap: 14px;
+}
+
+.one-page .one-kit__num {
+    font-size: 15px;
+    color: #1a1a1a;
+    text-align: right;
+    line-height: 1;
+}
+
+.one-page .one-kit__name {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 12px 16px;
+    font-family: inherit;
+    font-size: 14px;
+    color: #1f2937;
+    background: #fff;
+    border: 1px solid #dcdfe4;
+    border-radius: 6px;
+    outline: none;
+}
+
+.one-page .one-kit__name::placeholder {
+    color: #b3b9c2;
+    font-style: italic;
+}
+
+.one-page .one-kit__name:focus {
+    border-color: #6b63c7;
+}
+
+.one-page .one-kit__dash {
+    color: #b9bec6;
+    text-align: center;
+    font-size: 15px;
+    line-height: 1;
+}
+
+.one-page .one-kit__qty {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 12px 14px;
+    font-family: inherit;
+    font-size: 14px;
+    color: #1f2937;
+    background: #fff;
+    border: 1px solid #dcdfe4;
+    border-radius: 6px;
+    outline: none;
+    text-align: left;
+}
+
+.one-page .one-kit__qty::placeholder {
+    color: #b3b9c2;
+    font-style: italic;
+}
+
+.one-page .one-kit__qty:focus {
+    border-color: #6b63c7;
+}
+
+.one-page .one-kit__unit {
+    font-size: 13px;
+    color: #6a7280;
+    white-space: nowrap;
+}
+
+.one-page .one-kit__photo {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 96px;
+    height: 96px;
+    font-family: inherit;
+    font-size: 11px;
+    color: #1a1a1a;
+    background: #fff;
+    border: 1.5px solid #1a1a1a;
+    border-radius: 20px;
+    cursor: pointer;
+    overflow: hidden;
+    transition: background 0.15s ease;
+    text-align: center;
+    padding: 6px;
+    box-sizing: border-box;
+}
+
+.one-page .one-kit__photo:hover {
+    background: #f7f8fa;
+}
+
+.one-page .one-kit__photo-plus {
+    font-size: 22px;
+    font-weight: 400;
+    line-height: 1;
+    color: #1a1a1a;
+}
+
+.one-page .one-kit__photo-text {
+    font-size: 10px;
+    line-height: 1.15;
+    color: #1a1a1a;
+    text-align: center;
+}
+
+.one-page .one-kit__photo-preview {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 12px;
+}
+
+/* =========================================================
+   СЕКЦИЯ «ЦЕНООБРАЗОВАНИЕ»
+   ========================================================= */
+.one-page .one-price__lead {
+    font-size: 15px;
+    color: #6a7280;
+    margin: 0 0 10px;
+}
+
+.one-page .one-price__title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 17px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin: 0 0 20px;
+}
+
+.one-page .one-price__help {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1.5px solid #1a1a1a;
+    background: #fff;
+    color: #1a1a1a;
+    font-size: 15px;
+    font-weight: 600;
+    flex-shrink: 0;
+    line-height: 1;
+}
+
+.one-page .one-price__subtitle {
+    font-size: 15px;
+    color: #1a1a1a;
+    margin: 0 0 22px;
+}
+
+.one-page .one-price__row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 18px;
+}
+
+.one-page .one-price__label {
+    font-size: 14px;
+    color: #1f2937;
+    min-width: 130px;
+}
+
+.one-page .one-price__label--wide {
+    min-width: 200px;
+}
+
+.one-page .one-price__currencies {
+    display: flex;
+    gap: 10px;
+}
+
+.one-page .one-price__currency {
+    padding: 8px 18px;
+    font-family: inherit;
+    font-size: 14px;
+    color: #1f2937;
+    background: #fff;
+    border: 1px solid #dcdfe4;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.one-page .one-price__currency:hover {
+    background: #f5f7fa;
+}
+
+.one-page .one-price__currency--active {
+    background: #e3f2df;
+    border-color: #4caf50;
+    color: #1f4d1a;
+    font-weight: 600;
+}
+
+.one-page .one-price__symbol {
+    font-size: 15px;
+    color: #d33;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.one-page .one-price__input {
+    width: 200px;
+    box-sizing: border-box;
+    padding: 10px 14px;
+    font-family: inherit;
+    font-size: 14px;
+    color: #1f2937;
+    background: #fff;
+    border: 1px solid #dcdfe4;
+    border-radius: 6px;
+    outline: none;
+}
+
+.one-page .one-price__input:focus {
+    border-color: #6b63c7;
+}
+
+/* =========================================================
+   СИСТЕМА ЛОЯЛЬНОСТИ
+   ========================================================= */
+.one-page .one-loyalty__list {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+}
+
+.one-page .one-loyalty__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    color: #1f2937;
+}
+
+.one-page .one-loyalty__text {
+    white-space: nowrap;
+}
+
+.one-page .one-toggle {
+    position: relative;
+    width: 52px;
+    height: 26px;
+    border-radius: 13px;
+    border: none;
+    background: #d8d8d8;
+    cursor: pointer;
+    padding: 0;
+    transition: background 0.15s ease;
+    flex-shrink: 0;
+}
+
+.one-page .one-toggle--on {
+    background: #4caf50;
+}
+
+.one-page .one-toggle__knob {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #fff;
+    transition: transform 0.15s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.one-page .one-toggle--on .one-toggle__knob {
+    transform: translateX(26px);
+}
+
+.one-page .one-loyalty__input {
+    width: 90px;
+    box-sizing: border-box;
+    padding: 8px 12px;
+    font-family: inherit;
+    font-size: 14px;
+    color: #1f2937;
+    background: #fff;
+    border: 1px solid #dcdfe4;
+    border-radius: 6px;
+    outline: none;
+}
+
+.one-page .one-loyalty__input:focus {
+    border-color: #6b63c7;
+}
+
+.one-page .one-loyalty__input:disabled {
+    background: #f8f9fb;
+    color: #b3b9c2;
+    cursor: not-allowed;
+}
+
+.one-page .one-loyalty__input--price {
+    width: 140px;
+}
+
+.one-page .one-loyalty__info {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 1px solid #b9bec6;
+    background: #fff;
+    color: #6a7280;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: help;
+    flex-shrink: 0;
+}
+
+.one-page .one-loyalty__star {
+    color: #c0392b;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+/* =========================================================
+   СЕКЦИЯ «ДОСТАВКА»
+   ========================================================= */
+.one-page .one-delivery__intro {
+    font-size: 15px;
+    color: #6a7280;
+    margin: 0 0 18px;
+}
+
+.one-page .one-delivery__add {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 18px 8px 10px;
+    margin-bottom: 22px;
+    font-family: inherit;
+    font-size: 14px;
+    color: #1f2937;
+    background: #fbf7f0;
+    border: 1px solid #ecdcc4;
+    border-radius: 24px;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.one-page .one-delivery__add:hover {
+    background: #f4ecdd;
+    border-color: #d8c8ad;
+}
+
+.one-page .one-delivery__add-plus {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: #f0e2cb;
+    color: #8a6a34;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.one-page .one-delivery__add-text {
+    font-size: 14px;
+    color: #1f2937;
+}
+
+.one-page .one-delivery__form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 22px;
+    margin-bottom: 26px;
+    background: #fafbfc;
+    border: 1px solid #eceef1;
+    border-radius: 12px;
+}
+
+.one-page .one-delivery__form-input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 12px 16px;
+    font-family: inherit;
+    font-size: 14px;
+    color: #1f2937;
+    background: #fff;
+    border: 1px solid #dcdfe4;
+    border-radius: 8px;
+    outline: none;
+    transition: border-color 0.15s ease;
+}
+
+.one-page .one-delivery__form-input::placeholder {
+    color: #9aa2ad;
+}
+
+.one-page .one-delivery__form-input:focus {
+    border-color: #6b63c7;
+}
+
+.one-page .one-delivery__form-actions {
+    display: flex;
+    margin-top: 8px;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.one-page .one-delivery__form-btn {
+    flex: 1;
+    height: 52px;
+    font-family: inherit;
+    font-size: 22px;
+    font-weight: 700;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    transition: filter 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.one-page .one-delivery__form-btn:hover {
+    filter: brightness(1.05);
+}
+
+.one-page .one-delivery__form-btn--cancel {
+    background: #f0a300;
+}
+
+.one-page .one-delivery__form-btn--save {
+    background: #34c759;
+}
+
+.one-page .one-delivery__list {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+}
+
+.one-page .one-delivery__item {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.one-page .one-delivery__head {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.one-page .one-delivery__body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.one-page .one-delivery__address {
+    font-size: 14px;
+    color: #1f2937;
+    line-height: 1.35;
+    word-break: break-word;
+}
+
+.one-page .one-delivery__status {
+    font-size: 13px;
+    color: #8a9099;
+}
+
+.one-page .one-delivery__edit {
+    flex-shrink: 0;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 1.5px solid #2563eb;
+    background: #fff;
+    color: #2563eb;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.one-page .one-delivery__edit:hover {
+    background: #eff4ff;
+}
+
+.one-page .one-delivery__qty {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-left: 66px;
+}
+
+.one-page .one-delivery__help {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: 1.5px solid #1a1a1a;
+    background: #fff;
+    color: #1a1a1a;
+    font-size: 13px;
+    font-weight: 600;
+    flex-shrink: 0;
+    line-height: 1;
+}
+
+.one-page .one-delivery__qty-label {
+    font-size: 14px;
+    color: #1f2937;
+}
+
+.one-page .one-delivery__qty-input {
+    width: 140px;
+    box-sizing: border-box;
+    padding: 8px 12px;
+    font-family: inherit;
+    font-size: 14px;
+    color: #1f2937;
+    background: #fff;
+    border: 1px solid #dcdfe4;
+    border-radius: 6px;
+    outline: none;
+}
+
+.one-page .one-delivery__qty-input:focus {
+    border-color: #6b63c7;
+}
+
+.one-page .one-delivery__qty-unit {
+    font-size: 13px;
+    color: #6a7280;
+}
+
+/* =========================================================
+   СЕКЦИЯ «ХАРАКТЕРИСТИКИ» (таб 6)
+   ========================================================= */
+.one-page .one-char__heading {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin: 0 0 12px;
+}
+
+.one-page .one-char__hint {
+    font-size: 14px;
+    color: #6a7280;
+    line-height: 1.5;
+    margin: 0 0 20px;
+}
+
+.one-page .one-char__layout {
+    display: grid;
+    grid-template-columns: 220px minmax(0, 1fr);
+    gap: 28px;
+    align-items: flex-start;
+}
+
+/* Левое меню */
+.one-page .one-char__sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    position: sticky;
+    top: 16px;
+}
+
+.one-page .one-char__side {
+    padding: 14px 16px;
+    font-family: inherit;
+    font-size: 14px;
+    text-align: left;
+    color: #1f2937;
+    background: #fff;
+    border: 1px solid #dcdfe4;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+    line-height: 1.3;
+}
+
+.one-page .one-char__side:hover {
+    background: #f5f7fa;
+}
+
+.one-page .one-char__side--active {
+    background: #eef1f6;
+    border-color: #1a1a1a;
+    font-weight: 600;
+}
+
+/* Правая часть */
+.one-page .one-char__content {
+    min-width: 0;
+}
+
+/* Верхняя навигация по секциям */
+.one-page .one-char__nav {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 0 0 24px;
+    align-items: flex-start;
+}
+
+.one-page .one-char__nav-item {
+    padding: 0;
+    background: none;
+    border: none;
+    font-family: inherit;
+    font-size: 15px;
+    color: #1f2937;
+    cursor: pointer;
+    text-align: left;
+    text-decoration: none;
+    line-height: 1.35;
+}
+
+.one-page .one-char__nav-item:hover {
+    color: #2563eb;
+    text-decoration: underline;
+}
+
+.one-page .one-char__section-title {
+    font-size: 17px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin: 26px 0 12px;
+    scroll-margin-top: 16px;
+}
+
+.one-page .one-char__section-title:first-child {
+    margin-top: 0;
+}
+
+.one-page .one-char__group-title {
+    font-size: 14px;
+    color: #6a7280;
+    margin: 18px 0 8px;
+}
+
+.one-page .one-char__minihead {
+    font-size: 13px;
+    color: #8a9099;
+    margin: 12px 0 6px;
+}
+
+/* Строка характеристики */
+.one-page .one-char__row {
+    display: grid;
+    grid-template-columns:
+        minmax(130px, max-content) 28px 24px 20px minmax(180px, 1fr) minmax(220px, 2fr);
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid #eef0f3;
+}
+
+.one-page .one-char__req {
+    font-size: 12px;
+    color: #1f2937;
+    line-height: 1.2;
+    white-space: nowrap;
+}
+
+.one-page .one-char__row:not(.one-char__row--required) .one-char__req {
+    visibility: hidden;
+}
+
+.one-page .one-char__check {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border: 2px solid #7cbf3f;
+    border-radius: 4px;
+    background: #fff;
+    cursor: pointer;
+}
+
+.one-page .one-char__check input {
+    width: 14px;
+    height: 14px;
+    accent-color: #7cbf3f;
+    margin: 0;
+    cursor: pointer;
+}
+
+.one-page .one-char__info {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 1px solid #b9bec6;
+    background: #fff;
+    color: #6a7280;
+    font-size: 12px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.one-page .one-char__star {
+    color: #c0392b;
+    font-size: 14px;
+    font-weight: 700;
+    text-align: center;
+}
+
+.one-page .one-char__label {
+    font-size: 14px;
+    color: #1f2937;
+    line-height: 1.35;
+}
+
+.one-page .one-char__control {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+/* Поле-текст */
+.one-page .one-char__input-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+}
+
+.one-page .one-char__input {
+    flex: 1;
+    min-width: 120px;
+    box-sizing: border-box;
+    padding: 8px 12px;
+    font-family: inherit;
+    font-size: 14px;
+    color: #1f2937;
+    background: #fff;
+    border: 1px solid #dcdfe4;
+    border-radius: 6px;
+    outline: none;
+}
+
+.one-page .one-char__input--sm {
+    max-width: 180px;
+}
+
+.one-page .one-char__input::placeholder {
+    color: #9aa2ad;
+}
+
+.one-page .one-char__input:focus {
+    border-color: #6b63c7;
+}
+
+.one-page .one-char__unit {
+    padding: 8px 12px;
+    font-family: inherit;
+    font-size: 14px;
+    color: #1f2937;
+    background: #fff;
+    border: 1px solid #dcdfe4;
+    border-radius: 6px;
+    cursor: pointer;
+    outline: none;
+    min-width: 110px;
+}
+
+.one-page .one-char__unit:focus {
+    border-color: #6b63c7;
+}
+
+.one-page .one-char__unit-label {
+    font-size: 13px;
+    color: #6a7280;
+    white-space: nowrap;
+}
+
+/* Группа чипов */
+.one-page .one-char__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.one-page .one-char__chips .one-chip {
+    padding: 7px 14px;
+    font-size: 13px;
+}
+
+/* Стек: input над чипами */
+.one-page .one-char__stack {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+}
+
+/* «Иное» */
+.one-page .one-char__custom {
+    display: grid;
+    grid-template-columns: 24px minmax(180px, 1fr) minmax(180px, 1fr) 180px;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+}
+
+.one-page .one-char__custom-name,
+.one-page .one-char__custom-value,
+.one-page .one-char__custom-unit {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 8px 12px;
+    font-family: inherit;
+    font-size: 14px;
+    color: #1f2937;
+    background: #fff;
+    border: 1px solid #dcdfe4;
+    border-radius: 6px;
+    outline: none;
+}
+
+.one-page .one-char__custom-name:focus,
+.one-page .one-char__custom-value:focus,
+.one-page .one-char__custom-unit:focus {
+    border-color: #6b63c7;
+}
+
+.one-page .one-char__placeholder {
+    font-size: 14px;
+    color: #8a9099;
+    margin: 0;
+}
+
+/* =========================================================
+   ОПИСАНИЕ (секция 4 в подразделе «Идентификация»)
+   ========================================================= */
+.one-page .one-subtitle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin: 20px 0 6px;
+}
+
+.one-page .one-subtitle__help {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 1px solid #b9bec6;
+    background: #fff;
+    color: #6a7280;
+    font-size: 12px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.one-page .one-subtitle__hint {
+    margin: 0 0 12px;
+    font-size: 13px;
+    color: #6a7280;
+    line-height: 1.4;
+}
+
+.one-page .one-subblock {
+    margin: 12px 0 20px;
+}
+
+.one-page .one-subblock__title {
+    margin: 0 0 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #1f2937;
+}
+
+/* Диапазон «От … До …» */
+.one-page .one-range {
+    margin-bottom: 10px;
+}
+
+.one-page .one-range__label {
+    display: block;
+    font-size: 13px;
+    color: #1f2937;
+    margin-bottom: 4px;
+}
+
+.one-page .one-range__row {
+    display: grid;
+    grid-template-columns: 150px 28px 20px auto minmax(120px, 1fr) auto minmax(120px, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+}
+
+.one-page .one-range__cap {
+    font-size: 13px;
+    color: #6a7280;
+}
+
+.one-page .one-range__input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 8px 12px;
+    font-family: inherit;
+    font-size: 14px;
+    border: 1px solid #c9cfd6;
+    border-radius: 6px;
+    background: #fff;
+    color: #1f2937;
+    outline: none;
+}
+
+.one-page .one-range__input:focus {
+    border-color: #6b63c7;
+}
+
+.one-page .one-range__unit {
+    font-size: 13px;
+    color: #6a7280;
+    min-width: 24px;
+}
+
+/* Класс опасности */
+.one-page .one-hazard {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.one-page .one-hazard__item {
+    width: 40px;
+    height: 40px;
+    font-family: inherit;
+    font-size: 14px;
+    color: #1f2937;
+    background: #fff;
+    border: 1px solid #c9cfd6;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.one-page .one-hazard__item:hover {
+    background: #f1f4f8;
+}
+
+.one-page .one-hazard__item--active {
+    background: #dfe9fb;
+    border-color: #6b63c7;
+    font-weight: 700;
+}
+
+/* =========================================================
+   АДАПТИВ
+   ========================================================= */
+@media (max-width: 1024px) {
+    .one-page .one-char__layout {
+        grid-template-columns: 1fr;
+    }
+
+    .one-page .one-char__sidebar {
+        position: static;
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+
+    .one-page .one-char__row {
+        grid-template-columns:
+            minmax(130px, max-content) 28px 24px 20px minmax(0, 1fr);
+    }
+
+    .one-page .one-char__control {
+        grid-column: 1 / -1;
+        margin-top: 4px;
+    }
+}
+
+@media (max-width: 900px) {
+
+    .one-page .one-field,
+    .one-page .one-field--pair {
+        grid-template-columns: 1fr;
+    }
+
+    .one-page .one-field__req,
+    .one-page .one-field__help,
+    .one-page .one-field__star {
+        justify-self: start;
+    }
+
+    .one-page .one-photos {
+        grid-template-columns: 1fr;
+    }
+
+    .one-page .one-photos__grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .one-page .one-range__row {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .one-page .one-pack__radios,
+    .one-page .one-pack__chips,
+    .one-page .one-pack__weight,
+    .one-page .one-pack__custom {
+        margin-left: 0;
+    }
+
+    .one-page .one-pack__dim {
+        grid-template-columns: 1fr;
+    }
+
+    .one-page .one-kit__row {
+        grid-template-columns: 26px 24px minmax(0, 1fr);
+        row-gap: 10px;
+    }
+
+    .one-page .one-kit__dash,
+    .one-page .one-kit__unit {
+        display: none;
+    }
+
+    .one-page .one-kit__qty {
+        grid-column: 3 / span 1;
+    }
+
+    .one-page .one-kit__photo {
+        grid-column: 3 / span 1;
+        width: 100%;
+        height: 72px;
+        flex-direction: row;
+        gap: 12px;
+        border-radius: 14px;
+    }
+
+    .one-page .one-loyalty__row {
+        gap: 6px;
+        font-size: 13px;
+    }
+
+    .one-page .one-loyalty__input {
+        width: 70px;
+    }
+
+    .one-page .one-loyalty__input--price {
+        width: 110px;
+    }
+
+    .one-page .one-docs__row {
+        grid-template-columns: 1fr;
+    }
+
+    .one-page .one-delivery__qty {
+        margin-left: 0;
+        flex-wrap: wrap;
+    }
+
+    .one-page .one-delivery__qty-input {
+        width: 100%;
+    }
+
+    .one-page .one-char__custom {
+        grid-template-columns: 24px minmax(0, 1fr);
+    }
+
+    .one-page .one-char__custom-value,
+    .one-page .one-char__custom-unit {
+        grid-column: 2 / -1;
+    }
+}

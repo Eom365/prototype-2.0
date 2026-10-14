@@ -165,6 +165,10 @@ function mainFieldsOrder(fields) {
     return [...fields].sort((a, b) => (rank[a.code] ?? 10) - (rank[b.code] ?? 10));
 }
 
+function stripArrow(label) {
+    return String(label || "").replace(/\s*>\s*$/, "");
+}
+
 const WARRANTY_FIELDS = [
     {
         code: "warrantyPeriod",
@@ -208,8 +212,8 @@ const REQUIRED_CHARACTERISTIC_SECTIONS = [
 ];
 
 const EXTRA_CHARACTERISTIC_SECTIONS = [
-    { key: "functional", label: "5. Функциональные характеристики >" },
-    { key: "technical", label: "6. Технические характеристики >" },
+    { key: "functional", label: "5. Функциональные >" },
+    { key: "technical", label: "6. Технические >" },
     { key: "material", label: "7. Материал и состав >" },
     { key: "affiliation", label: "8. Принадлежность >" },
     { key: "power", label: "9. Энергопотребление >" },
@@ -556,6 +560,138 @@ const Add = forwardRef(function Add(_props, ref) {
                 ? prev.filter((c) => c !== code)
                 : [...prev, code],
         );
+    };
+
+    const isSectionFilled = (sectionKey, mode = "required") => {
+        const hasValue = (code) => {
+            const spec = specs[code];
+            if (!spec) return false;
+            return Boolean(
+                String(spec.value || "").trim() ||
+                String(spec.customValue || "").trim(),
+            );
+        };
+
+        const anyFilled = (codes) => codes.some((code) => hasValue(code));
+
+        // ===== Обязательные =====
+        if (sectionKey === "identification") {
+            return hasValue("model");
+        }
+        if (sectionKey === "manufacturer") {
+            return (
+                (hasValue("manufacturerName") || hasValue("manufacturer")) &&
+                (hasValue("countryOfOrigin") || hasValue("country"))
+            );
+        }
+        if (sectionKey === "warranty") {
+            return hasValue("warrantyPeriod") && hasValue("serviceLife");
+        }
+        if (sectionKey === "functional" && mode === "required") {
+            return (
+                hasValue("length") &&
+                hasValue("width") &&
+                hasValue("height") &&
+                hasValue("weight")
+            );
+        }
+
+        // ===== Дополнительные =====
+        if (sectionKey === "functional" && mode === "extra") {
+            return anyFilled([
+                "weightTolerance",
+                "diameter",
+                "volume",
+                "color",
+                "maxLoad",
+                "energyClass",
+            ]);
+        }
+        if (sectionKey === "technical") {
+            return anyFilled([
+                "hasCooling",
+                "coolingType",
+                "cylinders",
+                "engineStrokes",
+                "engineSpeed",
+                "starterType",
+                "fuelType",
+                "fuelTankVolume",
+                "fuelConsumption",
+                "noiseLevel",
+            ]);
+        }
+        if (sectionKey === "material") {
+            return anyFilled([
+                "materialPercent",
+                "hasCase",
+                "caseMaterial",
+                "waterproofCase",
+            ]);
+        }
+        if (sectionKey === "affiliation") {
+            return anyFilled([
+                "gender",
+                "ageGroup",
+                "ageLimit",
+                "shoeSize",
+                "clothesSize",
+                "season",
+            ]);
+        }
+        if (sectionKey === "power") {
+            return anyFilled([
+                "powerConsumption",
+                "workingTime",
+                "plugType",
+                "voltage",
+                "frequency",
+                "currentType",
+                "phases",
+                "batteryCapacity",
+                "batteryType",
+                "removableBattery",
+                "nominalPower",
+                "maxPower",
+            ]);
+        }
+        if (sectionKey === "display") {
+            return anyFilled([
+                "hasDisplay",
+                "displayType",
+                "diagonal",
+                "aspectRatio",
+                "matrixType",
+                "refreshRate",
+                "brightness",
+                "resolution",
+            ]);
+        }
+        if (sectionKey === "system") {
+            return anyFilled([
+                "processorType",
+                "cores",
+                "ram",
+                "storage",
+                "memorySlot",
+                "osType",
+                "osVersion",
+                "simType",
+                "simCount",
+                "mainCameras",
+                "mainCameraMp",
+                "cameraAngle",
+                "digitalZoom",
+                "frontCameraMp",
+                "speakers",
+                "audioPower",
+                "minFrequency",
+                "maxFrequency",
+                "portType",
+            ]);
+        }
+
+        return false;
     };
 
     const handleAxisSelectionChange = useCallback((items) => {
@@ -960,6 +1096,14 @@ const Add = forwardRef(function Add(_props, ref) {
 
     const tabs = TABS;
     const currentIndex = tabs.findIndex((tab) => tab.key === activeTab);
+    const photosCount = (product?.files || []).filter(
+        (f) => f.role === "product" || f.role === "presentation",
+    ).length;
+
+    const packagePhotosCount = (product?.files || []).filter(
+        (f) => f.role === "package",
+    ).length;
+
     const charTabContext = {
         specs,
         mainFields,
@@ -969,6 +1113,10 @@ const Add = forwardRef(function Add(_props, ref) {
         customRowsBySection,
         productLine,
         logo,
+        product,             // ← добавить
+        packType,            // ← добавить
+        photosCount,         // ← добавить
+        packagePhotosCount,  // ← добавить
     };
     const charsPanelOpen =
         panelFocus === "characteristics" || panelFocus === "both";
@@ -1463,8 +1611,6 @@ const Add = forwardRef(function Add(_props, ref) {
 
         // 4. Функциональные характеристики
         if (key === "functional") {
-            // mode === "required" → только обязательные поля
-            // mode === "extra"    → только необязательные поля
             const isExtra = mode === "extra";
 
             const allDimFields = (dimensionsGroup?.fields || []).map((f) =>
@@ -1516,12 +1662,6 @@ const Add = forwardRef(function Add(_props, ref) {
 
             return (
                 <>
-                    {/* {hasAnyDimOrWeight && (
-                        <h3 className="qw chars-subsection-title">
-                            Габаритные размеры и вес
-                        </h3>
-                    )} */}
-
                     {dimFields.length > 0 && (
                         <div
                             className={
@@ -2660,7 +2800,7 @@ const Add = forwardRef(function Add(_props, ref) {
                 Раздел пока не заполнен.
             </p>
         );
-    };
+    }; // <-- ЗДЕСЬ ЗАКАНЧИВАЕТСЯ ФУНКЦИЯ renderSection
 
     const visibleDocFields = getVisibleDocumentFields(product, requiredFields);
 
@@ -2670,6 +2810,14 @@ const Add = forwardRef(function Add(_props, ref) {
     const optionalDocFields = visibleDocFields.filter(
         ([name]) => !requiredFields.has(name),
     );
+
+    const requiredDocsFilled =
+        requiredDocFields.length > 0 &&
+        requiredDocFields.every(([name]) => Boolean(docs[name]));
+
+    const optionalDocsFilled =
+        optionalDocFields.length > 0 &&
+        optionalDocFields.some(([name]) => Boolean(docs[name]));
 
     const uploadedRequiredDocs = requiredDocFields
         .map(([name, label]) => ({ name, label, file: docs[name] }))
@@ -2741,6 +2889,45 @@ const Add = forwardRef(function Add(_props, ref) {
         )?.label ||
         "";
 
+    const modelLogoFile =
+        logo ||
+        (product?.files || []).find(
+            (file) => file.role === "logo" && !file.variationId,
+        ) ||
+        null;
+    const modelLogoUrl = modelLogoFile?.url || "";
+
+    const modelFeatureParts = [];
+    for (const code of nameFeatureCodes) {
+        const spec = specs[code];
+        if (!spec) continue;
+        const value =
+            spec.value === "other"
+                ? String(spec.customValue || "").trim()
+                : String(spec.value || "").trim();
+        if (value) modelFeatureParts.push(value);
+    }
+
+    const baseLineName =
+        (product?.fullName || "").trim() ||
+        [
+            (product?.productName || "").trim(),
+            (product?.brandName || "").trim(),
+            (productLine || product?.productLine || "").trim(),
+        ]
+            .filter(Boolean)
+            .join(" ");
+
+    // Всегда добавляем хвост из меток характеристик
+    const modelDisplayName = [
+        baseLineName,
+        "Модель",
+        "1 характеристика",
+        "2 характеристика",
+    ]
+        .filter(Boolean)
+        .join(" + ");
+
     return (
         <>
             <div
@@ -2769,10 +2956,21 @@ const Add = forwardRef(function Add(_props, ref) {
                             type="button"
                             role="tab"
                             aria-selected={openDocsGroup === "required"}
-                            className={`docs-tab ${openDocsGroup === "required" ? "docs-tab--active" : ""}`}
+                            className={[
+                                "docs-tab",
+                                openDocsGroup === "required" ? "docs-tab--active" : "",
+                                requiredDocsFilled ? "docs-tab--filled" : "",
+                            ].filter(Boolean).join(" ")}
                             onClick={() => toggleDocsGroup("required")}
                         >
-                            Обязательные для заполнения
+                            {requiredDocsFilled && (
+                                <span className="docs-tab__check" aria-hidden="true">
+                                    ✓
+                                </span>
+                            )}
+                            <span className="docs-tab__label">
+                                Обязательные для заполнения
+                            </span>
                         </button>
                     )}
 
@@ -2781,10 +2979,21 @@ const Add = forwardRef(function Add(_props, ref) {
                             type="button"
                             role="tab"
                             aria-selected={openDocsGroup === "optional"}
-                            className={`docs-tab ${openDocsGroup === "optional" ? "docs-tab--active" : ""}`}
+                            className={[
+                                "docs-tab",
+                                openDocsGroup === "optional" ? "docs-tab--active" : "",
+                                optionalDocsFilled ? "docs-tab--filled" : "",
+                            ].filter(Boolean).join(" ")}
                             onClick={() => toggleDocsGroup("optional")}
                         >
-                            Необязательные для заполнения
+                            {optionalDocsFilled && (
+                                <span className="docs-tab__check" aria-hidden="true">
+                                    ✓
+                                </span>
+                            )}
+                            <span className="docs-tab__label">
+                                Необязательные для заполнения
+                            </span>
                         </button>
                     )}
                 </div>
@@ -2862,10 +3071,11 @@ const Add = forwardRef(function Add(_props, ref) {
                         )}
                     </div>
                 )}
+                <div className="ooup"></div>
 
                 <div className="ttr">
                     <button className="utt">
-                        Загрузить Характеристики и Описание через файл Excel
+                        Заполнить через файл Excel
                     </button>
                 </div>
                 <h2 className="stage2-section-title">
@@ -2930,46 +3140,56 @@ const Add = forwardRef(function Add(_props, ref) {
 
                                 <div className="chars-layout">
                                     <aside className="chars-sidebar">
-                                        <div className="chars-sidebar__group">Обязательные</div>
+                                        <div className="chars-sidebar__group">Обязательные характеристики</div>
                                         {REQUIRED_CHARACTERISTIC_SECTIONS.map((section) => {
                                             const active =
                                                 activeSection.mode === "required" &&
                                                 activeSection.key === section.key;
+                                            const filled = isSectionFilled(section.key, "required");
                                             return (
                                                 <button
                                                     key={`req-${section.key}`}
                                                     type="button"
                                                     className={`chars-sidebar__item ${active ? "chars-sidebar__item--active" : ""}`}
                                                     onClick={() =>
-                                                        setActiveSection({
-                                                            key: section.key,
-                                                            mode: "required",
-                                                        })
+                                                        setActiveSection({ key: section.key, mode: "required" })
                                                     }
                                                 >
-                                                    {section.label}
+                                                    <span className="chars-sidebar__item-label">
+                                                        {section.label}
+                                                    </span>
+                                                    {filled && (
+                                                        <span className="chars-sidebar__check" aria-label="Заполнено">
+                                                            ✓
+                                                        </span>
+                                                    )}
                                                 </button>
                                             );
                                         })}
 
-                                        <div className="chars-sidebar__group">Дополнительные</div>
+                                        <div className="chars-sidebar__group">Дополнительные характеристики</div>
                                         {EXTRA_CHARACTERISTIC_SECTIONS.map((section) => {
                                             const active =
                                                 activeSection.mode === "extra" &&
                                                 activeSection.key === section.key;
+                                            const filled = isSectionFilled(section.key, "extra");
                                             return (
                                                 <button
                                                     key={`ext-${section.key}`}
                                                     type="button"
                                                     className={`chars-sidebar__item ${active ? "chars-sidebar__item--active" : ""}`}
                                                     onClick={() =>
-                                                        setActiveSection({
-                                                            key: section.key,
-                                                            mode: "extra",
-                                                        })
+                                                        setActiveSection({ key: section.key, mode: "extra" })
                                                     }
                                                 >
-                                                    {section.label}
+                                                    <span className="chars-sidebar__item-label">
+                                                        {section.label}
+                                                    </span>
+                                                    {filled && (
+                                                        <span className="chars-sidebar__check" aria-label="Заполнено">
+                                                            ✓
+                                                        </span>
+                                                    )}
                                                 </button>
                                             );
                                         })}
@@ -2977,44 +3197,70 @@ const Add = forwardRef(function Add(_props, ref) {
 
                                     <main className="chars-content">
                                         {activeSection.mode === "required" ? (
-                                            /* === Обязательные: все 4 секции сразу === */
-                                            REQUIRED_CHARACTERISTIC_SECTIONS.map((section) => (
-                                                <section
-                                                    className="chars-section"
-                                                    key={`req-content-${section.key}`}
-                                                >
+                                            /* === Обязательные: все 4 секции + подсказка внизу === */
+                                            <>
+                                                <p className="chars-content__lead">
+                                                    Заполните все обязательные характеристики для модели:
+                                                </p>
+
+                                                {REQUIRED_CHARACTERISTIC_SECTIONS.map((section) => (
+                                                    <section
+                                                        className="chars-section"
+                                                        key={`req-content-${section.key}`}
+                                                    >
+                                                        <div className="chars-section__title-row">
+                                                            <PageHelp
+                                                                inline
+                                                                context={stripArrow(section.label)}
+                                                                buttonTitle={`Подсказка по разделу «${stripArrow(section.label)}»`}
+                                                            />
+                                                            <h3 className="chars-section__title">
+                                                                {stripArrow(section.label)}
+                                                            </h3>
+                                                        </div>
+                                                        <div className="chars-section__body">
+                                                            {renderSection(section.key, "required")}
+                                                        </div>
+                                                    </section>
+                                                ))}
+
+                                                <p className="chars-content__lead chars-content__lead--after">
+                                                    Чтобы заполнить дополнительные характеристики, перейдите в раздел{" "}
+                                                    <button
+                                                        type="button"
+                                                        className="chars-content__link"
+                                                        onClick={() =>
+                                                            setActiveSection({ key: "functional", mode: "extra" })
+                                                        }
+                                                    >
+                                                        «Дополнительные характеристики» → «5. Функциональные»
+                                                    </button>
+                                                </p>
+                                            </>
+                                        ) : (
+                                            /* === Дополнительные: подсказка + выбранная секция === */
+                                            <>
+                                                <p className="chars-content__lead">
+                                                    Заполните дополнительные характеристики, которые соответствуют вашей
+                                                    модели (параметру)
+                                                </p>
+
+                                                <section className="chars-section">
                                                     <div className="chars-section__title-row">
                                                         <PageHelp
                                                             inline
-                                                            context={section.label}
-                                                            buttonTitle={`Подсказка по разделу «${section.label}»`}
+                                                            context={stripArrow(activeSectionLabel)}
+                                                            buttonTitle="Подсказка"
                                                         />
                                                         <h3 className="chars-section__title">
-                                                            {section.label}
+                                                            {stripArrow(activeSectionLabel)}
                                                         </h3>
                                                     </div>
                                                     <div className="chars-section__body">
-                                                        {renderSection(section.key, "required")}
+                                                        {renderSection(activeSection.key, "extra")}
                                                     </div>
                                                 </section>
-                                            ))
-                                        ) : (
-                                            /* === Дополнительные: только выбранная === */
-                                            <section className="chars-section">
-                                                <div className="chars-section__title-row">
-                                                    <PageHelp
-                                                        inline
-                                                        context={activeSectionLabel}
-                                                        buttonTitle="Подсказка"
-                                                    />
-                                                    <h3 className="chars-section__title">
-                                                        {activeSectionLabel}
-                                                    </h3>
-                                                </div>
-                                                <div className="chars-section__body">
-                                                    {renderSection(activeSection.key, "extra")}
-                                                </div>
-                                            </section>
+                                            </>
                                         )}
                                     </main>
                                 </div>
@@ -3023,23 +3269,28 @@ const Add = forwardRef(function Add(_props, ref) {
 
                         {charsPanelOpen && activeTab === "dimensions" && (
                             <div className="form">
-                                <h2 className="stage24-section-title">Наименование модели (параметра)</h2>
+                                <h2 className="stage24-section-title">
+                                    Наименование модели (параметра)
+                                </h2>
                                 <p className="stage23-subtitle-line">
                                     Посмотрите наименование модели (параметра).
                                 </p>
-                                <PageHelp
-                                    inline
-                                    context="Наименование бренда"
-                                    buttonTitle="Подсказка по полю «Наименование бренда»"
-                                />
-                                <div className="field-row">
-                                    <span className="info-icon" title="Наименование модели">
-                                        ⓘ
-                                    </span>
-                                    <span className="required-mark-slot" aria-hidden="true" />
-                                    <span className="field-name">Наименование модели</span>
-                                    <span className="field-text">
-                                        (Наименование линейки + Модель + 1 характеристика + 2 характеристика)
+
+                                <div className="stage4-name-box">
+                                    <PageHelp
+                                        inline
+                                        context="Наименование модели"
+                                        buttonTitle="Подсказка по полю «Наименование модели»"
+                                    />
+                                    {modelLogoUrl && (
+                                        <img
+                                            className="stage4-name-box__logo"
+                                            src={modelLogoUrl}
+                                            alt="Логотип"
+                                        />
+                                    )}
+                                    <span className="stage4-name-box__text">
+                                        {modelDisplayName || "Наименование линейки + Модель + 1 характеристика + 2 характеристика"}
                                     </span>
                                 </div>
 
@@ -3051,8 +3302,8 @@ const Add = forwardRef(function Add(_props, ref) {
                                 <div className="field-row">
                                     <PageHelp
                                         inline
-                                        context="Наименование бренда"
-                                        buttonTitle="Подсказка по полю «Наименование бренда»"
+                                        context="1 характеристика"
+                                        buttonTitle="Подсказка"
                                     />
                                     <button
                                         type="button"
@@ -3061,7 +3312,6 @@ const Add = forwardRef(function Add(_props, ref) {
                                     >
                                         ✕
                                     </button>
-
                                     <span className="required-mark-slot" aria-hidden="true" />
                                     <span className="field-name">1 характеристика</span>
                                     <span className="field-text">
@@ -3072,8 +3322,8 @@ const Add = forwardRef(function Add(_props, ref) {
                                 <div className="field-row">
                                     <PageHelp
                                         inline
-                                        context="Наименование бренда"
-                                        buttonTitle="Подсказка по полю «Наименование бренда»"
+                                        context="2 характеристика"
+                                        buttonTitle="Подсказка"
                                     />
                                     <button
                                         type="button"
@@ -3085,7 +3335,7 @@ const Add = forwardRef(function Add(_props, ref) {
                                     <span className="required-mark-slot" aria-hidden="true" />
                                     <span className="field-name">2 характеристика</span>
                                     <span className="field-text">
-                                        {specs.color?.value || "Значение "}
+                                        {specs.color?.value || "Значение"}
                                     </span>
                                 </div>
                             </div>
@@ -3764,6 +4014,8 @@ const Add = forwardRef(function Add(_props, ref) {
                                                 <span className="toggle__knob" />
                                             </button>
 
+                                            
+
                                             <div className="address-body">
                                                 <div className="address-text">
                                                     {item.address}
@@ -3973,7 +4225,7 @@ const Add = forwardRef(function Add(_props, ref) {
                 current={4}
                 total={4}
                 prevPath="/stage22"
-                nextPath="/stage22"
+                nextPath="/one"
                 onSave={async () => {
                     await persist();
                     setCharsRefreshKey((prev) => prev + 1);

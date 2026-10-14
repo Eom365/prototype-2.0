@@ -111,7 +111,7 @@ function Stage1() {
   return (
     <>
       <div className="container stage1-page">
-        <h1 className="title">Этап 1 - Создание линейки</h1>
+        <h1 className="title">Этап 1 - Создание линейки продукта</h1>
         <h2 className="title">Проверка идентичности продукта</h2>
         <h3 className="subtitle standart">
           Введите информацию о товаре для поиска совпадений среди существующих

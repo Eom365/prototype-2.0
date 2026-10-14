@@ -643,6 +643,7 @@ const Stage24 = forwardRef(function Stage24(
 
   return (
     <>
+      <div className="ooup"></div>
       <div className={embedded ? "stage24-embed stage24-page" : "container stage24-page"}>
         {!embedded && (
           <VariantFlowHeader product={product} productId={productId} />
