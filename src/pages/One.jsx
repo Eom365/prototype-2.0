@@ -1,6 +1,7 @@
 // One.jsx — Этап 4: Создание модели (параметра)
 import { useRef, useState } from "react";
 import "./One.css";
+import BottomBar from "../components/BottomBar";
 
 /* =========================================================
    ВЕРХНИЕ 6 ТАБОВ ЭТАПА
@@ -18,7 +19,7 @@ const TABS = [
 ];
 
 /* =========================================================
-   ПОДРАЗДЕЛЫ «ИДЕНТИФИКАЦИИ»
+   ПОДРАЗДЕЛЫ
    ========================================================= */
 const IDENT_SECTIONS = [
     { key: "photos", label: "Фотографии конкретной модели" },
@@ -42,7 +43,6 @@ const CURRENCY_SYMBOLS = { RUB: "₽", CNY: "¥" };
 /* =========================================================
    Вспомогательные компоненты
    ========================================================= */
-
 function BlockTitle({ children }) {
     return <div className="one-block-title">{children}</div>;
 }
@@ -111,7 +111,130 @@ function ChoicePair({ required, label, value, onChange, hint }) {
 }
 
 /* =========================================================
-   ПОЛЯ ДОКУМЕНТОВ
+   Блок добавления фотографий
+   ========================================================= */
+function PhotoSlots({ photos = [], total = 5, onChange }) {
+    const inputRef = useRef(null);
+
+    const openPicker = () => {
+        inputRef.current?.click();
+    };
+
+    const handleFiles = (event) => {
+        const files = Array.from(event.target.files || []);
+        event.target.value = "";
+        if (!files.length) return;
+
+        const next = [...photos];
+        for (const file of files) {
+            if (next.length >= total) break;
+            next.push({
+                id: `${file.name}-${file.size}-${Date.now()}-${Math.random()}`,
+                name: file.name,
+                url: URL.createObjectURL(file),
+                file,
+            });
+        }
+        onChange?.(next);
+    };
+
+    const removeAt = (index) => {
+        const next = photos.slice();
+        next.splice(index, 1);
+        onChange?.(next);
+    };
+
+    const bigPhoto = photos[0] || null;
+    const smallPhotos = photos.slice(1);
+    const smallSlots = total - 1;
+
+    return (
+        <div className="one-photo-slots">
+            <input
+                ref={inputRef}
+                type="file"
+                accept="image/*"
+                multiple
+                style={{ display: "none" }}
+                onChange={handleFiles}
+            />
+
+            {bigPhoto ? (
+                <div className="one-photo-slots__big one-photo-slots__big--filled">
+                    <img
+                        src={bigPhoto.url}
+                        alt={bigPhoto.name}
+                        className="one-photo-slots__preview"
+                    />
+                    <button
+                        type="button"
+                        className="one-photo-slots__remove"
+                        title="Удалить"
+                        onClick={() => removeAt(0)}
+                    >
+                        ✕
+                    </button>
+                </div>
+            ) : (
+                <button
+                    type="button"
+                    className="one-photo-slots__big"
+                    onClick={openPicker}
+                    aria-label="Добавить фотографию"
+                >
+                    <span className="one-photo-slots__plus one-photo-slots__plus--lg">
+                        +
+                    </span>
+                    <span className="one-photo-slots__caption">
+                        Добавить фотографию
+                    </span>
+                </button>
+            )}
+
+            <div className="one-photo-slots__grid">
+                {Array.from({ length: smallSlots }).map((_, i) => {
+                    const photo = smallPhotos[i];
+                    if (photo) {
+                        return (
+                            <div
+                                key={photo.id}
+                                className="one-photo-slots__small one-photo-slots__small--filled"
+                            >
+                                <img
+                                    src={photo.url}
+                                    alt={photo.name}
+                                    className="one-photo-slots__preview"
+                                />
+                                <button
+                                    type="button"
+                                    className="one-photo-slots__remove"
+                                    title="Удалить"
+                                    onClick={() => removeAt(i + 1)}
+                                >
+                                    ✕
+                                </button>
+                            </div>
+                        );
+                    }
+                    return (
+                        <button
+                            type="button"
+                            key={`empty-${i}`}
+                            className="one-photo-slots__small"
+                            onClick={openPicker}
+                            aria-label={`Добавить фотографию ${i + 2}`}
+                        >
+                            <span className="one-photo-slots__plus">+</span>
+                        </button>
+                    );
+                })}
+            </div>
+        </div>
+    );
+}
+
+/* =========================================================
+   СЕКЦИЯ 2. ДОКУМЕНТЫ
    ========================================================= */
 const DOC_FIELDS = [
     { code: "warranty", label: "Гарантийный талон", required: true, template: true },
@@ -123,9 +246,6 @@ const DOC_FIELDS = [
     { code: "other", label: "Иной документ" },
 ];
 
-/* =========================================================
-   СЕКЦИЯ 2. ДОКУМЕНТЫ КОНКРЕТНОЙ МОДЕЛИ
-   ========================================================= */
 function SectionDocuments({ docs, onPick, onRemove }) {
     return (
         <section className="one-block one-docs">
@@ -197,7 +317,7 @@ function SectionDocuments({ docs, onPick, onRemove }) {
 /* =========================================================
    СЕКЦИЯ 3.1. УПАКОВКА
    ========================================================= */
-function SectionPackaging({ data, onChange }) {
+function SectionPackaging({ data, onChange, photos, onPhotosChange }) {
     const packMaterials = {
         box: [
             { value: "cardboard", label: "Картон" },
@@ -389,21 +509,11 @@ function SectionPackaging({ data, onChange }) {
                     Добавьте фотографии упаковки продукта:
                 </p>
 
-                <button type="button" className="one-photos__add">
-                    <span className="one-photos__add-plus">＋</span>
-                    Добавить фотографию (0/5)
-                </button>
-
-                <div className="one-photos__grid">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                        <button
-                            type="button"
-                            key={i}
-                            className={`one-photos__slot${i === 0 ? " one-photos__slot--first" : ""}`}
-                            aria-label={`Слот фотографии упаковки ${i + 1}`}
-                        />
-                    ))}
-                </div>
+                <PhotoSlots
+                    photos={photos || []}
+                    total={5}
+                    onChange={onPhotosChange}
+                />
             </div>
         </section>
     );
@@ -464,9 +574,7 @@ function SectionKit({ items, onChange }) {
                         <input
                             type="text"
                             className="one-kit__name"
-                            placeholder={
-                                index === 0 ? "*Наименование модели*" : "Наименование"
-                            }
+                            placeholder={index === 0 ? "*Наименование модели*" : "Наименование"}
                             value={item.name}
                             onChange={(e) => updateRow(item.id, { name: e.target.value })}
                         />
@@ -913,7 +1021,7 @@ function SectionDelivery({ items, onChange }) {
 /* =========================================================
    СЕКЦИЯ 1. ФОТОГРАФИИ
    ========================================================= */
-function SectionPhotos() {
+function SectionPhotos({ photos = [], onPhotosChange }) {
     const slots = 5;
 
     return (
@@ -945,27 +1053,17 @@ function SectionPhotos() {
                 </div>
             </div>
 
-            <button type="button" className="one-photos__add">
-                <span className="one-photos__add-plus">＋</span>
-                Добавить фотографию (0/{slots})
-            </button>
-
-            <div className="one-photos__grid">
-                {Array.from({ length: slots }).map((_, i) => (
-                    <button
-                        type="button"
-                        key={i}
-                        className={`one-photos__slot${i === 0 ? " one-photos__slot--first" : ""}`}
-                        aria-label={`Слот фотографии ${i + 1}`}
-                    />
-                ))}
-            </div>
+            <PhotoSlots
+                photos={photos}
+                total={slots}
+                onChange={onPhotosChange}
+            />
         </section>
     );
 }
 
 /* =========================================================
-   СЕКЦИЯ 2. ХАРАКТЕРИСТИКИ (для подраздела «Идентификация»)
+   СЕКЦИЯ 2. ХАРАКТЕРИСТИКИ (в «Идентификации»)
    ========================================================= */
 function SectionCharacteristics({ values, onChange }) {
     return (
@@ -990,9 +1088,8 @@ function SectionCharacteristics({ values, onChange }) {
 }
 
 /* =========================================================
-   СЕКЦИЯ 6. ХАРАКТЕРИСТИКИ — вспомогательные компоненты
+   СЕКЦИЯ 6. ХАРАКТЕРИСТИКИ — вспомогательные
    ========================================================= */
-
 const CHAR_SIDEBAR = [
     { key: "technical", label: "Технические характеристики" },
     { key: "physical", label: "Физические характеристики" },
@@ -1005,6 +1102,16 @@ const TECH_SECTIONS = [
     { key: "tech-power", label: "Энергопотребление" },
     { key: "tech-display", label: "Дисплей" },
     { key: "tech-system", label: "Системные компоненты" },
+];
+
+const PHYSICAL_SECTIONS = [
+    { key: "physical-dimensions", label: "Габаритные размеры и вес" },
+    { key: "physical-material", label: "Материал и состав" },
+    { key: "physical-affiliation", label: "Принадлежность" },
+];
+
+const FUNCTIONAL_SECTIONS = [
+    { key: "functional", label: "Функциональные" },
 ];
 
 function CharRow({ required, label, value, onChange, children }) {
@@ -1048,9 +1155,6 @@ function CharInput({ value, onChange, placeholder = "Значение", unit }) 
                         <option key={u.value} value={u.value}>{u.label}</option>
                     ))}
                 </select>
-            )}
-            {!unit && value?.unitLabel && (
-                <span className="one-char__unit-label">{value.unitLabel}</span>
             )}
         </div>
     );
@@ -1173,14 +1277,46 @@ function SectionCharacteristicsFull({ values, onChange }) {
                         </>
                     )}
                     {sideTab === "physical" && (
-                        <p className="one-char__placeholder">
-                            Раздел «Физические характеристики» — в разработке.
-                        </p>
+                        <>
+                            <nav
+                                className="one-char__nav"
+                                aria-label="Разделы физических характеристик"
+                            >
+                                {PHYSICAL_SECTIONS.map((s, i) => (
+                                    <button
+                                        key={s.key}
+                                        type="button"
+                                        className="one-char__nav-item"
+                                        onClick={() => scrollTo(s.key)}
+                                    >
+                                        {i + 6}. {s.label}
+                                    </button>
+                                ))}
+                            </nav>
+
+                            <PhysicalCharacteristics values={values} onChange={onChange} />
+                        </>
                     )}
                     {sideTab === "functional" && (
-                        <p className="one-char__placeholder">
-                            Раздел «Функциональные характеристики» — в разработке.
-                        </p>
+                        <>
+                            <nav
+                                className="one-char__nav"
+                                aria-label="Разделы функциональных характеристик"
+                            >
+                                {FUNCTIONAL_SECTIONS.map((s) => (
+                                    <button
+                                        key={s.key}
+                                        type="button"
+                                        className="one-char__nav-item"
+                                        onClick={() => scrollTo(s.key)}
+                                    >
+                                        9. {s.label}
+                                    </button>
+                                ))}
+                            </nav>
+
+                            <FunctionalCharacteristics values={values} onChange={onChange} />
+                        </>
                     )}
                 </div>
             </div>
@@ -1197,7 +1333,6 @@ function TechCharacteristics({ values, onChange }) {
 
     return (
         <>
-            {/* --- Гарантийные обязательства --- */}
             <h3 id="tech-warranty" className="one-char__section-title">
                 Гарантийные обязательства
             </h3>
@@ -1270,7 +1405,6 @@ function TechCharacteristics({ values, onChange }) {
                 </select>
             </CharRow>
 
-            {/* --- Технические --- */}
             <h3 id="tech-technical" className="one-char__section-title">
                 Технические
             </h3>
@@ -1375,7 +1509,6 @@ function TechCharacteristics({ values, onChange }) {
             <h3 className="one-char__section-title">Иное</h3>
             <CharCustom value={v("customTechnical")} onChange={set("customTechnical")} />
 
-            {/* --- Энергопотребление --- */}
             <h3 id="tech-power" className="one-char__section-title">
                 Энергопотребление
             </h3>
@@ -1548,7 +1681,6 @@ function TechCharacteristics({ values, onChange }) {
             <h3 className="one-char__section-title">Иное</h3>
             <CharCustom value={v("customPower")} onChange={set("customPower")} />
 
-            {/* --- Дисплей --- */}
             <h3 id="tech-display" className="one-char__section-title">
                 Дисплей
             </h3>
@@ -1657,7 +1789,6 @@ function TechCharacteristics({ values, onChange }) {
             <h3 className="one-char__section-title">Иное</h3>
             <CharCustom value={v("customDisplay")} onChange={set("customDisplay")} />
 
-            {/* --- Системные компоненты --- */}
             <h3 id="tech-system" className="one-char__section-title">
                 Системные компоненты
             </h3>
@@ -1897,6 +2028,379 @@ function TechCharacteristics({ values, onChange }) {
 
             <h3 className="one-char__section-title">Иное</h3>
             <CharCustom value={v("customSystem")} onChange={set("customSystem")} />
+        </>
+    );
+}
+
+/* =========================================================
+   ФИЗИЧЕСКИЕ ХАРАКТЕРИСТИКИ
+   ========================================================= */
+function PhysicalCharacteristics({ values, onChange }) {
+    const v = (code) => values[code] || {};
+    const set = (code) => (patch) => onChange(code, patch);
+
+    return (
+        <>
+            <h3 id="physical-dimensions" className="one-char__section-title">
+                Габаритные размеры и вес
+            </h3>
+
+            <CharRow required label="Длина" value={v("length")} onChange={set("length")}>
+                <CharInput
+                    value={v("length")}
+                    onChange={set("length")}
+                    unit={[
+                        { value: "mm", label: "Миллиметры" },
+                        { value: "cm", label: "Сантиметры" },
+                    ]}
+                />
+            </CharRow>
+
+            <CharRow required label="Ширина" value={v("width")} onChange={set("width")}>
+                <CharInput
+                    value={v("width")}
+                    onChange={set("width")}
+                    unit={[
+                        { value: "mm", label: "Миллиметры" },
+                        { value: "cm", label: "Сантиметры" },
+                    ]}
+                />
+            </CharRow>
+
+            <CharRow required label="Высота" value={v("height")} onChange={set("height")}>
+                <CharInput
+                    value={v("height")}
+                    onChange={set("height")}
+                    unit={[
+                        { value: "mm", label: "Миллиметры" },
+                        { value: "cm", label: "Сантиметры" },
+                    ]}
+                />
+            </CharRow>
+
+            <CharRow
+                required
+                label="Вес модели без упаковки"
+                value={v("weight")}
+                onChange={set("weight")}
+            >
+                <CharInput
+                    value={v("weight")}
+                    onChange={set("weight")}
+                    unit={[
+                        { value: "g", label: "Грамм" },
+                        { value: "kg", label: "Килограмм" },
+                    ]}
+                />
+            </CharRow>
+
+            <CharRow
+                required
+                label="Погрешность веса"
+                value={v("weightTolerance")}
+                onChange={set("weightTolerance")}
+            >
+                <CharInput
+                    value={v("weightTolerance")}
+                    onChange={set("weightTolerance")}
+                    unit={[
+                        { value: "g", label: "Грамм" },
+                        { value: "kg", label: "Килограмм" },
+                    ]}
+                />
+            </CharRow>
+
+            <CharRow label="Диаметр" value={v("diameter")} onChange={set("diameter")}>
+                <CharInput
+                    value={v("diameter")}
+                    onChange={set("diameter")}
+                    unit={[
+                        { value: "mm", label: "Миллиметры" },
+                        { value: "cm", label: "Сантиметры" },
+                    ]}
+                />
+            </CharRow>
+
+            <CharRow label="Объём" value={v("volume")} onChange={set("volume")}>
+                <CharInput
+                    value={v("volume")}
+                    onChange={set("volume")}
+                    unit={[
+                        { value: "ml", label: "Миллилитры" },
+                        { value: "l", label: "Литры" },
+                        { value: "cm3", label: "Сантиметры³" },
+                    ]}
+                />
+            </CharRow>
+
+            <h3 id="physical-material" className="one-char__section-title">
+                Материал и состав
+            </h3>
+
+            <CharRow
+                label="Состав (материал) продукта"
+                value={v("materialPercent")}
+                onChange={set("materialPercent")}
+            >
+                <div className="one-char__input-wrap">
+                    <input
+                        type="text"
+                        className="one-char__input"
+                        placeholder="Значение"
+                        value={v("materialPercent").text || ""}
+                        onChange={(e) =>
+                            onChange("materialPercent", {
+                                ...v("materialPercent"),
+                                text: e.target.value,
+                            })
+                        }
+                    />
+                    <span className="one-char__unit-label">%</span>
+                </div>
+            </CharRow>
+
+            <CharRow label="Корпус" value={v("hasCase")} onChange={set("hasCase")}>
+                <CharChips
+                    value={v("hasCase")}
+                    onChange={set("hasCase")}
+                    options={[
+                        { value: "yes", label: "Есть" },
+                        { value: "no", label: "Нет" },
+                    ]}
+                />
+            </CharRow>
+
+            <CharRow
+                label="Материал корпуса"
+                value={v("caseMaterial")}
+                onChange={set("caseMaterial")}
+            >
+                <CharInput
+                    value={v("caseMaterial")}
+                    onChange={set("caseMaterial")}
+                />
+            </CharRow>
+
+            <CharRow
+                label="Влагозащитный корпус"
+                value={v("waterproofCase")}
+                onChange={set("waterproofCase")}
+            >
+                <CharChips
+                    value={v("waterproofCase")}
+                    onChange={set("waterproofCase")}
+                    options={[
+                        { value: "yes", label: "Да" },
+                        { value: "no", label: "Нет" },
+                    ]}
+                />
+            </CharRow>
+
+            <h3 className="one-char__section-title">Иное</h3>
+            <CharCustom
+                value={v("customMaterial")}
+                onChange={set("customMaterial")}
+            />
+
+            <h3 id="physical-affiliation" className="one-char__section-title">
+                Принадлежность
+            </h3>
+
+            <CharRow label="Пол" value={v("gender")} onChange={set("gender")}>
+                <CharChips
+                    value={v("gender")}
+                    onChange={set("gender")}
+                    options={[
+                        { value: "female", label: "Женский" },
+                        { value: "male", label: "Мужской" },
+                        { value: "girls", label: "Девочки" },
+                        { value: "boys", label: "Мальчики" },
+                        { value: "unisex", label: "Унисекс" },
+                    ]}
+                />
+            </CharRow>
+
+            <CharRow label="Возраст" value={v("ageGroup")} onChange={set("ageGroup")}>
+                <CharChips
+                    value={v("ageGroup")}
+                    onChange={set("ageGroup")}
+                    options={[
+                        { value: "0-12", label: "Дети 0–12 лет" },
+                        { value: "13-18", label: "Подростки 13–18 лет" },
+                        { value: "19-59", label: "Взрослые 19–59 лет" },
+                        { value: "60+", label: "Пожилые 60+ лет" },
+                    ]}
+                />
+            </CharRow>
+
+            <CharRow
+                label="Возрастное ограничение"
+                value={v("ageLimit")}
+                onChange={set("ageLimit")}
+            >
+                <CharChips
+                    value={v("ageLimit")}
+                    onChange={set("ageLimit")}
+                    options={[
+                        { value: "0+", label: "0+" },
+                        { value: "6+", label: "6+" },
+                        { value: "12+", label: "12+" },
+                        { value: "16+", label: "16+" },
+                        { value: "18+", label: "18+" },
+                    ]}
+                />
+            </CharRow>
+
+            <CharGroupTitle>Размерная сетка</CharGroupTitle>
+
+            <CharRow
+                label="Российский размер обуви"
+                value={v("shoeSize")}
+                onChange={set("shoeSize")}
+            >
+                <div className="one-char__input-wrap">
+                    <input
+                        type="text"
+                        className="one-char__input"
+                        placeholder="Значение"
+                        value={v("shoeSize").text || ""}
+                        onChange={(e) =>
+                            onChange("shoeSize", {
+                                ...v("shoeSize"),
+                                text: e.target.value,
+                            })
+                        }
+                    />
+                    <span className="one-char__unit-label">12–54</span>
+                </div>
+            </CharRow>
+
+            <CharRow
+                label="Российский размер одежды"
+                value={v("clothesSize")}
+                onChange={set("clothesSize")}
+            >
+                <div className="one-char__input-wrap">
+                    <input
+                        type="text"
+                        className="one-char__input"
+                        placeholder="Значение"
+                        value={v("clothesSize").text || ""}
+                        onChange={(e) =>
+                            onChange("clothesSize", {
+                                ...v("clothesSize"),
+                                text: e.target.value,
+                            })
+                        }
+                    />
+                    <span className="one-char__unit-label">20–94</span>
+                </div>
+            </CharRow>
+
+            <CharGroupTitle>Сезон</CharGroupTitle>
+
+            <CharRow label="Сезон" value={v("season")} onChange={set("season")}>
+                <CharChips
+                    value={v("season")}
+                    onChange={set("season")}
+                    options={[
+                        { value: "summer", label: "Лето" },
+                        { value: "autumn", label: "Осень" },
+                        { value: "winter", label: "Зима" },
+                        { value: "spring", label: "Весна" },
+                    ]}
+                />
+            </CharRow>
+
+            <h3 className="one-char__section-title">Иное</h3>
+            <CharCustom
+                value={v("customAffiliation")}
+                onChange={set("customAffiliation")}
+            />
+        </>
+    );
+}
+
+/* =========================================================
+   ФУНКЦИОНАЛЬНЫЕ ХАРАКТЕРИСТИКИ
+   ========================================================= */
+function FunctionalCharacteristics({ values, onChange }) {
+    const v = (code) => values[code] || {};
+    const set = (code) => (patch) => onChange(code, patch);
+
+    const COLOR_OPTIONS = [
+        "Белый", "Черный", "Серый", "Серебристый", "Синий", "Красный",
+        "Бежевый", "Коричневый", "Зеленый", "Желтый", "Оранжевый",
+        "Фиолетовый", "Розовый", "Голубой", "Бордовый",
+    ].map((x) => ({ value: x, label: x }));
+
+    const ENERGY_CLASS_OPTIONS = [
+        "A++", "A+", "A", "B", "C", "D", "E", "F", "G",
+    ].map((x) => ({ value: x, label: x }));
+
+    return (
+        <>
+            <h3 id="functional" className="one-char__section-title">
+                Функциональные
+            </h3>
+
+            <CharGroupTitle>Цвет</CharGroupTitle>
+
+            <CharRow label="Цвет" value={v("color")} onChange={set("color")}>
+                <div className="one-char__stack">
+                    <input
+                        type="text"
+                        className="one-char__input"
+                        placeholder="Введите значение"
+                        value={v("color").text || ""}
+                        onChange={(e) =>
+                            onChange("color", { ...v("color"), text: e.target.value })
+                        }
+                    />
+                    <CharChips
+                        value={v("color")}
+                        onChange={set("color")}
+                        options={COLOR_OPTIONS}
+                    />
+                </div>
+            </CharRow>
+
+            <CharGroupTitle>Нагрузка</CharGroupTitle>
+
+            <CharRow
+                label="Максимальная нагрузка на продукт"
+                value={v("maxLoad")}
+                onChange={set("maxLoad")}
+            >
+                <CharInput
+                    value={v("maxLoad")}
+                    onChange={set("maxLoad")}
+                    unit={[
+                        { value: "kg", label: "Килограмм" },
+                        { value: "g", label: "Грамм" },
+                    ]}
+                />
+            </CharRow>
+
+            <CharGroupTitle>Класс энергоэффективности</CharGroupTitle>
+
+            <CharRow
+                label="Класс энергоэффективности"
+                value={v("energyClass")}
+                onChange={set("energyClass")}
+            >
+                <CharChips
+                    value={v("energyClass")}
+                    onChange={set("energyClass")}
+                    options={ENERGY_CLASS_OPTIONS}
+                />
+            </CharRow>
+
+            <h3 className="one-char__section-title">Иное</h3>
+            <CharCustom
+                value={v("customFunctional")}
+                onChange={set("customFunctional")}
+            />
         </>
     );
 }
@@ -2164,6 +2668,8 @@ export default function One() {
         setChars((prev) => ({ ...prev, [code]: patch }));
 
     const [docs, setDocs] = useState({});
+    const [modelPhotos, setModelPhotos] = useState([]);
+    const [packPhotos, setPackPhotos] = useState([]);
 
     const [delivery, setDelivery] = useState([
         {
@@ -2267,6 +2773,12 @@ export default function One() {
                 <span className="stage4-name-box__text">{modelDisplayName}</span>
             </div>
 
+            <div className="one-page__excel-row">
+                <button type="button" className="one-page__excel-btn">
+                    Заполнить через файл Excel
+                </button>
+            </div>
+
             <div className="one-tabs" role="tablist">
                 {TABS.map((tab) => {
                     const active = activeTab === tab.key;
@@ -2285,6 +2797,7 @@ export default function One() {
                 })}
             </div>
 
+            {/* ============== УПАКОВКА ============== */}
             {activeTab === "packaging" && (
                 <>
                     <nav className="one-subnav" aria-label="Разделы упаковки">
@@ -2301,7 +2814,12 @@ export default function One() {
                     </nav>
 
                     <div ref={(el) => (sectionsRef.current.packaging = el)}>
-                        <SectionPackaging data={pack} onChange={updatePack} />
+                        <SectionPackaging
+                            data={pack}
+                            onChange={updatePack}
+                            photos={packPhotos}
+                            onPhotosChange={setPackPhotos}
+                        />
                     </div>
 
                     <div ref={(el) => (sectionsRef.current.kit = el)}>
@@ -2310,14 +2828,17 @@ export default function One() {
                 </>
             )}
 
+            {/* ============== ХАРАКТЕРИСТИКИ ============== */}
             {activeTab === "characteristics" && (
                 <SectionCharacteristicsFull values={chars} onChange={updateChars} />
             )}
 
+            {/* ============== ДОСТАВКА ============== */}
             {activeTab === "delivery" && (
                 <SectionDelivery items={delivery} onChange={setDelivery} />
             )}
 
+            {/* ============== ЦЕНООБРАЗОВАНИЕ ============== */}
             {activeTab === "pricing" && (
                 <>
                     <nav className="one-subnav" aria-label="Разделы ценообразования">
@@ -2344,6 +2865,7 @@ export default function One() {
                 </>
             )}
 
+            {/* ============== ДОКУМЕНТЫ ============== */}
             {activeTab === "documents" && (
                 <SectionDocuments
                     docs={docs}
@@ -2352,23 +2874,29 @@ export default function One() {
                 />
             )}
 
+            {/* ============== ИДЕНТИФИКАЦИЯ ============== */}
             {activeTab === "identification" && (
                 <>
-                    <nav className="one-subnav" aria-label="Разделы идентификации">
-                        {IDENT_SECTIONS.map((s, i) => (
-                            <button
-                                key={s.key}
-                                type="button"
-                                className="one-subnav__item"
-                                onClick={() => scrollTo(s.key)}
-                            >
-                                {i + 1}. {s.label}
-                            </button>
-                        ))}
+                    <nav className="one-subnav-box" aria-label="Разделы идентификации">
+                        <div className="one-subnav-box__list">
+                            {IDENT_SECTIONS.map((s, i) => (
+                                <button
+                                    key={s.key}
+                                    type="button"
+                                    className="one-subnav-box__item"
+                                    onClick={() => scrollTo(s.key)}
+                                >
+                                    {i + 1}. {s.label}
+                                </button>
+                            ))}
+                        </div>
                     </nav>
 
                     <div ref={(el) => (sectionsRef.current.photos = el)}>
-                        <SectionPhotos />
+                        <SectionPhotos
+                            photos={modelPhotos}
+                            onPhotosChange={setModelPhotos}
+                        />
                     </div>
 
                     <div ref={(el) => (sectionsRef.current.characteristics = el)}>
@@ -2384,6 +2912,28 @@ export default function One() {
                     </div>
                 </>
             )}
+
+            <BottomBar
+                current={4}
+                total={4}
+                prevPath="/stage22"
+                nextPath="/stage22"
+                onSave={async () => {
+                    // TODO: подключить API
+                    console.log("save", {
+                        ident,
+                        chars,
+                        pack,
+                        kit,
+                        pricing,
+                        delivery,
+                        docs,
+                        modelPhotos,
+                        packPhotos,
+                    });
+                }}
+                homeIconSrc="../images/Home.png"
+            />
         </div>
     );
 }

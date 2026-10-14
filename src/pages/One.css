@@ -37,7 +37,7 @@
     border-radius: 6px;
     padding: 12px 16px;
     background: #fff;
-    width: 100%;
+    width: 610px;
     margin-bottom: 20px;
     min-height: 56px;
     box-sizing: border-box;
@@ -78,7 +78,7 @@
     word-break: break-word;
 }
 
-//* =========================================================
+/* =========================================================
    Таб-панель — 6 разделов в одну строку
    ========================================================= */
 .one-page .one-tabs {
@@ -284,7 +284,7 @@
     background: #fff;
     font-size: 17px;
     font-weight: 600;
-    color: #1a1a1a;
+    color: blue;
     margin-bottom: 18px;
     text-align: left;
 }
@@ -1869,7 +1869,7 @@
     border-radius: 6px;
     padding: 12px 16px;
     background: #fff;
-    width: 100%;
+    width: 610px;
     margin-bottom: 20px;
     min-height: 56px;
     box-sizing: border-box;
@@ -2008,17 +2008,6 @@
 .one-page .one-block {
     margin-bottom: 32px;
     scroll-margin-top: 16px;
-}
-
-.one-page .one-block-title {
-    display: inline-block;
-    padding: 10px 18px;
-    border: 1.5px solid #1a1a1a;
-    background: #fff;
-    font-size: 17px;
-    font-weight: 600;
-    color: #1a1a1a;
-    margin-bottom: 18px;
 }
 
 /* =========================================================
@@ -2167,11 +2156,11 @@
     justify-content: flex-start;
 }
 
-.one-page .one-docs__req-text {
+/* .one-page .one-docs__req-text {
     font-size: 13px;
     color: #1a1a1a;
     font-weight: 500;
-}
+} */
 
 .one-page .one-docs__req-star {
     color: #1a1a1a;
@@ -2403,7 +2392,7 @@
 }
 
 .one-page .one-pack__req {
-    color: #1a1a1a;
+    /* color: #1a1a1a; */
     font-size: 13px;
     font-weight: 500;
     white-space: nowrap;
@@ -3243,7 +3232,7 @@
 
 .one-page .one-char__req {
     font-size: 12px;
-    color: #1f2937;
+    color: #9b1c1c;
     line-height: 1.2;
     white-space: nowrap;
 }
@@ -3660,5 +3649,246 @@
     .one-page .one-char__custom-value,
     .one-page .one-char__custom-unit {
         grid-column: 2 / -1;
+    }
+}
+
+/* =========================================================
+   Секция «Иное» — метка над кнопкой выбора единиц
+   ========================================================= */
+.one-page .one-char__unit-label {
+    font-size: 13px;
+    color: #6a7280;
+    white-space: nowrap;
+    padding-left: 4px;
+}
+
+/* =========================================================
+   Функциональные: чипы цвета и класса энергоэффективности
+   переносятся свободно, чтобы длинный список смотрелся
+   компактно и не «ломал» сетку
+   ========================================================= */
+.one-page .one-char__row--wide-chips .one-char__control {
+    flex-wrap: wrap;
+}
+
+.one-page .one-char__stack .one-char__chips {
+    max-width: 100%;
+}
+
+/* =========================================================
+   Кнопка «Заполнить через файл Excel» — аналог .utt / .ttr из Add.css
+   ========================================================= */
+.one-page .one-page__excel-row {
+    display: flex;
+    justify-content: flex-start;
+    margin: 4px 0 18px;
+}
+
+.one-page .one-page__excel-btn {
+    padding: 13px 18px;
+    font-family: inherit;
+    font-size: 14px;
+    color: #1a1a1a;
+    background: #ffe9c7;
+    border: 1.5px solid #944806;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.15s ease, filter 0.15s ease;
+}
+
+.one-page .one-page__excel-btn:hover {
+    background: #ffdcaa;
+}
+
+.one-page .one-page__excel-btn:active {
+    filter: brightness(0.97);
+}
+
+/* =========================================================
+   Новый вид добавления фотографий — 1 большая + 4 маленькие
+   ========================================================= */
+.one-page .one-photo-slots {
+    display: grid;
+    grid-template-columns: 260px minmax(0, 1fr);
+    gap: 18px;
+    margin-top: 8px;
+    max-width: 620px;
+}
+
+/* Большая карточка */
+.one-page .one-photo-slots__big {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    background: #fff;
+    border: 1.5px solid #1a1a1a;
+    border-radius: 28px;
+    cursor: pointer;
+    padding: 16px;
+    box-sizing: border-box;
+    font-family: inherit;
+    transition: background 0.15s ease;
+}
+
+.one-page .one-photo-slots__big:hover {
+    background: #f7f8fa;
+}
+
+/* Сетка 2×2 справа */
+.one-page .one-photo-slots__grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 14px;
+    height: 100%;
+}
+
+/* Маленькие карточки — квадрат */
+.one-page .one-photo-slots__small {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    background: #fff;
+    border: 1.5px solid #1a1a1a;
+    border-radius: 20px;
+    cursor: pointer;
+    font-family: inherit;
+    padding: 0;
+    box-sizing: border-box;
+    transition: background 0.15s ease;
+}
+
+.one-page .one-photo-slots__small:hover {
+    background: #f7f8fa;
+}
+
+/* Плюс в кружке */
+.one-page .one-photo-slots__plus {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: #3a1f0a;
+    color: #fff;
+    font-size: 20px;
+    font-weight: 400;
+    line-height: 1;
+    padding-bottom: 3px;
+}
+
+.one-page .one-photo-slots__plus--lg {
+    width: 64px;
+    height: 64px;
+    font-size: 44px;
+    padding-bottom: 6px;
+}
+
+/* Подпись под большим плюсом */
+.one-page .one-photo-slots__caption {
+    font-size: 14px;
+    color: #1f2937;
+    text-align: center;
+    line-height: 1.2;
+    background: #f0e9db;
+    padding: 3px 8px;
+    border-radius: 3px;
+}
+
+
+/* Скрыть старые классы, если где-то ещё используются (на случай поэтапной миграции) */
+.one-page .one-photos__add,
+.one-page .one-photos__grid {
+    /* можно оставить без display: none, если где-то ещё нужны */
+}
+
+/* =========================================================
+   Навигация «Идентификация» — один цельный блок
+   ========================================================= */
+.one-page .one-subnav-box {
+    width: 300px;
+    max-width: 100%;
+    margin: 0 0 32px;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #c3e0b4;
+    /* одна общая рамка вокруг всего блока */
+    background: #fff;
+    box-sizing: border-box;
+    overflow: hidden;
+    margin-top: -32px;
+    /* ничего не вылезает за рамку */
+}
+
+/* Верхняя зелёная плашка — без собственной рамки,
+   только разделитель снизу, чтобы не было «второй коробки» */
+.one-page .one-subnav-box__title {
+    padding: 20px 18px;
+    background: #ddf0d3;
+    color: #1f4d1a;
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.3;
+    text-align: left;
+    border: none;
+    /* ← убрали рамку у плашки */
+    border-bottom: 1px solid #c3e0b4;
+}
+
+/* Список пунктов — без рамки, просто под плашкой */
+.one-page .one-subnav-box__list {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 16px 18px 18px;
+    background: #fff;
+    border: none;
+    margin-top:
+    /* ← убрали рамку у списка */
+}
+
+.one-page .one-subnav-box__item {
+    padding: 0;
+    background: none;
+    border: none;
+    font-family: inherit;
+    font-size: 14px;
+    line-height: 1.35;
+    color: #1f2937;
+    text-align: left;
+    cursor: pointer;
+    text-decoration: none;
+    transition: color 0.15s ease;
+}
+
+.one-page .one-subnav-box__item:hover {
+    color: #2563eb;
+    text-decoration: underline;
+}
+
+/* Адаптив */
+@media (max-width: 700px) {
+    .one-page .one-subnav-box {
+        width: 100%;
+    }
+
+    .one-page .one-subnav-box__title {
+        padding: 14px 16px;
+        font-size: 14px;
+    }
+
+    .one-page .one-subnav-box__list {
+        padding: 12px 16px 14px;
+        gap: 8px;
     }
 }
