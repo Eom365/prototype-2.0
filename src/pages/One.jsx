@@ -1,7 +1,8 @@
 // One.jsx — Этап 4: Создание модели (параметра)
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import "./One.css";
 import BottomBar from "../components/BottomBar";
+import Select from "react-select";
 
 /* =========================================================
    ВЕРХНИЕ 6 ТАБОВ ЭТАПА
@@ -9,21 +10,21 @@ import BottomBar from "../components/BottomBar";
 const TABS = [
     { key: "identification", label: "1. Идентификация конкретной модели" },
     { key: "documents", label: "2. Документы конкретной модели" },
-    { key: "packaging", label: "3. Упаковка конкретной модели" },
-    { key: "pricing", label: "4. Ценообразование конкретной модели" },
-    { key: "delivery", label: "5. Доставка конкретной модели" },
     {
         key: "characteristics",
-        label: "6. Технические, физические и функциональные характеристики конкретной модели",
+        label: "3. Технические, физические и функциональные характеристики конкретной модели",
     },
+    { key: "packaging", label: "4. Упаковка конкретной модели" },
+    { key: "pricing", label: "5. Ценообразование конкретной модели" },
+    { key: "delivery", label: "6. Доставка конкретной модели" },
 ];
 
 /* =========================================================
    ПОДРАЗДЕЛЫ
    ========================================================= */
 const IDENT_SECTIONS = [
+    { key: "characteristics", label: "Сведения о конкретной модели" },
     { key: "photos", label: "Фотографии конкретной модели" },
-    { key: "characteristics", label: "Характеристики конкретной модели" },
     { key: "manufacturer", label: "Сведения о производителе" },
     { key: "description", label: "Описание конкретной модели" },
 ];
@@ -41,18 +42,257 @@ const PRICING_SECTIONS = [
 const CURRENCY_SYMBOLS = { RUB: "₽", CNY: "¥" };
 
 /* =========================================================
-   Вспомогательные компоненты
+   Список стран мира (195 государств) на русском языке
+   Формат: { value: ISO-код, label: русское название } 
    ========================================================= */
+const COUNTRIES_RU = [
+    { value: "AU", label: "Австралия" },
+    { value: "AT", label: "Австрия" },
+    { value: "AZ", label: "Азербайджан" },
+    { value: "AL", label: "Албания" },
+    { value: "DZ", label: "Алжир" },
+    { value: "AO", label: "Ангола" },
+    { value: "AD", label: "Андорра" },
+    { value: "AG", label: "Антигуа и Барбуда" },
+    { value: "AR", label: "Аргентина" },
+    { value: "AM", label: "Армения" },
+    { value: "AF", label: "Афганистан" },
+    { value: "BS", label: "Багамы" },
+    { value: "BD", label: "Бангладеш" },
+    { value: "BB", label: "Барбадос" },
+    { value: "BH", label: "Бахрейн" },
+    { value: "BY", label: "Беларусь" },
+    { value: "BZ", label: "Белиз" },
+    { value: "BE", label: "Бельгия" },
+    { value: "BJ", label: "Бенин" },
+    { value: "BG", label: "Болгария" },
+    { value: "BO", label: "Боливия" },
+    { value: "BA", label: "Босния и Герцеговина" },
+    { value: "BW", label: "Ботсвана" },
+    { value: "BR", label: "Бразилия" },
+    { value: "BN", label: "Бруней" },
+    { value: "BF", label: "Буркина-Фасо" },
+    { value: "BI", label: "Бурунди" },
+    { value: "BT", label: "Бутан" },
+    { value: "VU", label: "Вануату" },
+    { value: "VA", label: "Ватикан" },
+    { value: "GB", label: "Великобритания" },
+    { value: "HU", label: "Венгрия" },
+    { value: "VE", label: "Венесуэла" },
+    { value: "TL", label: "Восточный Тимор" },
+    { value: "VN", label: "Вьетнам" },
+    { value: "GA", label: "Габон" },
+    { value: "HT", label: "Гаити" },
+    { value: "GY", label: "Гайана" },
+    { value: "GM", label: "Гамбия" },
+    { value: "GH", label: "Гана" },
+    { value: "GT", label: "Гватемала" },
+    { value: "GN", label: "Гвинея" },
+    { value: "GW", label: "Гвинея-Бисау" },
+    { value: "DE", label: "Германия" },
+    { value: "HN", label: "Гондурас" },
+    { value: "GD", label: "Гренада" },
+    { value: "GR", label: "Греция" },
+    { value: "GE", label: "Грузия" },
+    { value: "DK", label: "Дания" },
+    { value: "DJ", label: "Джибути" },
+    { value: "DM", label: "Доминика" },
+    { value: "DO", label: "Доминиканская Республика" },
+    { value: "EG", label: "Египет" },
+    { value: "ZM", label: "Замбия" },
+    { value: "ZW", label: "Зимбабве" },
+    { value: "IL", label: "Израиль" },
+    { value: "IN", label: "Индия" },
+    { value: "ID", label: "Индонезия" },
+    { value: "JO", label: "Иордания" },
+    { value: "IQ", label: "Ирак" },
+    { value: "IR", label: "Иран" },
+    { value: "IE", label: "Ирландия" },
+    { value: "IS", label: "Исландия" },
+    { value: "ES", label: "Испания" },
+    { value: "IT", label: "Италия" },
+    { value: "YE", label: "Йемен" },
+    { value: "CV", label: "Кабо-Верде" },
+    { value: "KZ", label: "Казахстан" },
+    { value: "KH", label: "Камбоджа" },
+    { value: "CM", label: "Камерун" },
+    { value: "CA", label: "Канада" },
+    { value: "QA", label: "Катар" },
+    { value: "KE", label: "Кения" },
+    { value: "CY", label: "Кипр" },
+    { value: "KG", label: "Киргизия" },
+    { value: "KI", label: "Кирибати" },
+    { value: "CN", label: "Китай" },
+    { value: "CO", label: "Колумбия" },
+    { value: "KM", label: "Коморы" },
+    { value: "CG", label: "Конго" },
+    { value: "CD", label: "Конго (ДРК)" },
+    { value: "KP", label: "КНДР" },
+    { value: "KR", label: "Южная Корея" },
+    { value: "CR", label: "Коста-Рика" },
+    { value: "CI", label: "Кот-д’Ивуар" },
+    { value: "CU", label: "Куба" },
+    { value: "KW", label: "Кувейт" },
+    { value: "LA", label: "Лаос" },
+    { value: "LV", label: "Латвия" },
+    { value: "LS", label: "Лесото" },
+    { value: "LR", label: "Либерия" },
+    { value: "LB", label: "Ливан" },
+    { value: "LY", label: "Ливия" },
+    { value: "LT", label: "Литва" },
+    { value: "LI", label: "Лихтенштейн" },
+    { value: "LU", label: "Люксембург" },
+    { value: "MU", label: "Маврикий" },
+    { value: "MR", label: "Мавритания" },
+    { value: "MG", label: "Мадагаскар" },
+    { value: "MW", label: "Малави" },
+    { value: "MY", label: "Малайзия" },
+    { value: "MV", label: "Мальдивы" },
+    { value: "MT", label: "Мальта" },
+    { value: "ML", label: "Мали" },
+    { value: "MA", label: "Марокко" },
+    { value: "MH", label: "Маршалловы Острова" },
+    { value: "MX", label: "Мексика" },
+    { value: "MZ", label: "Мозамбик" },
+    { value: "MD", label: "Молдавия" },
+    { value: "MC", label: "Монако" },
+    { value: "MN", label: "Монголия" },
+    { value: "MM", label: "Мьянма" },
+    { value: "NA", label: "Намибия" },
+    { value: "NR", label: "Науру" },
+    { value: "NP", label: "Непал" },
+    { value: "NE", label: "Нигер" },
+    { value: "NG", label: "Нигерия" },
+    { value: "NL", label: "Нидерланды" },
+    { value: "NI", label: "Никарагуа" },
+    { value: "NZ", label: "Новая Зеландия" },
+    { value: "NO", label: "Норвегия" },
+    { value: "AE", label: "ОАЭ" },
+    { value: "OM", label: "Оман" },
+    { value: "PK", label: "Пакистан" },
+    { value: "PW", label: "Палау" },
+    { value: "PS", label: "Палестина" },
+    { value: "PA", label: "Панама" },
+    { value: "PG", label: "Папуа — Новая Гвинея" },
+    { value: "PY", label: "Парагвай" },
+    { value: "PE", label: "Перу" },
+    { value: "PL", label: "Польша" },
+    { value: "PT", label: "Португалия" },
+    { value: "RU", label: "Россия" },
+    { value: "RW", label: "Руанда" },
+    { value: "RO", label: "Румыния" },
+    { value: "SV", label: "Сальвадор" },
+    { value: "WS", label: "Самоа" },
+    { value: "SM", label: "Сан-Марино" },
+    { value: "ST", label: "Сан-Томе и Принсипи" },
+    { value: "SA", label: "Саудовская Аравия" },
+    { value: "SZ", label: "Эсватини" },
+    { value: "SC", label: "Сейшелы" },
+    { value: "SN", label: "Сенегал" },
+    { value: "VC", label: "Сент-Винсент и Гренадины" },
+    { value: "KN", label: "Сент-Китс и Невис" },
+    { value: "LC", label: "Сент-Люсия" },
+    { value: "RS", label: "Сербия" },
+    { value: "SG", label: "Сингапур" },
+    { value: "SY", label: "Сирия" },
+    { value: "SK", label: "Словакия" },
+    { value: "SI", label: "Словения" },
+    { value: "SB", label: "Соломоновы Острова" },
+    { value: "SO", label: "Сомали" },
+    { value: "SD", label: "Судан" },
+    { value: "SR", label: "Суринам" },
+    { value: "US", label: "США" },
+    { value: "SL", label: "Сьерра-Леоне" },
+    { value: "TJ", label: "Таджикистан" },
+    { value: "TH", label: "Таиланд" },
+    { value: "TZ", label: "Танзания" },
+    { value: "TG", label: "Того" },
+    { value: "TO", label: "Тонга" },
+    { value: "TT", label: "Тринидад и Тобаго" },
+    { value: "TV", label: "Тувалу" },
+    { value: "TN", label: "Тунис" },
+    { value: "TM", label: "Туркменистан" },
+    { value: "TR", label: "Турция" },
+    { value: "UG", label: "Уганда" },
+    { value: "UZ", label: "Узбекистан" },
+    { value: "UA", label: "Украина" },
+    { value: "UY", label: "Уругвай" },
+    { value: "FM", label: "Микронезия" },
+    { value: "FJ", label: "Фиджи" },
+    { value: "PH", label: "Филиппины" },
+    { value: "FI", label: "Финляндия" },
+    { value: "FR", label: "Франция" },
+    { value: "HR", label: "Хорватия" },
+    { value: "CF", label: "ЦАР" },
+    { value: "TD", label: "Чад" },
+    { value: "ME", label: "Черногория" },
+    { value: "CZ", label: "Чехия" },
+    { value: "CL", label: "Чили" },
+    { value: "CH", label: "Швейцария" },
+    { value: "SE", label: "Швеция" },
+    { value: "LK", label: "Шри-Ланка" },
+    { value: "EC", label: "Эквадор" },
+    { value: "GQ", label: "Экваториальная Гвинея" },
+    { value: "ER", label: "Эритрея" },
+    { value: "EE", label: "Эстония" },
+    { value: "ET", label: "Эфиопия" },
+    { value: "ZA", label: "ЮАР" },
+    { value: "SS", label: "Южный Судан" },
+    { value: "JM", label: "Ямайка" },
+    { value: "JP", label: "Япония" },
+];
+
+/* =========================================================
+   Вспомогательные компоненты 
+   ========================================================= */
+
+/* =========================================================
+Авторастущая textarea (растёт по мере ввода)
+========================================================= */
+function AutoTextarea({ value, onChange, placeholder, maxLength, className = "" }) {
+    const ref = useRef(null);
+
+    // Автоматически подгоняем высоту под содержимое
+    const resize = () => {
+        const el = ref.current;
+        if (!el) return;
+        el.style.height = "auto";
+        el.style.height = `${el.scrollHeight}px`;
+    };
+
+    // Подгоняем высоту при каждом изменении value
+    useMemo(() => {
+        // requestAnimationFrame, чтобы дождаться отрисовки
+        requestAnimationFrame(resize);
+    }, [value]);
+
+    return (
+        <textarea
+            ref={ref}
+            className={`one-field__input one-field__input--auto ${className}`}
+            value={value}
+            placeholder={placeholder}
+            maxLength={maxLength}
+            rows={1}
+            onChange={(e) => {
+                onChange(e.target.value);
+                resize();
+            }}
+        />
+    );
+}
 function BlockTitle({ children }) {
     return <div className="one-block-title">{children}</div>;
 }
 
-function FieldRow({ required, label, value, onChange, placeholder = "Значение", hint }) {
+function FieldRow({ required, label, value, onChange, placeholder = "Значение", hint, maxLength, multiline }) {
     return (
-        <div className="one-field">
+        <div className={`one-field${multiline ? " one-field--multiline" : ""}`}>
+            <span className="one-field__star">{required ? "✱" : ""}</span>
             <span className={`one-field__req${required ? "" : " one-field__req--hidden"}`}>
                 {required ? "требует заполнения" : ""}
             </span>
+
             <button
                 type="button"
                 className="one-field__help"
@@ -61,16 +301,84 @@ function FieldRow({ required, label, value, onChange, placeholder = "Значе�
             >
                 ?
             </button>
-            <span className="one-field__star">{required ? "✱" : ""}</span>
             <span className="one-field__label">{label}</span>
-            <input
-                type="text"
-                className="one-field__input"
-                value={value}
-                placeholder={placeholder}
-                onChange={(e) => onChange(e.target.value)}
-            />
+
+            {multiline ? (
+                <AutoTextarea
+                    value={value}
+                    onChange={onChange}
+                    placeholder={placeholder}
+                    maxLength={maxLength}
+                />
+            ) : (
+                <input
+                    type="text"
+                    className="one-field__input"
+                    value={value}
+                    placeholder={placeholder}
+                    onChange={(e) => onChange(e.target.value)}
+                    maxLength={maxLength}
+                />
+            )}
         </div>
+    );
+}
+
+/* =========================================================
+   Выпадающий список стран с флагами (react-select-country-list)
+   ========================================================= */
+
+function CountrySelect({ value, onChange, placeholder = "Выберите страну" }) {
+    // Локальное значение поискового ввода
+    const [inputValue, setInputValue] = useState("");
+
+    // Сортируем: сначала совпадения с начала строки, потом — из середины
+    const filteredOptions = useMemo(() => {
+        const q = inputValue.trim().toLowerCase();
+        if (!q) return COUNTRIES_RU;
+
+        const starts = [];
+        const contains = [];
+
+        for (const c of COUNTRIES_RU) {
+            const label = c.label.toLowerCase();
+            const code = c.value.toLowerCase();
+
+            if (label.startsWith(q) || code.startsWith(q)) {
+                starts.push(c);
+            } else if (label.includes(q) || code.includes(q)) {
+                contains.push(c);
+            }
+        }
+
+        return [...starts, ...contains];
+    }, [inputValue]);
+
+    // Текущее выбранное значение
+    const current =
+        COUNTRIES_RU.find((o) => o.value === value || o.label === value) ||
+        null;
+
+    return (
+        <Select
+            classNamePrefix="one-rs"
+            className="one-field__select"
+            options={filteredOptions}
+            value={current}
+            onChange={(opt) => onChange(opt ? opt.value : "")}
+            inputValue={inputValue}
+            onInputChange={(v, meta) => {
+                // Обновляем inputValue только когда пользователь печатает.
+                // При выборе / очистке / закрытии меню — сбрасываем.
+                setInputValue(meta.action === "input-change" ? v : "");
+            }}
+            placeholder={placeholder}
+            isSearchable
+            isClearable
+            noOptionsMessage={() => "Ничего не найдено"}
+            /* Отключаем встроенную фильтрацию — свои правила уже применены */
+            filterOption={() => true}
+        />
     );
 }
 
@@ -81,6 +389,7 @@ function ChoicePair({ required, label, value, onChange, hint }) {
     ];
     return (
         <div className="one-field one-field--pair">
+            <span className="one-field__star">{required ? "✱" : ""}</span>
             <span className={`one-field__req${required ? "" : " one-field__req--hidden"}`}>
                 {required ? "требует заполнения" : ""}
             </span>
@@ -92,7 +401,7 @@ function ChoicePair({ required, label, value, onChange, hint }) {
             >
                 ?
             </button>
-            <span className="one-field__star">{required ? "✱" : ""}</span>
+            {/* <span className="one-field__star">{required ? "✱" : ""}</span> */}
             <span className="one-field__label">{label}</span>
             <div className="one-field__pairs">
                 {options.map((o) => (
@@ -109,6 +418,46 @@ function ChoicePair({ required, label, value, onChange, hint }) {
         </div>
     );
 }
+
+
+function SubBlock({ title, children }) {
+    return (
+        <div className="one-subblock">
+            <p className="one-subblock__title">{title}</p>
+            {children}
+        </div>
+    );
+}
+
+function RangeRow({ label, unit, from, to, onChangeFrom, onChangeTo }) {
+    return (
+        <div className="one-range">
+            <span className="one-range__label">{label}</span>
+            <div className="one-range__row">
+                <span className="one-field__star">✱</span>
+                <span className="one-field__req">требует заполнения</span>
+                <span className="one-field__help-slot" />
+                {/* <span className="one-field__star">✱</span> */}
+                <span className="one-range__cap">От</span>
+                <input
+                    type="text"
+                    className="one-range__input"
+                    value={from}
+                    onChange={(e) => onChangeFrom(e.target.value)}
+                />
+                <span className="one-range__cap">До</span>
+                <input
+                    type="text"
+                    className="one-range__input"
+                    value={to}
+                    onChange={(e) => onChangeTo(e.target.value)}
+                />
+                <span className="one-range__unit">{unit}</span>
+            </div>
+        </div>
+    );
+}
+
 
 /* =========================================================
    Блок добавления фотографий
@@ -259,10 +608,8 @@ function SectionDocuments({ docs, onPick, onRemove }) {
                             <span className="one-docs__req-slot">
                                 {field.required ? (
                                     <>
-                                        <span className="one-docs__req-text one-field__req">
-                                            требует заполнения
-                                        </span>
-                                        <span className="one-docs__req-star">✱</span>
+                                    
+                                        <span className="one-field__req">✱ требует заполнения</span>
                                     </>
                                 ) : (
                                     <span className="one-docs__req-space" aria-hidden="true" />
@@ -357,6 +704,7 @@ function SectionPackaging({ data, onChange, photos, onPhotosChange }) {
 
             <div className="one-pack__group">
                 <p className="one-pack__title">
+                    <span className="one-field__star">✱</span>
                     <span className="one-pack__req">требует заполнения</span>
                     <span className="one-pack__help">?</span>
                     Укажите вид упаковки:
@@ -379,6 +727,7 @@ function SectionPackaging({ data, onChange, photos, onPhotosChange }) {
 
             <div className="one-pack__group">
                 <p className="one-pack__title">
+                    <span class="one-field__star">✱</span>
                     <span className="one-pack__req">требует заполнения</span>
                     <span className="one-pack__help">?</span>
                     Укажите материал упаковки:
@@ -417,6 +766,7 @@ function SectionPackaging({ data, onChange, photos, onPhotosChange }) {
 
             <div className="one-pack__group">
                 <p className="one-pack__title one-pack__title--strong">
+                    <span class="one-field__star">✱</span>
                     <span className="one-pack__req">требует заполнения</span>
                     <span className="one-pack__help">?</span>
                     Хрупкий продукт
@@ -447,6 +797,7 @@ function SectionPackaging({ data, onChange, photos, onPhotosChange }) {
 
             <div className="one-pack__group">
                 <p className="one-pack__title one-pack__title--strong">
+                    <span class="one-field__star">✱</span>
                     <span className="one-pack__req">требует заполнения</span>
                     <span className="one-pack__help">?</span>
                     Вес продукта в упаковке
@@ -477,7 +828,8 @@ function SectionPackaging({ data, onChange, photos, onPhotosChange }) {
                 </p>
                 {["length", "width", "height"].map((dim) => (
                     <div className="one-pack__dim" key={dim}>
-                        <span className="one-pack__req">требует заполнения</span>
+                        {/* <span class="one-field__star">✱</span> */}
+                        <span className="one-pack__req">✱ требует заполнения</span>
                         <span className="one-pack__dim-label">
                             {dim === "length" ? "Длина" : dim === "width" ? "Ширина" : "Высота"}
                         </span>
@@ -639,11 +991,11 @@ function SectionPricing({ data, onChange }) {
     return (
         <>
             <section id="price-cost" className="one-block">
-                <p className="one-price__lead">Укажите стоимость модели</p>
+                {/* <p className="one-price__lead err">Укажите стоимость модели</p> */}
 
                 <h3 className="one-price__title">
                     <span className="one-price__help">?</span>
-                    Стоимость модели
+                    Укажите стоимость модели
                 </h3>
 
                 <div className="one-price__row">
@@ -665,9 +1017,10 @@ function SectionPricing({ data, onChange }) {
                         </button>
                     </div>
                 </div>
-
+                
                 <div className="one-price__row">
-                    <span className="one-field__req">требует заполнения</span>
+                    <span class="one-field__star">✱</span>
+                    <span className="one-pack__req">требует заполнения</span>
                     <span className="one-price__label one-price__label--wide">
                         Введите стоимость модели:
                     </span>
@@ -684,11 +1037,11 @@ function SectionPricing({ data, onChange }) {
             </section>
 
             <section id="price-loyalty" className="one-block">
-                <p className="one-price__lead">выберите систему лояльности</p>
+               
 
                 <h3 className="one-price__title">
                     <span className="one-price__help">?</span>
-                    Система лояльности
+                    Выберите систему лояльности
                 </h3>
 
                 <p className="one-price__subtitle">
@@ -698,8 +1051,12 @@ function SectionPricing({ data, onChange }) {
                 <div className="one-loyalty__list">
                     {data.discounts.map((discount, index) => (
                         <div className="one-loyalty__row" key={index}>
+                            {/* <span className="one-field__star">
+                                {index === 0 ? "✱" : ""}
+                            </span> */}
+                           
                             <span className="one-field__req">
-                                {index === 0 ? "требует заполнения" : ""}
+                                {index === 0 ? "✱ требует заполнения" : ""}
                             </span>
 
                             <button
@@ -758,7 +1115,7 @@ function SectionPricing({ data, onChange }) {
                                 ⓘ
                             </span>
 
-                            {index === 0 && <span className="one-loyalty__star">✱</span>}
+                            {/* {index === 0 && <span className="one-loyalty__star">✱</span>} */}
                         </div>
                     ))}
                 </div>
@@ -1019,7 +1376,38 @@ function SectionDelivery({ items, onChange }) {
 }
 
 /* =========================================================
-   СЕКЦИЯ 1. ФОТОГРАФИИ
+   СЕКЦИЯ 1. ХАРАКТЕРИСТИКИ (в «Идентификации»)
+   ========================================================= */
+function SectionCharacteristics({ values, onChange }) {
+    return (
+        <section id="ident-characteristics" className="one-block">
+            <BlockTitle>Сведения о конкретной модели</BlockTitle>
+
+
+            <FieldRow
+                required
+                multiline
+                label="Наименование модели"
+                value={values.model}
+                onChange={(v) => onChange("model", v)}
+                hint="Как модель называется у производителя"
+                maxLength={75}
+
+            />
+            <FieldRow
+                multiline
+                label="Артикул модели (параметра) от завода-изготовителя"
+                value={values.article}
+                onChange={(v) => onChange("article", v)}
+                hint="Артикул, присвоенный производителем"
+                maxLength={75}
+            />
+        </section>
+    );
+}
+
+/* =========================================================
+   СЕКЦИЯ 2. ФОТОГРАФИИ
    ========================================================= */
 function SectionPhotos({ photos = [], onPhotosChange }) {
     const slots = 5;
@@ -1062,88 +1450,116 @@ function SectionPhotos({ photos = [], onPhotosChange }) {
     );
 }
 
-/* =========================================================
-   СЕКЦИЯ 2. ХАРАКТЕРИСТИКИ (в «Идентификации»)
-   ========================================================= */
-function SectionCharacteristics({ values, onChange }) {
-    return (
-        <section id="ident-characteristics" className="one-block">
-            <BlockTitle>Характеристики конкретной модели</BlockTitle>
-
-            <FieldRow
-                label="Артикул модели (параметра) от завода-изготовителя"
-                value={values.article}
-                onChange={(v) => onChange("article", v)}
-                hint="Артикул, присвоенный производителем"
-            />
-            <FieldRow
-                required
-                label="Наименование модели"
-                value={values.model}
-                onChange={(v) => onChange("model", v)}
-                hint="Как модель называется у производителя"
-            />
-        </section>
-    );
-}
 
 /* =========================================================
    СЕКЦИЯ 6. ХАРАКТЕРИСТИКИ — вспомогательные
    ========================================================= */
-const CHAR_SIDEBAR = [
+// const CHAR_SIDEBAR = [
+//     { key: "technical", label: "Технические характеристики" },
+//     { key: "physical", label: "Физические характеристики" },
+//     { key: "functional", label: "Функциональные характеристики" },
+// ];
+
+// One.jsx
+
+const ALL_CHAR_SECTIONS = [
     { key: "technical", label: "Технические характеристики" },
+    { key: "tech-warranty", label: "1. Гарантийные обязательства" },
+    { key: "tech-technical", label: "2. Технические характеристики" },
+    { key: "tech-power", label: "3. Энергопотребление" },
+    { key: "tech-display", label: "4. Дисплей" },
+    { key: "tech-system", label: "5. Системные компоненты" },
     { key: "physical", label: "Физические характеристики" },
+    { key: "physical-dimensions", label: "6. Габаритные размеры и вес" },
+    { key: "physical-material", label: "7. Материал и состав" },
+    { key: "physical-affiliation", label: "8. Принадлежность" },
+    { key: "physical-conditions", label: "9. Условия транспортировки, хранения и эксплуатации" },
     { key: "functional", label: "Функциональные характеристики" },
+    { key: "functional-10", label: "10. Функциональные" }, // Было "functional"
 ];
+// const TECH_SECTIONS = [
+//     { key: "tech-warranty", label: "Гарантийные обязательства" },
+//     { key: "tech-technical", label: "Технические характеристики" },
+//     { key: "tech-power", label: "Энергопотребление" },
+//     { key: "tech-display", label: "Дисплей" },
+//     { key: "tech-system", label: "Системные компоненты" },
+// ];
 
-const TECH_SECTIONS = [
-    { key: "tech-warranty", label: "Гарантийные обязательства" },
-    { key: "tech-technical", label: "Технические характеристики" },
-    { key: "tech-power", label: "Энергопотребление" },
-    { key: "tech-display", label: "Дисплей" },
-    { key: "tech-system", label: "Системные компоненты" },
-];
+// const PHYSICAL_SECTIONS = [
+//     { key: "physical-dimensions", label: "Габаритные размеры и вес" },
+//     { key: "physical-material", label: "Материал и состав" },
+//     { key: "physical-affiliation", label: "Принадлежность" },
+//     { key: "physical-conditions", label: "Условия транспортировки, хранения и эксплуатации"},
+// ];
 
-const PHYSICAL_SECTIONS = [
-    { key: "physical-dimensions", label: "Габаритные размеры и вес" },
-    { key: "physical-material", label: "Материал и состав" },
-    { key: "physical-affiliation", label: "Принадлежность" },
-];
+// const FUNCTIONAL_SECTIONS = [
+//     { key: "functional", label: "Функциональные" },
+// ];
 
-const FUNCTIONAL_SECTIONS = [
-    { key: "functional", label: "Функциональные" },
-];
-
-function CharRow({ required, label, value, onChange, children }) {
+function CharRow({ required, label, value, onChange, children, multiline, maxLength }) {
     return (
         <div className={`one-char__row${required ? " one-char__row--required" : ""}`}>
-            <span className="one-char__req">
-                {required ? "требует заполнения" : ""}
+            <span className="one-char__req-wrap">
+                <span className="one-char__star">{required ? "✱" : ""}</span>
+                <span className="one-char__req">
+                    {required ? "требует заполнения" : ""}
+                </span>
             </span>
             <label className="one-char__check" title="Отобразить в наименовании модели">
                 <input
                     type="checkbox"
                     checked={Boolean(value?.inName)}
                     onChange={(e) => onChange({ ...value, inName: e.target.checked })}
+                    maxLength={maxLength}
                 />
             </label>
             <span className="one-char__info" title="Подсказка">ⓘ</span>
-            <span className="one-char__star">{required ? "✱" : ""}</span>
             <span className="one-char__label">{label}</span>
             <div className="one-char__control">{children}</div>
         </div>
     );
 }
 
-function CharInput({ value, onChange, placeholder = "Значение", unit }) {
+function CharInput({
+    value,
+    onChange,
+    placeholder = "Значение",
+    unit,
+    maxLength,
+    filter = "any",   // "any" | "text" | "numeric"
+}) {
+    // Функция фильтрации ввода
+    const applyFilter = (raw) => {
+        let result = raw;
+
+        if (filter === "text") {
+            // Только буквы (кириллица, латиница) и пробел/дефис
+            result = result.replace(/[^A-Za-zА-Яа-яЁё\s\-]/g, "");
+        } else if (filter === "numeric") {
+            // Только цифры
+            result = result.replace(/\D/g, "");
+        }
+
+        // Обрезаем по максимальной длине
+        if (maxLength && result.length > maxLength) {
+            result = result.slice(0, maxLength);
+        }
+
+        return result;
+    };
+
     return (
         <div className="one-char__input-wrap">
             <input
                 type="text"
+                inputMode={filter === "numeric" ? "numeric" : "text"}
                 className="one-char__input"
                 placeholder={placeholder}
                 value={value?.text || ""}
-                onChange={(e) => onChange({ ...value, text: e.target.value })}
+                onChange={(e) => {
+                    const clean = applyFilter(e.target.value);
+                    onChange({ ...value, text: clean });
+                }}
             />
             {unit?.length > 0 && (
                 <select
@@ -1220,9 +1636,9 @@ function CharCustom({ value, onChange }) {
 /* =========================================================
    СЕКЦИЯ 6. ХАРАКТЕРИСТИКИ — полный вид
    ========================================================= */
-function SectionCharacteristicsFull({ values, onChange }) {
-    const [sideTab, setSideTab] = useState("technical");
+// One.jsx
 
+function SectionCharacteristicsFull({ values, onChange }) {
     const scrollTo = (id) => {
         const el = document.getElementById(id);
         el?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -1230,96 +1646,58 @@ function SectionCharacteristicsFull({ values, onChange }) {
 
     return (
         <section className="one-block one-char">
-            <h2 className="one-char__heading">
-                Технические, физические и функциональные характеристики модели
-            </h2>
-            <p className="one-char__hint">
-                Заполните характеристики, которые будут соответствовать модели (параметру).
-                <br />
-                Отметьте галочкой характеристики, которые будут отображаться
-                в наименовании модели (параметра).
-            </p>
-
-            <div className="one-char__layout">
-                <aside className="one-char__sidebar">
-                    {CHAR_SIDEBAR.map((s) => (
+            {/* 1. Навигация слева (отдельный flex-элемент) */}
+            <nav className="one-subnav-boxx" aria-label="Разделы характеристик">
+                <div className="one-subnav-box__list">
+                    {ALL_CHAR_SECTIONS.map((s, i) => (
                         <button
-                            key={s.key}
+                            key={`${s.key}-${i}`}
                             type="button"
-                            className={`one-char__side${sideTab === s.key ? " one-char__side--active" : ""}`}
-                            onClick={() => setSideTab(s.key)}
+                            className="one-subnav-box__item"
+                            onClick={() => scrollTo(s.key)}
                         >
                             {s.label}
                         </button>
                     ))}
-                </aside>
+                </div>
+            </nav>
+
+            {/* 2. Оборачиваем весь основной контент в один div */}
+            <div className="one-char__main">
+                <h2 className="one-block-title">
+                    Технические, физические и функциональные характеристики модели
+                </h2>
+
+                <p className="one-char__hint">
+                    Заполните характеристики, которые будут соответствовать модели (параметру).
+                    <br />
+                    Отметьте галочкой характеристики, которые будут отображаться
+                    в наименовании модели (параметра).
+                </p>
 
                 <div className="one-char__content">
-                    {sideTab === "technical" && (
-                        <>
-                            <nav
-                                className="one-char__nav"
-                                aria-label="Разделы технических характеристик"
-                            >
-                                {TECH_SECTIONS.map((s, i) => (
-                                    <button
-                                        key={s.key}
-                                        type="button"
-                                        className="one-char__nav-item"
-                                        onClick={() => scrollTo(s.key)}
-                                    >
-                                        {i + 1}. {s.label}
-                                    </button>
-                                ))}
-                            </nav>
+                    <section id="technical" className="one-char__group">
+                        <h3 className="one-char__group-heading">
+                            Технические характеристики
+                        </h3>
+                        <TechCharacteristics values={values} onChange={onChange} />
+                    </section>
 
-                            <TechCharacteristics values={values} onChange={onChange} />
-                        </>
-                    )}
-                    {sideTab === "physical" && (
-                        <>
-                            <nav
-                                className="one-char__nav"
-                                aria-label="Разделы физических характеристик"
-                            >
-                                {PHYSICAL_SECTIONS.map((s, i) => (
-                                    <button
-                                        key={s.key}
-                                        type="button"
-                                        className="one-char__nav-item"
-                                        onClick={() => scrollTo(s.key)}
-                                    >
-                                        {i + 6}. {s.label}
-                                    </button>
-                                ))}
-                            </nav>
+                    <section id="physical" className="one-char__group">
+                        <h3 className="one-char__group-heading">
+                            Физические характеристики
+                        </h3>
+                        <PhysicalCharacteristics values={values} onChange={onChange} />
+                    </section>
 
-                            <PhysicalCharacteristics values={values} onChange={onChange} />
-                        </>
-                    )}
-                    {sideTab === "functional" && (
-                        <>
-                            <nav
-                                className="one-char__nav"
-                                aria-label="Разделы функциональных характеристик"
-                            >
-                                {FUNCTIONAL_SECTIONS.map((s) => (
-                                    <button
-                                        key={s.key}
-                                        type="button"
-                                        className="one-char__nav-item"
-                                        onClick={() => scrollTo(s.key)}
-                                    >
-                                        9. {s.label}
-                                    </button>
-                                ))}
-                            </nav>
-
-                            <FunctionalCharacteristics values={values} onChange={onChange} />
-                        </>
-                    )}
+                    <section id="functional" className="one-char__group">
+                        <h3 className="one-char__group-heading">
+                            Функциональные характеристики
+                        </h3>
+                        <FunctionalCharacteristics values={values} onChange={onChange} />
+                    </section>
                 </div>
-            </div>
+            </div> {/* <--- Закрывающий тег one-char__main */}
         </section>
     );
 }
@@ -1343,32 +1721,19 @@ function TechCharacteristics({ values, onChange }) {
                 value={v("warrantyPeriod")}
                 onChange={set("warrantyPeriod")}
             >
-                <input
-                    type="number"
-                    className="one-char__input one-char__input--sm"
+                <CharInput
                     placeholder="Введите число"
-                    value={v("warrantyPeriod").text || ""}
-                    onChange={(e) =>
-                        onChange("warrantyPeriod", {
-                            ...v("warrantyPeriod"),
-                            text: e.target.value,
-                        })
-                    }
+                    value={v("warrantyPeriod")}
+                    onChange={set("warrantyPeriod")}
+                    filter="numeric"
+                    maxLength={3}
+                    unit={[
+                        { value: "days", label: "дней" },
+                        { value: "months", label: "месяцев" },
+                        { value: "years", label: "лет" },
+                    ]}
                 />
-                <select
-                    className="one-char__unit"
-                    value={v("warrantyPeriod").unit || "months"}
-                    onChange={(e) =>
-                        onChange("warrantyPeriod", {
-                            ...v("warrantyPeriod"),
-                            unit: e.target.value,
-                        })
-                    }
-                >
-                    <option value="days">дней</option>
-                    <option value="months">месяцев</option>
-                    <option value="years">лет</option>
-                </select>
+        
             </CharRow>
 
             <CharRow
@@ -1377,32 +1742,19 @@ function TechCharacteristics({ values, onChange }) {
                 value={v("serviceLife")}
                 onChange={set("serviceLife")}
             >
-                <input
-                    type="number"
-                    className="one-char__input one-char__input--sm"
+                <CharInput
+                   
                     placeholder="Введите число"
-                    value={v("serviceLife").text || ""}
-                    onChange={(e) =>
-                        onChange("serviceLife", {
-                            ...v("serviceLife"),
-                            text: e.target.value,
-                        })
-                    }
+                    value={v("operationPeriod")}
+                    onChange={set("operationPeriod")}
+                    filter="numeric"
+                    maxLength={3}
+                    unit={[
+                        { value: "days", label: "дней" },
+                        { value: "months", label: "месяцев" },
+                        { value: "years", label: "лет" },
+                    ]}
                 />
-                <select
-                    className="one-char__unit"
-                    value={v("serviceLife").unit || "months"}
-                    onChange={(e) =>
-                        onChange("serviceLife", {
-                            ...v("serviceLife"),
-                            unit: e.target.value,
-                        })
-                    }
-                >
-                    <option value="days">дней</option>
-                    <option value="months">месяцев</option>
-                    <option value="years">лет</option>
-                </select>
             </CharRow>
 
             <h3 id="tech-technical" className="one-char__section-title">
@@ -1421,20 +1773,55 @@ function TechCharacteristics({ values, onChange }) {
                     ]}
                 />
             </CharRow>
-            <CharRow label="Тип охлаждения" value={v("coolingType")} onChange={set("coolingType")}>
-                <CharInput value={v("coolingType")} onChange={set("coolingType")} />
-            </CharRow>
+
+            <FieldRow    
+                multiline
+                label="Тип охлаждения"
+                value={values.model}
+                onChange={(v) => onChange("model", v)}
+                hint="__"
+                maxLength={50}
+
+            />
 
             <CharGroupTitle>Двигатель</CharGroupTitle>
 
-            <CharRow label="Количество цилиндров" value={v("cylinders")} onChange={set("cylinders")}>
+            <CharRow 
+                label="Количество цилиндров" 
+                value={v("cylinders")} 
+                onChange={set("cylinders")}
+                >
                 <CharInput
+                    placeholder="Введите число"
                     value={v("cylinders")}
                     onChange={set("cylinders")}
-                    unit={[{ value: "шт", label: "шт." }]}
+                    filter="numeric"
+                    maxLength={3}
+                    unit={[{ value: "штук", label: "штук" }]}
                 />
             </CharRow>
-            <CharRow
+
+            {/* <CharRow
+                required
+                label="Срок эксплуатации"
+                value={v("serviceLife")}
+                onChange={set("serviceLife")}
+            >
+                <CharInput
+
+                    placeholder="Введите число"
+                    value={v("operationPeriod")}
+                    onChange={set("operationPeriod")}
+                    filter="numeric"
+                    maxLength={3}
+                    unit={[
+                        { value: "days", label: "дней" },
+                        { value: "months", label: "месяцев" },
+                        { value: "years", label: "лет" },
+                    ]}
+                />
+            </CharRow> */}
+            {/* <CharRow
                 label="Количество тактов двигателя"
                 value={v("engineStrokes")}
                 onChange={set("engineStrokes")}
@@ -1442,7 +1829,21 @@ function TechCharacteristics({ values, onChange }) {
                 <CharInput
                     value={v("engineStrokes")}
                     onChange={set("engineStrokes")}
-                    unit={[{ value: "такт", label: "такт" }]}
+                    unit={[{ value: "такт", label: "такта" }]}
+                />
+            </CharRow> */}
+            <CharRow
+                label="Количество тактов двигателя"
+                value={v("engineStrokes")}
+                onChange={set("engineStrokes")}
+            >
+                <CharChips
+                    value={v("engineStrokes")}
+                    onChange={set("engineStrokes")}
+                    options={[
+                        { value: "two", label: "Два такта" },
+                        { value: "four", label: "Четыре такта" },
+                    ]}
                 />
             </CharRow>
             <CharRow
@@ -1451,11 +1852,15 @@ function TechCharacteristics({ values, onChange }) {
                 onChange={set("engineSpeed")}
             >
                 <CharInput
+                    placeholder="Введите число"
                     value={v("engineSpeed")}
                     onChange={set("engineSpeed")}
-                    unit={[{ value: "rpm", label: "об/мин" }]}
+                    filter="numeric"
+                    maxLength={5}
+                    unit={[{ value: "rpm", label: "оборотов в минуту" }]}
                 />
             </CharRow>
+
             <CharRow label="Тип стартера" value={v("starterType")} onChange={set("starterType")}>
                 <CharChips
                     value={v("starterType")}
@@ -1467,42 +1872,67 @@ function TechCharacteristics({ values, onChange }) {
                     ]}
                 />
             </CharRow>
-            <CharRow label="Вид топлива" value={v("fuelType")} onChange={set("fuelType")}>
+            
+            {/* <CharRow label="Вид топлива" value={v("fuelType")} onChange={set("fuelType")}>
                 <CharInput value={v("fuelType")} onChange={set("fuelType")} />
-            </CharRow>
+            </CharRow> */}
+
+            <FieldRow
+                
+                multiline
+                label="Вид топлива"
+                value={v("fuelType").text || ""}
+                onChange={(text) => onChange("fuelType", { ...v("fuelType"), text })} 
+                maxLength={50}
+            />
+
             <CharRow
                 label="Объём топливного бака"
                 value={v("fuelTankVolume")}
                 onChange={set("fuelTankVolume")}
             >
                 <CharInput
+                    placeholder="Введите число"
                     value={v("fuelTankVolume")}
                     onChange={set("fuelTankVolume")}
+                    filter="numeric"
+                    maxLength={3}
                     unit={[
-                        { value: "l", label: "Литры" },
-                        { value: "ml", label: "Миллилитры" },
+                        { value: "l", label: "Литров" },
+                        { value: "ml", label: "Миллилитров" },
                     ]}
                 />
             </CharRow>
+
             <CharRow
                 label="Расход топлива"
                 value={v("fuelConsumption")}
                 onChange={set("fuelConsumption")}
             >
                 <CharInput
+                    placeholder="Введите число"
                     value={v("fuelConsumption")}
                     onChange={set("fuelConsumption")}
-                    unit={[{ value: "l_h", label: "л/ч" }]}
+                    filter="numeric"
+                    maxLength={3}
+                    unit={[{ value: "l_h", label: "литров в час (л/ч)" }]}
                 />
             </CharRow>
 
             <CharGroupTitle>Уровень шума</CharGroupTitle>
 
-            <CharRow label="Уровень шума" value={v("noiseLevel")} onChange={set("noiseLevel")}>
+            <CharRow
+                label="Уровень шума" 
+                value={v("noiseLevel")} 
+                onChange={set("noiseLevel")}
+                >
                 <CharInput
+                    placeholder="Введите число"
                     value={v("noiseLevel")}
                     onChange={set("noiseLevel")}
-                    unit={[{ value: "db", label: "дБ" }]}
+                    filter="numeric"
+                    maxLength={3}
+                    unit={[{ value: "db", label: "децибел (дБ)" }]}
                 />
             </CharRow>
 
@@ -1521,8 +1951,11 @@ function TechCharacteristics({ values, onChange }) {
                 onChange={set("powerConsumption")}
             >
                 <CharInput
+                    placeholder="Введите число"
                     value={v("powerConsumption")}
                     onChange={set("powerConsumption")}
+                    filter="numeric"
+                    maxLength={4}
                     unit={[{ value: "vt", label: "Вт" }]}
                 />
             </CharRow>
@@ -1532,25 +1965,19 @@ function TechCharacteristics({ values, onChange }) {
                 onChange={set("workingTime")}
             >
                 <CharInput
+                    placeholder="Введите число"
                     value={v("workingTime")}
                     onChange={set("workingTime")}
+                    filter="numeric"
+                    maxLength={3}
                     unit={[
                         { value: "min", label: "Минут" },
-                        { value: "hour", label: "Часов" },
+                        { value: "hour", label: "Часа" },
                     ]}
                 />
             </CharRow>
             <CharRow label="Тип вилки" value={v("plugType")} onChange={set("plugType")}>
                 <div className="one-char__stack">
-                    <input
-                        type="text"
-                        className="one-char__input"
-                        placeholder="Введите значение"
-                        value={v("plugType").text || ""}
-                        onChange={(e) =>
-                            onChange("plugType", { ...v("plugType"), text: e.target.value })
-                        }
-                    />
                     <CharChips
                         value={v("plugType")}
                         onChange={set("plugType")}
@@ -1560,6 +1987,15 @@ function TechCharacteristics({ values, onChange }) {
                             { value: "C", label: "C" },
                             { value: "D", label: "D" },
                             { value: "E", label: "E" },
+                            { value: "F", label: "F"},
+                            { value: "G", label: "G" },
+                            { value: "H", label: "H" },
+                            { value: "I", label: "I" },
+                            { value: "J", label: "J" },
+                            { value: "K", label: "K" },
+                            { value: "L", label: "L" },
+                            { value: "M", label: "M" },
+                            
                         ]}
                     />
                 </div>
@@ -1579,8 +2015,11 @@ function TechCharacteristics({ values, onChange }) {
             </CharRow>
             <CharRow label="Частота" value={v("frequency")} onChange={set("frequency")}>
                 <CharInput
+                    placeholder="Введите число"
                     value={v("frequency")}
                     onChange={set("frequency")}
+                    filter="numeric"
+                    maxLength={3}
                     unit={[{ value: "hz", label: "Гц" }]}
                 />
             </CharRow>
@@ -1613,8 +2052,11 @@ function TechCharacteristics({ values, onChange }) {
                 onChange={set("batteryCapacity")}
             >
                 <CharInput
+                    placeholder="Введите значение"
                     value={v("batteryCapacity")}
                     onChange={set("batteryCapacity")}
+                    filter="numeric"
+                    maxLength={6}
                     unit={[{ value: "mah", label: "мА·ч" }]}
                 />
             </CharRow>
@@ -1626,6 +2068,7 @@ function TechCharacteristics({ values, onChange }) {
                 <div className="one-char__stack">
                     <input
                         type="text"
+                        maxLength={20}
                         className="one-char__input"
                         placeholder="Введите значение"
                         value={v("batteryType").text || ""}
@@ -1665,15 +2108,21 @@ function TechCharacteristics({ values, onChange }) {
 
             <CharRow label="Номинальная" value={v("nominalPower")} onChange={set("nominalPower")}>
                 <CharInput
+                    placeholder="Введите число"
                     value={v("nominalPower")}
                     onChange={set("nominalPower")}
+                    filter="numeric"
+                    maxLength={10}
                     unit={[{ value: "vt", label: "Вт" }]}
                 />
             </CharRow>
             <CharRow label="Максимальная" value={v("maxPower")} onChange={set("maxPower")}>
                 <CharInput
+                    placeholder="Введите число"
                     value={v("maxPower")}
                     onChange={set("maxPower")}
+                    filter="numeric"
+                    maxLength={10}
                     unit={[{ value: "vt", label: "Вт" }]}
                 />
             </CharRow>
@@ -1716,9 +2165,15 @@ function TechCharacteristics({ values, onChange }) {
             </CharRow>
             <CharRow label="Диагональ" value={v("diagonal")} onChange={set("diagonal")}>
                 <CharInput
+                    placeholder="Введите число"
                     value={v("diagonal")}
                     onChange={set("diagonal")}
-                    unit={[{ value: "inch", label: "дюймы" }]}
+                    filter="numeric"
+                    maxLength={5}
+                    unit={[
+                        { value: "inch", label: "Дюймов" },
+                        { value: "sm", label: "Сантиметров" },
+                    ]}
                 />
             </CharRow>
             <CharRow
@@ -1752,35 +2207,52 @@ function TechCharacteristics({ values, onChange }) {
                 onChange={set("refreshRate")}
             >
                 <CharInput
+                    placeholder="Введите значение"
                     value={v("refreshRate")}
                     onChange={set("refreshRate")}
+                    filter="numeric"
+                    maxLength={5}
                     unit={[{ value: "hz", label: "Гц" }]}
                 />
             </CharRow>
             <CharRow label="Яркость" value={v("brightness")} onChange={set("brightness")}>
                 <CharInput
+                    placeholder="Введите число"
                     value={v("brightness")}
                     onChange={set("brightness")}
-                    unit={[{ value: "nit", label: "НИТ" }]}
+                    filter="numeric"
+                    maxLength={5}
+                    unit={[{ value: "nit", label: "Нит" }]}
                 />
             </CharRow>
             <CharRow label="Разрешение" value={v("resolution")} onChange={set("resolution")}>
                 <div className="one-char__stack">
-                    <input
-                        type="text"
-                        className="one-char__input"
-                        placeholder="Введите значение"
-                        value={v("resolution").text || ""}
-                        onChange={(e) =>
-                            onChange("resolution", { ...v("resolution"), text: e.target.value })
-                        }
+                    <p> Ширина экрана по горизонтали:
+                    <CharInput
+                        placeholder="Введите число"
+                        filter="numeric"
+                        maxLength={4}
+                        value={v("resolution1")}
+                        onChange={set("resolution1")}
+                        unit={[{ value: "px", label: "Пикселей" }]}
                     />
+                    </p>
+                    <p> Ширина экрана по вертикали:
+                        <CharInput
+                            placeholder="Введите число"
+                            filter="numeric"
+                            maxLength={4}
+                            value={v("resolution2")}
+                            onChange={set("resolution2")}
+                            unit={[{ value: "px", label: "Пикселей" }]}
+                        />
+                    </p>
                     <CharChips
                         value={v("resolution")}
                         onChange={set("resolution")}
                         options={[
-                            "1280×720", "1366×768", "1600×900", "1920×1080",
-                            "2560×1440", "2560×1600", "3840×2160", "3440×1440",
+                            "1280×720 Пикс.", "1366×768 Пикс.", "1600×900 Пикс.", "1920×1080 Пикс.",
+                            "2560×1440 Пикс.", "2560×1600 Пикс.", "3840×2160 Пикс.", "3440×1440 Пикс.",
                         ].map((x) => ({ value: x, label: x }))}
                     />
                 </div>
@@ -1801,6 +2273,7 @@ function TechCharacteristics({ values, onChange }) {
                         type="text"
                         className="one-char__input"
                         placeholder="Введите значение"
+                        maxLength={30}
                         value={v("processorType").text || ""}
                         onChange={(e) =>
                             onChange("processorType", { ...v("processorType"), text: e.target.value })
@@ -1838,15 +2311,21 @@ function TechCharacteristics({ values, onChange }) {
 
             <CharRow label="Оперативная память" value={v("ram")} onChange={set("ram")}>
                 <CharInput
+                    placeholder="Введите число"
                     value={v("ram")}
                     onChange={set("ram")}
+                    filter="numeric"
+                    maxLength={4}
                     unit={[{ value: "gb", label: "ГБ" }]}
                 />
             </CharRow>
             <CharRow label="Встроенная память" value={v("storage")} onChange={set("storage")}>
                 <CharInput
+                    placeholder="Введите число"
                     value={v("storage")}
                     onChange={set("storage")}
+                    filter="numeric"
+                    maxLength={4}
                     unit={[
                         { value: "gb", label: "ГБ" },
                         { value: "tb", label: "ТБ" },
@@ -1889,9 +2368,25 @@ function TechCharacteristics({ values, onChange }) {
                     ]}
                 />
             </CharRow>
-            <CharRow label="Версия" value={v("osVersion")} onChange={set("osVersion")}>
-                <CharInput value={v("osVersion")} onChange={set("osVersion")} />
-            </CharRow>
+            {/* <CharRow 
+                label="Версия операционной системы" 
+                value={v("osVersion")} 
+                onChange={set("osVersion")}
+            >
+                <CharInput 
+                    value={v("osVersion")} 
+                    onChange={set("osVersion")} 
+                    maxlength={50}
+                />
+            </CharRow> */}
+
+            <FieldRow
+                multiline
+                label="Версия"
+                value={v("fuelType").text || ""}
+                onChange={(text) => onChange("fuelType", { ...v("fuelType"), text })}
+                maxLength={50}
+            />
 
             <CharGroupTitle>Сим-карта</CharGroupTitle>
 
@@ -1925,8 +2420,11 @@ function TechCharacteristics({ values, onChange }) {
                 onChange={set("mainCameras")}
             >
                 <CharInput
+                    placeholder="Введите число"
                     value={v("mainCameras")}
                     onChange={set("mainCameras")}
+                    filter="numeric"
+                    maxLength={2}
                     unit={[{ value: "pcs", label: "штук" }]}
                 />
             </CharRow>
@@ -1936,8 +2434,11 @@ function TechCharacteristics({ values, onChange }) {
                 onChange={set("mainCameraMp")}
             >
                 <CharInput
+                    placeholder="Введите число"
                     value={v("mainCameraMp")}
                     onChange={set("mainCameraMp")}
+                    filter="numeric"
+                    maxLength={3}
                     unit={[{ value: "mp", label: "Мп" }]}
                 />
             </CharRow>
@@ -1947,15 +2448,21 @@ function TechCharacteristics({ values, onChange }) {
                 onChange={set("cameraAngle")}
             >
                 <CharInput
+                    placeholder="Введите число"
                     value={v("cameraAngle")}
                     onChange={set("cameraAngle")}
+                    filter="numeric"
+                    maxLength={3}
                     unit={[{ value: "deg", label: "°" }]}
                 />
             </CharRow>
             <CharRow label="Цифровой зум" value={v("digitalZoom")} onChange={set("digitalZoom")}>
                 <CharInput
+                    placeholder="Введите число"
                     value={v("digitalZoom")}
                     onChange={set("digitalZoom")}
+                    filter="numeric"
+                    maxLength={3}
                     unit={[{ value: "x", label: "x" }]}
                 />
             </CharRow>
@@ -1968,8 +2475,11 @@ function TechCharacteristics({ values, onChange }) {
                 onChange={set("frontCameraMp")}
             >
                 <CharInput
+                    placeholder="Введите число"
                     value={v("frontCameraMp")}
                     onChange={set("frontCameraMp")}
+                    filter="numeric"
+                    maxLength={3}
                     unit={[{ value: "mp", label: "Мп" }]}
                 />
             </CharRow>
@@ -1978,15 +2488,21 @@ function TechCharacteristics({ values, onChange }) {
 
             <CharRow label="Количество динамиков" value={v("speakers")} onChange={set("speakers")}>
                 <CharInput
+                    placeholder="Введите число"
                     value={v("speakers")}
                     onChange={set("speakers")}
+                    filter="numeric"
+                    maxLength={2}
                     unit={[{ value: "pcs", label: "штук" }]}
                 />
             </CharRow>
             <CharRow label="Мощность" value={v("audioPower")} onChange={set("audioPower")}>
                 <CharInput
+                    placeholder="Введите число"
                     value={v("audioPower")}
                     onChange={set("audioPower")}
+                    filter="numeric"
+                    maxLength="3"
                     unit={[{ value: "vt", label: "Вт" }]}
                 />
             </CharRow>
@@ -1996,8 +2512,11 @@ function TechCharacteristics({ values, onChange }) {
                 onChange={set("minFrequency")}
             >
                 <CharInput
+                    placeholder="Введите число"
                     value={v("minFrequency")}
                     onChange={set("minFrequency")}
+                    filter="numeric"
+                    maxLength={4}
                     unit={[{ value: "hz", label: "Гц" }]}
                 />
             </CharRow>
@@ -2007,8 +2526,11 @@ function TechCharacteristics({ values, onChange }) {
                 onChange={set("maxFrequency")}
             >
                 <CharInput
+                    placeholder="Введите число"
                     value={v("maxFrequency")}
                     onChange={set("maxFrequency")}
+                    filter="numeric"
+                    maxLength={4}
                     unit={[{ value: "hz", label: "Гц" }]}
                 />
             </CharRow>
@@ -2047,8 +2569,11 @@ function PhysicalCharacteristics({ values, onChange }) {
 
             <CharRow required label="Длина" value={v("length")} onChange={set("length")}>
                 <CharInput
+                    placeholder="Введите число"
                     value={v("length")}
                     onChange={set("length")}
+                    filter="numeric"
+                    maxLength={8}
                     unit={[
                         { value: "mm", label: "Миллиметры" },
                         { value: "cm", label: "Сантиметры" },
@@ -2058,8 +2583,11 @@ function PhysicalCharacteristics({ values, onChange }) {
 
             <CharRow required label="Ширина" value={v("width")} onChange={set("width")}>
                 <CharInput
+                    placeholder="Введите число"
                     value={v("width")}
                     onChange={set("width")}
+                    filter="numeric"
+                    maxLength={8}
                     unit={[
                         { value: "mm", label: "Миллиметры" },
                         { value: "cm", label: "Сантиметры" },
@@ -2069,8 +2597,11 @@ function PhysicalCharacteristics({ values, onChange }) {
 
             <CharRow required label="Высота" value={v("height")} onChange={set("height")}>
                 <CharInput
+                    placeholder="Введите число"
                     value={v("height")}
                     onChange={set("height")}
+                    filter="numeric"
+                    maxLength={8}
                     unit={[
                         { value: "mm", label: "Миллиметры" },
                         { value: "cm", label: "Сантиметры" },
@@ -2085,8 +2616,11 @@ function PhysicalCharacteristics({ values, onChange }) {
                 onChange={set("weight")}
             >
                 <CharInput
+                    placeholder="Введите число"
                     value={v("weight")}
                     onChange={set("weight")}
+                    filter="numeric"
+                    maxLength={8}
                     unit={[
                         { value: "g", label: "Грамм" },
                         { value: "kg", label: "Килограмм" },
@@ -2101,8 +2635,11 @@ function PhysicalCharacteristics({ values, onChange }) {
                 onChange={set("weightTolerance")}
             >
                 <CharInput
+                    placeholder="Введите число"
                     value={v("weightTolerance")}
                     onChange={set("weightTolerance")}
+                    filter="numeric"
+                    maxLength={6}
                     unit={[
                         { value: "g", label: "Грамм" },
                         { value: "kg", label: "Килограмм" },
@@ -2112,8 +2649,11 @@ function PhysicalCharacteristics({ values, onChange }) {
 
             <CharRow label="Диаметр" value={v("diameter")} onChange={set("diameter")}>
                 <CharInput
+                    placeholder="Введите число"
                     value={v("diameter")}
                     onChange={set("diameter")}
+                    filter="numeric"
+                    maxLength={8}
                     unit={[
                         { value: "mm", label: "Миллиметры" },
                         { value: "cm", label: "Сантиметры" },
@@ -2123,8 +2663,11 @@ function PhysicalCharacteristics({ values, onChange }) {
 
             <CharRow label="Объём" value={v("volume")} onChange={set("volume")}>
                 <CharInput
+                    placeholder="Введите число"
                     value={v("volume")}
                     onChange={set("volume")}
+                    filter="numeric"
+                    maxLength={8}
                     unit={[
                         { value: "ml", label: "Миллилитры" },
                         { value: "l", label: "Литры" },
@@ -2317,10 +2860,125 @@ function PhysicalCharacteristics({ values, onChange }) {
                 value={v("customAffiliation")}
                 onChange={set("customAffiliation")}
             />
+
+            {/* --- Условия транспортировки, хранения и эксплуатации --- */}
+            <h3 id="physical-conditions" className="one-char__section-title">
+                Условия транспортировки, хранения и эксплуатации
+            </h3>
+
+            <p className="one-subtitle__hint">
+                Заполните условия транспортировки, хранения, эксплуатации и срок
+                эксплуатации. При заполнении ориентируйтесь на следующие документы:
+                1. Руководство по эксплуатации.
+            </p>
+
+            <SubBlock title="Условия транспортировки">
+                <RangeRow
+                    label="Температурный режим"
+                    unit="°C"
+                    from={v("transportTempFrom").text || ""}
+                    to={v("transportTempTo").text || ""}
+                    onChangeFrom={(text) =>
+                        onChange("transportTempFrom", { ...v("transportTempFrom"), text })
+                    }
+                    onChangeTo={(text) =>
+                        onChange("transportTempTo", { ...v("transportTempTo"), text })
+                    }
+                />
+                <RangeRow
+                    label="Влажность"
+                    unit="%"
+                    from={v("transportHumidityFrom").text || ""}
+                    to={v("transportHumidityTo").text || ""}
+                    onChangeFrom={(text) =>
+                        onChange("transportHumidityFrom", { ...v("transportHumidityFrom"), text })
+                    }
+                    onChangeTo={(text) =>
+                        onChange("transportHumidityTo", { ...v("transportHumidityTo"), text })
+                    }
+                />
+                <ChoicePair
+                    required
+                    label="Попадание прямых солнечных лучей"
+                    value={v("transportSun").text || ""}
+                    onChange={(value) =>
+                        onChange("transportSun", { ...v("transportSun"), text: value })
+                    }
+                />
+            </SubBlock>
+
+            <SubBlock title="Условия хранения на складе">
+                <RangeRow
+                    label="Температурный режим"
+                    unit="°C"
+                    from={v("storageTempFrom").text || ""}
+                    to={v("storageTempTo").text || ""}
+                    onChangeFrom={(text) =>
+                        onChange("storageTempFrom", { ...v("storageTempFrom"), text })
+                    }
+                    onChangeTo={(text) =>
+                        onChange("storageTempTo", { ...v("storageTempTo"), text })
+                    }
+                />
+                <RangeRow
+                    label="Влажность"
+                    unit="%"
+                    from={v("storageHumidityFrom").text || ""}
+                    to={v("storageHumidityTo").text || ""}
+                    onChangeFrom={(text) =>
+                        onChange("storageHumidityFrom", { ...v("storageHumidityFrom"), text })
+                    }
+                    onChangeTo={(text) =>
+                        onChange("storageHumidityTo", { ...v("storageHumidityTo"), text })
+                    }
+                />
+                <ChoicePair
+                    required
+                    label="Попадание прямых солнечных лучей"
+                    value={v("storageSun").text || ""}
+                    onChange={(value) =>
+                        onChange("storageSun", { ...v("storageSun"), text: value })
+                    }
+                />
+            </SubBlock>
+
+            <SubBlock title="Условия эксплуатации модели (параметра)">
+                <RangeRow
+                    label="Температурный режим"
+                    unit="°C"
+                    from={v("usageTempFrom").text || ""}
+                    to={v("usageTempTo").text || ""}
+                    onChangeFrom={(text) =>
+                        onChange("usageTempFrom", { ...v("usageTempFrom"), text })
+                    }
+                    onChangeTo={(text) =>
+                        onChange("usageTempTo", { ...v("usageTempTo"), text })
+                    }
+                />
+                <RangeRow
+                    label="Влажность"
+                    unit="%"
+                    from={v("usageHumidityFrom").text || ""}
+                    to={v("usageHumidityTo").text || ""}
+                    onChangeFrom={(text) =>
+                        onChange("usageHumidityFrom", { ...v("usageHumidityFrom"), text })
+                    }
+                    onChangeTo={(text) =>
+                        onChange("usageHumidityTo", { ...v("usageHumidityTo"), text })
+                    }
+                />
+                <ChoicePair
+                    required
+                    label="Попадание прямых солнечных лучей"
+                    value={v("usageSun").text || ""}
+                    onChange={(value) =>
+                        onChange("usageSun", { ...v("usageSun"), text: value })
+                    }
+                />
+            </SubBlock>
         </>
     );
 }
-
 /* =========================================================
    ФУНКЦИОНАЛЬНЫЕ ХАРАКТЕРИСТИКИ
    ========================================================= */
@@ -2340,7 +2998,7 @@ function FunctionalCharacteristics({ values, onChange }) {
 
     return (
         <>
-            <h3 id="functional" className="one-char__section-title">
+            <h3 id="functional-10" className="one-char__section-title"> {/* Было id="functional" */}
                 Функциональные
             </h3>
 
@@ -2414,17 +3072,31 @@ function SectionManufacturer({ values, onChange }) {
             <BlockTitle>Сведения о производителе</BlockTitle>
 
             <FieldRow
+                multiline
                 required
                 label="Наименование производителя"
                 value={values.manufacturerName}
                 onChange={(v) => onChange("manufacturerName", v)}
+                maxLength={75}
             />
-            <FieldRow
-                required
-                label="Страна производства"
-                value={values.country}
-                onChange={(v) => onChange("country", v)}
-            />
+            <div className="one-field">
+                <span className="one-field__star">✱</span>
+                <span className="one-field__req">требует заполнения</span>
+                <button
+                    type="button"
+                    className="one-field__help"
+                    title="Страна производства"
+                    aria-label="Подсказка"
+                >
+                    ?
+                </button>
+                {/* <span className="one-field__star">✱</span> */}
+                <span className="one-field__label">Страна производства</span>
+                <CountrySelect
+                    value={values.country}
+                    onChange={(v) => onChange("country", v)}
+                />
+            </div>
         </section>
     );
 }
@@ -2448,18 +3120,22 @@ function SectionDescription({ values, onChange }) {
 
             <FieldRow
                 required
+                multiline
                 label="Назначение модели"
                 value={values.purpose}
                 onChange={(v) => onChange("purpose", v)}
+                maxLength={500}
             />
             <FieldRow
                 required
+                multiline
                 label="Принцип действия модели"
                 value={values.actionPrinciple}
                 onChange={(v) => onChange("actionPrinciple", v)}
+                maxLength={500}
             />
 
-            <h3 className="one-subtitle">
+            {/* <h3 className="one-subtitle">
                 <span className="one-subtitle__help">?</span>
                 Условия транспортировки, хранения и эксплуатации
             </h3>
@@ -2542,7 +3218,7 @@ function SectionDescription({ values, onChange }) {
                     value={values.usageSun}
                     onChange={(v) => onChange("usageSun", v)}
                 />
-            </SubBlock>
+            </SubBlock> */}
 
             <h3 className="one-subtitle">
                 <span className="one-subtitle__help">?</span>
@@ -2555,9 +3231,10 @@ function SectionDescription({ values, onChange }) {
             </p>
 
             <div className="one-field">
+                <span className="one-field__star">✱</span>
                 <span className="one-field__req">требует заполнения</span>
                 <span className="one-field__help-slot" />
-                <span className="one-field__star">✱</span>
+                {/* <span className="one-field__star">✱</span> */}
                 <span className="one-field__label">Класс опасности</span>
                 <div className="one-hazard">
                     {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => (
@@ -2575,56 +3252,61 @@ function SectionDescription({ values, onChange }) {
 
             <FieldRow
                 required
+                multiline
                 label="Указание мер безопасности"
                 value={values.safetyMeasures}
                 onChange={(v) => onChange("safetyMeasures", v)}
+                maxLength={500}
             />
             <FieldRow
                 required
+                multiline
                 label="Утилизация товаров и упаковки"
                 value={values.utilization}
                 onChange={(v) => onChange("utilization", v)}
+                maxLength={500}
             />
         </section>
     );
 }
 
-function SubBlock({ title, children }) {
-    return (
-        <div className="one-subblock">
-            <p className="one-subblock__title">{title}</p>
-            {children}
-        </div>
-    );
-}
+// function SubBlock({ title, children }) {
+//     return (
+//         <div className="one-subblock">
+//             <p className="one-subblock__title">{title}</p>
+//             {children}
+//         </div>
+//     );
+// }
 
-function RangeRow({ label, unit, from, to, onChangeFrom, onChangeTo }) {
-    return (
-        <div className="one-range">
-            <span className="one-range__label">{label}</span>
-            <div className="one-range__row">
-                <span className="one-field__req">требует заполнения</span>
-                <span className="one-field__help-slot" />
-                <span className="one-field__star">✱</span>
-                <span className="one-range__cap">От</span>
-                <input
-                    type="text"
-                    className="one-range__input"
-                    value={from}
-                    onChange={(e) => onChangeFrom(e.target.value)}
-                />
-                <span className="one-range__cap">До</span>
-                <input
-                    type="text"
-                    className="one-range__input"
-                    value={to}
-                    onChange={(e) => onChangeTo(e.target.value)}
-                />
-                <span className="one-range__unit">{unit}</span>
-            </div>
-        </div>
-    );
-}
+// function RangeRow({ label, unit, from, to, onChangeFrom, onChangeTo }) {
+//     return (
+//         <div className="one-range">
+//             <span className="one-range__label">{label}</span>
+//             <div className="one-range__row">
+//                 <span className="one-field__star">✱</span>
+//                 <span className="one-field__req">требует заполнения</span>
+//                 <span className="one-field__help-slot" />
+//                 {/* <span className="one-field__star">✱</span> */}
+//                 <span className="one-range__cap">От</span>
+//                 <input
+//                     type="text"
+//                     className="one-range__input"
+//                     value={from}
+//                     onChange={(e) => onChangeFrom(e.target.value)}
+//                 />
+//                 <span className="one-range__cap">До</span>
+//                 <input
+//                     type="text"
+//                     className="one-range__input"
+//                     value={to}
+//                     onChange={(e) => onChangeTo(e.target.value)}
+//                 />
+//                 <span className="one-range__unit">{unit}</span>
+//             </div>
+//         </div>
+//     );
+// }
 
 /* =========================================================
    Основной компонент
@@ -2798,34 +3480,40 @@ export default function One() {
             </div>
 
             {/* ============== УПАКОВКА ============== */}
+         
             {activeTab === "packaging" && (
-                <>
-                    <nav className="one-subnav" aria-label="Разделы упаковки">
-                        {PACK_SECTIONS.map((s, i) => (
-                            <button
-                                key={s.key}
-                                type="button"
-                                className="one-subnav__item"
-                                onClick={() => scrollTo(s.key)}
-                            >
-                                {i + 1}. {s.label}
-                            </button>
-                        ))}
+                <div className="one-ident-layout">
+                    <nav className="one-subnav-box" aria-label="Разделы упаковки">
+                        <div className="one-subnav-box__list">
+                            {PACK_SECTIONS.map((s, i) => (
+                                <button
+                                    key={s.key}
+                                    type="button"
+                                    className="one-subnav-box__item"
+                                    onClick={() => scrollTo(s.key)}
+                                >
+                                    {i + 1}. {s.label}
+                                </button>
+                            ))}
+                        </div>
                     </nav>
 
-                    <div ref={(el) => (sectionsRef.current.packaging = el)}>
-                        <SectionPackaging
-                            data={pack}
-                            onChange={updatePack}
-                            photos={packPhotos}
-                            onPhotosChange={setPackPhotos}
-                        />
-                    </div>
+                    {/* Основной контент справа */}
+                    <div className="one-ident__main">
+                        <div ref={(el) => (sectionsRef.current.packaging = el)}>
+                            <SectionPackaging
+                                data={pack}
+                                onChange={updatePack}
+                                photos={packPhotos}
+                                onPhotosChange={setPackPhotos}
+                            />
+                        </div>
 
-                    <div ref={(el) => (sectionsRef.current.kit = el)}>
-                        <SectionKit items={kit} onChange={setKit} />
+                        <div ref={(el) => (sectionsRef.current.kit = el)}>
+                            <SectionKit items={kit} onChange={setKit} />
+                        </div>
                     </div>
-                </>
+                </div>
             )}
 
             {/* ============== ХАРАКТЕРИСТИКИ ============== */}
@@ -2876,7 +3564,7 @@ export default function One() {
 
             {/* ============== ИДЕНТИФИКАЦИЯ ============== */}
             {activeTab === "identification" && (
-                <>
+                <div className="one-ident-layout">
                     <nav className="one-subnav-box" aria-label="Разделы идентификации">
                         <div className="one-subnav-box__list">
                             {IDENT_SECTIONS.map((s, i) => (
@@ -2892,25 +3580,28 @@ export default function One() {
                         </div>
                     </nav>
 
-                    <div ref={(el) => (sectionsRef.current.photos = el)}>
-                        <SectionPhotos
-                            photos={modelPhotos}
-                            onPhotosChange={setModelPhotos}
-                        />
-                    </div>
+                    {/* Оборачиваем весь контент в один блок */}
+                    <div className="one-ident__main">
+                        <div ref={(el) => (sectionsRef.current.characteristics = el)}>
+                            <SectionCharacteristics values={ident} onChange={updateIdent} />
+                        </div>
 
-                    <div ref={(el) => (sectionsRef.current.characteristics = el)}>
-                        <SectionCharacteristics values={ident} onChange={updateIdent} />
-                    </div>
+                        <div ref={(el) => (sectionsRef.current.photos = el)}>
+                            <SectionPhotos
+                                photos={modelPhotos}
+                                onPhotosChange={setModelPhotos}
+                            />
+                        </div>
 
-                    <div ref={(el) => (sectionsRef.current.manufacturer = el)}>
-                        <SectionManufacturer values={ident} onChange={updateIdent} />
-                    </div>
+                        <div ref={(el) => (sectionsRef.current.manufacturer = el)}>
+                            <SectionManufacturer values={ident} onChange={updateIdent} />
+                        </div>
 
-                    <div ref={(el) => (sectionsRef.current.description = el)}>
-                        <SectionDescription values={ident} onChange={updateIdent} />
+                        <div ref={(el) => (sectionsRef.current.description = el)}>
+                            <SectionDescription values={ident} onChange={updateIdent} />
+                        </div>
                     </div>
-                </>
+                </div>
             )}
 
             <BottomBar

@@ -250,6 +250,8 @@
     gap: 6px;
     margin: 8px 0 24px;
     align-items: flex-start;
+    border: 1px solid #c3e0b4;
+    width: 250px;
 }
 
 .one-page .one-subnav__item {
@@ -286,7 +288,7 @@
     font-weight: 600;
     color: blue;
     margin-bottom: 18px;
-    text-align: left;
+    /* text-align: left; */
 }
 
 /* =========================================================
@@ -1584,20 +1586,22 @@
     margin: 0 0 20px;
 }
 
-.one-page .one-char__layout {
+/* .one-page .one-char__layout {
     display: grid;
     grid-template-columns: 220px minmax(0, 1fr);
     gap: 28px;
     align-items: flex-start;
-}
+} */
 
 /* Левое меню */
 .one-page .one-char__sidebar {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    position: sticky;
+    /* position: sticky; */
     top: 16px;
+    margin-left: 350px;
+    margin-top: -20px;
 }
 
 .one-page .one-char__side {
@@ -1610,19 +1614,23 @@
     border: 1px solid #dcdfe4;
     border-radius: 8px;
     cursor: pointer;
-    transition: background 0.15s ease, border-color 0.15s ease;
+    /* transition: background 0.15s ease, border-color 0.15s ease; */
     line-height: 1.3;
+    width: 260px;
+
+
+    
 }
 
 .one-page .one-char__side:hover {
     background: #f5f7fa;
 }
 
-.one-page .one-char__side--active {
+/* .one-page .one-char__side--active {
     background: #eef1f6;
     border-color: #1a1a1a;
     font-weight: 600;
-}
+} */
 
 /* Правая часть */
 .one-page .one-char__content {
@@ -2030,6 +2038,7 @@
     color: #9b1c1c;
     font-size: 13px;
     line-height: 1.2;
+    margin-left: -100px;
 }
 
 .one-page .one-field__req--hidden {
@@ -2067,6 +2076,7 @@
     font-size: 15px;
     font-weight: 700;
     text-align: center;
+    margin-left: -40px;
 }
 
 .one-page .one-field__label {
@@ -2140,6 +2150,7 @@
     font-size: 14px;
     font-weight: 500;
     color: #1f2937;
+    /* margin-left: 50px; */
 }
 
 .one-page .one-docs__row {
@@ -2154,6 +2165,7 @@
     align-items: center;
     gap: 6px;
     justify-content: flex-start;
+    margin-left: 150px;
 }
 
 /* .one-page .one-docs__req-text {
@@ -2672,8 +2684,9 @@
    ========================================================= */
 .one-page .one-price__lead {
     font-size: 15px;
-    color: #6a7280;
+    color: #000;
     margin: 0 0 10px;
+    text-align: left;
 }
 
 .one-page .one-price__title {
@@ -2784,6 +2797,7 @@
     display: flex;
     flex-direction: column;
     gap: 22px;
+    margin-left: 130px;
 }
 
 .one-page .one-loyalty__row {
@@ -3131,15 +3145,17 @@
 }
 
 /* Левое меню */
-.one-page .one-char__sidebar {
+/* .one-page .one-char__sidebar {
     display: flex;
     flex-direction: column;
     gap: 8px;
     position: sticky;
     top: 16px;
-}
+    border: 1px solid #000;
+    width: 250px;
+} */
 
-.one-page .one-char__side {
+/* .one-page .one-char__side {
     padding: 14px 16px;
     font-family: inherit;
     font-size: 14px;
@@ -3151,17 +3167,17 @@
     cursor: pointer;
     transition: background 0.15s ease, border-color 0.15s ease;
     line-height: 1.3;
-}
+} */
 
 .one-page .one-char__side:hover {
     background: #f5f7fa;
 }
 
-.one-page .one-char__side--active {
+/* .one-page .one-char__side--active {
     background: #eef1f6;
     border-color: #1a1a1a;
     font-weight: 600;
-}
+} */
 
 /* Правая часть */
 .one-page .one-char__content {
@@ -3532,125 +3548,7 @@
     font-weight: 700;
 }
 
-/* =========================================================
-   АДАПТИВ
-   ========================================================= */
-@media (max-width: 1024px) {
-    .one-page .one-char__layout {
-        grid-template-columns: 1fr;
-    }
 
-    .one-page .one-char__sidebar {
-        position: static;
-        flex-direction: row;
-        flex-wrap: wrap;
-    }
-
-    .one-page .one-char__row {
-        grid-template-columns:
-            minmax(130px, max-content) 28px 24px 20px minmax(0, 1fr);
-    }
-
-    .one-page .one-char__control {
-        grid-column: 1 / -1;
-        margin-top: 4px;
-    }
-}
-
-@media (max-width: 900px) {
-
-    .one-page .one-field,
-    .one-page .one-field--pair {
-        grid-template-columns: 1fr;
-    }
-
-    .one-page .one-field__req,
-    .one-page .one-field__help,
-    .one-page .one-field__star {
-        justify-self: start;
-    }
-
-    .one-page .one-photos {
-        grid-template-columns: 1fr;
-    }
-
-    .one-page .one-photos__grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
-    .one-page .one-range__row {
-        grid-template-columns: 1fr 1fr;
-    }
-
-    .one-page .one-pack__radios,
-    .one-page .one-pack__chips,
-    .one-page .one-pack__weight,
-    .one-page .one-pack__custom {
-        margin-left: 0;
-    }
-
-    .one-page .one-pack__dim {
-        grid-template-columns: 1fr;
-    }
-
-    .one-page .one-kit__row {
-        grid-template-columns: 26px 24px minmax(0, 1fr);
-        row-gap: 10px;
-    }
-
-    .one-page .one-kit__dash,
-    .one-page .one-kit__unit {
-        display: none;
-    }
-
-    .one-page .one-kit__qty {
-        grid-column: 3 / span 1;
-    }
-
-    .one-page .one-kit__photo {
-        grid-column: 3 / span 1;
-        width: 100%;
-        height: 72px;
-        flex-direction: row;
-        gap: 12px;
-        border-radius: 14px;
-    }
-
-    .one-page .one-loyalty__row {
-        gap: 6px;
-        font-size: 13px;
-    }
-
-    .one-page .one-loyalty__input {
-        width: 70px;
-    }
-
-    .one-page .one-loyalty__input--price {
-        width: 110px;
-    }
-
-    .one-page .one-docs__row {
-        grid-template-columns: 1fr;
-    }
-
-    .one-page .one-delivery__qty {
-        margin-left: 0;
-        flex-wrap: wrap;
-    }
-
-    .one-page .one-delivery__qty-input {
-        width: 100%;
-    }
-
-    .one-page .one-char__custom {
-        grid-template-columns: 24px minmax(0, 1fr);
-    }
-
-    .one-page .one-char__custom-value,
-    .one-page .one-char__custom-unit {
-        grid-column: 2 / -1;
-    }
-}
 
 /* =========================================================
    Секция «Иное» — метка над кнопкой выбора единиц
@@ -3814,9 +3712,9 @@
 /* =========================================================
    Навигация «Идентификация» — один цельный блок
    ========================================================= */
-.one-page .one-subnav-box {
-    width: 300px;
-    max-width: 100%;
+.one-page .one-subnav-boxx {
+    width: 250px;
+    /* max-width: 100%; */
     margin: 0 0 32px;
     display: flex;
     flex-direction: column;
@@ -3825,7 +3723,12 @@
     background: #fff;
     box-sizing: border-box;
     overflow: hidden;
-    margin-top: -32px;
+    /* margin-top: -140px; */
+    position: sticky;
+        top: 16px;
+        width: 250px;
+    margin-top: -20px;
+    
     /* ничего не вылезает за рамку */
 }
 
@@ -3850,11 +3753,10 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 10px;
-    padding: 16px 18px 18px;
+    padding: 16px 5px 16px;
     background: #fff;
     border: none;
-    margin-top:
-    /* ← убрали рамку у списка */
+    
 }
 
 .one-page .one-subnav-box__item {
@@ -3876,19 +3778,180 @@
     text-decoration: underline;
 }
 
-/* Адаптив */
-@media (max-width: 700px) {
-    .one-page .one-subnav-box {
-        width: 100%;
-    }
 
-    .one-page .one-subnav-box__title {
-        padding: 14px 16px;
-        font-size: 14px;
-    }
+.one-subnav-box  {
+    border: 1px solid #c3e0b4;
+    width: 260px;
+    margin-top: -20px;
+    position: sticky;
+        top: 16px;
+        width: 260px;
+}
+/* Строка характеристики — обновлённая сетка */
+.one-page .one-char__row {
+    display: grid;
+    grid-template-columns:
+        minmax(160px, max-content)
+        /* ✱ требует заполнения */
+        28px
+        /* checkbox */
+        24px
+        /* ⓘ */
+        minmax(180px, 1fr)
+        /* label */
+        minmax(220px, 2fr);
+    /* control */
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid #eef0f3;
+}
 
-    .one-page .one-subnav-box__list {
-        padding: 12px 16px 14px;
-        gap: 8px;
-    }
+/* Звёздочка + текст в одну группу, чтобы не разъезжались */
+.one-page .one-char__req-wrap {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+}
+
+/* Звёздочка — единый цвет по всему проекту */
+.one-page .one-char__star {
+    color: #c0392b;
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+/* Текст «требует заполнения» — тот же цвет, что у звёздочки */
+.one-page .one-char__req {
+    font-size: 13px;
+    color: #c0392b;
+    line-height: 1.2;
+}
+
+/* Скрываем всю группу у необязательных полей, но оставляем место */
+.one-page .one-char__row:not(.one-char__row--required) .one-char__req-wrap {
+    visibility: hidden;
+}
+
+.eer {
+    text-align: left;
+}
+
+/* =========================================================
+   Группа характеристик (Технические / Физические / Функциональные)
+   ========================================================= */
+.one-page .one-char__group {
+    margin-bottom: 28px;
+    scroll-margin-top: 16px;
+}
+
+.one-page .one-char__group-heading {
+    font-size: 20px;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin: 24px 0 14px;
+    text-align: left;
+}
+
+/* Первая группа — без большого верхнего отступа */
+.one-page .one-char__group:first-child .one-char__group-heading {
+    margin-top: 8px;
+}
+
+/* =========================================================
+   Нумерованный подсписок внутри группы (1–5, 6–9, 10)
+   ========================================================= */
+.one-page .one-char__nav {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 0 0 24px 8px;
+    align-items: flex-start;
+}
+
+.one-page .one-char__nav-item {
+    padding: 0;
+    background: none;
+    border: none;
+    font-family: inherit;
+    font-size: 18px;
+    line-height: 1.35;
+    color: #1f2937;
+    cursor: pointer;
+    text-align: left;
+    text-decoration: none;
+}
+
+.one-page .one-char__nav-item:hover {
+    color: #2563eb;
+}
+
+
+
+.one-page .one-char {
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+}
+
+.one-page .one-subnav-boxx {
+    width: 250px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 16px;
+    /* ... остальные ваши стили для рамки и фона ... */
+}
+
+.one-page .one-char__main {
+    flex-grow: 1;
+    /* Контент занимает всё оставшееся место */
+    min-width: 0;
+    /* Защита от вылезания длинных полей */
+}
+
+
+/* =========================================================
+   Исправление верстки для вкладки "Идентификация"
+   ========================================================= */
+.one-page .one-ident-layout {
+    display: flex;
+    gap: 6px;
+    align-items: flex-start;
+}
+
+.one-page .one-ident__main {
+    flex-grow: 1;
+    min-width: 0;
+    /* Защита от вылезания длинных полей */
+}
+
+/* Исправляем навигацию, убираем отрицательный отступ */
+.one-page .one-subnav-box {
+    /* width: 300px; */
+    flex-shrink: 0;
+    position: sticky;
+    top: 16px;
+    margin-top: 0;
+    /* Убираем -20px, которые ломали верстку */
+    /* Остальные ваши стили (border, background и т.д.) оставьте */
+}
+
+/* 2. Разрешаем тексту переноситься */
+.one-page .one-char__label,
+.one-page .one-field__label,
+.one-page .one-char__req,
+.one-page .one-field__req {
+    white-space: normal;       /* Разрешает перенос строк */
+    word-break: break-word;    /* Ломает длинные слова, если они не влезают */
+    min-width: 0;              /* ВАЖНО: заставляет элемент сжиматься в сетке */
+    line-height: 1.35;         /* Делаем межстрочный интервал комфортным */
+}
+
+.one-page .one-field__input--auto,
+.one-page textarea.one-char__input {
+    overflow: hidden;
+    resize: none;
+    /* Убирает уголок ресайза в правом нижнем углу */
 }
