@@ -3955,3 +3955,217 @@
     resize: none;
     /* Убирает уголок ресайза в правом нижнем углу */
 }
+/* Контейнер для селекта и поля ввода "Иное" */
+.one-page .one-char__custom-unit-wrap {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+}
+
+/* Убеждаемся, что селект занимает нужное место */
+.one-page .one-char__custom-unit {
+    flex: 1;
+    min-width: 0;
+}
+
+/* Стили для нового поля ввода своей единицы измерения */
+.one-page .one-char__custom-unit-input {
+    flex: 1;
+    min-width: 0;
+    box-sizing: border-box;
+    padding: 8px 12px;
+    font-family: inherit;
+    font-size: 14px;
+    color: #1f2937;
+    background: #fff;
+    border: 1px solid #dcdfe4;
+    border-radius: 6px;
+    outline: none;
+}
+
+.one-page .one-char__custom-unit-input:focus {
+    border-color: #6b63c7;
+}
+
+/* 1. Родительский контейнер большой карточки */
+.one-page .one-photo-slots__big {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    background: #fff;
+    border: 1.5px solid #1a1a1a;
+    border-radius: 28px;
+    cursor: pointer;
+    padding: 16px;
+    box-sizing: border-box;
+    transition: background 0.15s ease;
+
+    /* ГЛАВНОЕ: скрываем всё, что выходит за рамки */
+    overflow: hidden;
+}
+
+/* 2. Маленькие карточки */
+.one-page .one-photo-slots__small {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    background: #fff;
+    border: 1.5px solid #1a1a1a;
+    border-radius: 20px;
+    cursor: pointer;
+    padding: 0;
+    box-sizing: border-box;
+    transition: background 0.15s ease;
+
+    /* ГЛАВНОЕ: скрываем всё, что выходит за рамки */
+    overflow: hidden;
+}
+
+/* 3. Само изображение */
+.one-page .one-photo-slots__preview {
+    /* Заставляем картинку занимать ровно 100% контейнера */
+    width: 100%;
+    height: 100%;
+
+    /* object-fit: cover; заставляет картинку заполнить блок 
+       без искажения пропорций (лишнее обрежется) */
+    object-fit: cover;
+
+    /* На всякий случай убираем отступы, если они есть */
+    display: block;
+}
+
+/* --- Бейдж "Главное фото" на большой карточке --- */
+.one-page .one-photo-slots__main-badge {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    background: #f5a623;
+    /* Золотой цвет */
+    color: #fff;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    z-index: 10;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    pointer-events: none;
+    /* Чтобы бейдж не мешал кликам */
+}
+
+/* --- Кнопка "Сделать главной" (звездочка) на маленьких фото --- */
+.one-page .one-photo-slots__set-main {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid #ccc;
+    color: #888;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 10;
+    transition: all 0.2s ease;
+    padding: 0;
+}
+
+/* Наведение на звездочку */
+.one-page .one-photo-slots__set-main:hover {
+    color: #f5a623;
+    border-color: #f5a623;
+    background: #fff;
+    transform: scale(1.1);
+}
+
+.one-page .stage4-name-box__photo {
+    width: 40px;
+    height: 40px;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 1px solid #e0e0e0;
+    flex-shrink: 0;
+    /* Запрещаем картинке сжиматься, если текст длинный */
+    background-color: #fafbfc;
+}
+
+.one-page .one-page__top-photo {
+    width: 120px;
+    /* Ширина фото, можете изменить под дизайн */
+    height: 120px;
+    margin-bottom: 20px;
+    /* Отступ до заголовка */
+    border: 1px solid #d0d0d0;
+    border-radius: 8px;
+    background: #fafbfc;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.one-page .one-page__top-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    /* Фото будет вписываться целиком, не обрезаясь */
+}
+
+/* Контейнер для позиционирования подсказки */
+.one-page .one-tooltip-wrap {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+}
+
+/* Само всплывающее окно */
+.one-page .one-tooltip-popup {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-top: 8px;
+    background: #333;
+    color: #fff;
+    padding: 10px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    line-height: 1.4;
+    width: max-content;
+    max-width: 280px;
+    z-index: 1000;
+    /* Чтобы окно было поверх остальных элементов */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    white-space: normal;
+    text-align: left;
+    font-weight: normal;
+}
+
+/* Стрелочка, указывающая на иконку */
+.one-page .one-tooltip-popup::before {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 6px;
+    border-style: solid;
+    border-color: transparent transparent #333 transparent;
+}
